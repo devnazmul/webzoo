@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebZoo Realtime Test</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    input { width: 350px; margin: 4px; }
+    button { margin: 4px; padding: 4px 12px; }
+    .box { border: 1px solid #ccc; padding: 10px; min-height: 60px; margin-top: 8px; }
+    .green { color: green; } .red { color: red; } .gray { color: gray; }
+  </style>
+</head>
+<body>
+  <h2>WebZoo Realtime Test</h2>
+
+  <div>
+    <input id="userId" placeholder="Your user ID" />
+    <input id="accessToken" placeholder="Access Token" />
+    <br/>
+    <input id="workspaceId" placeholder="Workspace ID" />
+    <input id="topicId" placeholder="Topic ID" />
+    <br/>
+    <button onclick="init()">Connect & Join</button>
+    <button onclick="leaveT()">Leave Topic</button>
+  </div>
+
+  <div id="status" class="gray">Not connected</div>
+
+  <h3>Online Users:</h3>
+  <div id="presence" class="box"></div>
+
+  <h3>Typing:</h3>
+  <div id="typing" class="box"></div>
+
+  <h3>Messages:</h3>
+  <div id="messages" class="box"></div>
+
+  <h3>Simulate Typing:</h3>
+  <input id="typeInput" placeholder="Type message and press Enter..."
+    oninput="onType()"
+    onkeydown="if(event.key === 'Enter') sendMessage()"
+  />
+
+  <script>
+    const socket = io('http://localhost:4000');
+    let typingTimer;
+
+    socket.on('connect', () => {
+      document.getElementById('status').textContent = 'Connected: ' + socket.id;
+      document.getElementById('status').className = 'green';
+    });
+
+    socket.on('disconnect', () => {
+      document.getElementById('status').textContent = 'Disconnected';
+      document.getElementById('status').className = 'red';
+    });
+
+    socket.on('message:new', (data) => {
+      const div = document.getElementById('messages');
+      const entry = document.createElement('div');
+      entry.textContent = `[${data.message.author.name}]: ${data.message.content}`;
+      div.appendChild(entry);
+    });
+
+    socket.on('presence:update', (data) => {
+      document.getElementById('presence').textContent =
+        'Online in topic: ' + JSON.stringify(data.onlineUsers);
+    });
+
+    socket.on('typing:update', (data) => {
+      const div = document.getElementById('typing');
+      if (data.isTyping) {
+        div.textContent = `User ${data.userId} is typing...`;
+      } else {
+        div.textContent = '';
+      }
+    });
+
+    function init() {
+      const userId = document.getElementById('userId').value.trim();
+      const topicId = document.getElementById('topicId').value.trim();
+      if (!userId || !topicId) return alert('Fill in both fields');
+      socket.emit('presence:init', userId);
+      socket.emit('topic:join', topicId);
+      document.getElementById('status').textContent =
+        'Connected & joined topic: ' + topicId;
+    }
+
+    function leaveT() {
+      const topicId = document.getElementById('topicId').value.trim();
+      socket.emit('topic:leave', topicId);
+    }
+
+    function onType() {
+      const topicId = document.getElementById('topicId').value.trim();
+      if (!topicId) return;
+      socket.emit('typing:start', topicId);
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        socket.emit('typing:stop', topicId);
+      }, 1500);
+    }
+
+    async function sendMessage() {
+      const workspaceId = document.getElementById('workspaceId').value.trim();
+      const topicId = document.getElementById('topicId').value.trim();
+      const token = document.getElementById('accessToken').value.trim();
+      const input = document.getElementById('typeInput');
+      const content = input.value.trim();
+      
+      if (!workspaceId || !topicId || !token || !content) {
+        return alert('Please fill in Access Token, Workspace ID, Topic ID, and Message content');
+      }
+      
+      try {
+        const res = await fetch(`http://localhost:4000/api/workspaces/${workspaceId}/topics/${topicId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ content })
+        });
+        
+        if (res.ok) {
+          input.value = '';
+          socket.emit('typing:stop', topicId);
+        } else {
+          const err = await res.json();
+          alert('Error: ' + (err.message || 'Failed to send message'));
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

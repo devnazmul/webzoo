@@ -1,0 +1,13 @@
+{
+  "name": "webzoo",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
