@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
-import { getSocket } from '@/lib/socket';
-import { Button } from '@/components/ui/button';
-import { SendHorizonal } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import Quill from "quill";
+import "quill/dist/quill.snow.css";
+import { getSocket } from "@/lib/socket";
+import { Button } from "@/components/ui/button";
+import { SendHorizonal } from "lucide-react";
 
 interface SuggestionItem {
   id: string;
@@ -34,9 +34,9 @@ export default function QuillMessageInput({
 
   // Suggestion state
   const [suggestionType, setSuggestionType] = useState<
-    'user' | 'topic' | 'slash' | null
+    "user" | "topic" | "slash" | null
   >(null);
-  const [suggestionQuery, setSuggestionQuery] = useState('');
+  const [suggestionQuery, setSuggestionQuery] = useState("");
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [suggestionPos, setSuggestionPos] = useState({ top: 0, left: 0 });
   const triggerIndex = useRef<number>(0);
@@ -45,14 +45,14 @@ export default function QuillMessageInput({
     if (!editorRef.current || quillRef.current) return;
 
     const quill = new Quill(editorRef.current, {
-      theme: 'snow',
+      theme: "snow",
       placeholder: `Message #${topicName}...`,
       modules: {
         toolbar: [
-          ['bold', 'italic', 'underline', 'strike'],
-          ['code', 'code-block'],
-          [{ list: 'ordered' }, { list: 'bullet' }],
-          ['clean'],
+          ["bold", "italic", "underline", "strike"],
+          ["code", "code-block"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["clean"],
         ],
         keyboard: {
           bindings: {
@@ -60,9 +60,12 @@ export default function QuillMessageInput({
               key: 13,
               shiftKey: false,
               handler: () => {
-                if (suggestionTypeRef.current && suggestionsRef.current.length > 0) {
+                if (
+                  suggestionTypeRef.current &&
+                  suggestionsRef.current.length > 0
+                ) {
                   applySuggestionRef.current?.(
-                    suggestionsRef.current[suggestionIndexRef.current]
+                    suggestionsRef.current[suggestionIndexRef.current],
                   );
                   return false;
                 }
@@ -74,8 +77,8 @@ export default function QuillMessageInput({
               key: 40,
               handler: () => {
                 if (suggestionTypeRef.current) {
-                  setSuggestionIndex((i) =>
-                    (i + 1) % suggestionsRef.current.length
+                  setSuggestionIndex(
+                    (i) => (i + 1) % suggestionsRef.current.length,
                   );
                   return false;
                 }
@@ -86,9 +89,10 @@ export default function QuillMessageInput({
               key: 38,
               handler: () => {
                 if (suggestionTypeRef.current) {
-                  setSuggestionIndex((i) =>
-                    (i + suggestionsRef.current.length - 1) %
-                    suggestionsRef.current.length
+                  setSuggestionIndex(
+                    (i) =>
+                      (i + suggestionsRef.current.length - 1) %
+                      suggestionsRef.current.length,
                   );
                   return false;
                 }
@@ -109,7 +113,7 @@ export default function QuillMessageInput({
 
     quillRef.current = quill;
 
-    quill.on('text-change', () => {
+    quill.on("text-change", () => {
       const text = quill.getText();
       setIsEmpty(text.trim().length === 0);
       handleTypingIndicator();
@@ -125,24 +129,30 @@ export default function QuillMessageInput({
   const suggestionTypeRef = useRef(suggestionType);
   const suggestionsRef = useRef<SuggestionItem[]>([]);
   const suggestionIndexRef = useRef(suggestionIndex);
-  const applySuggestionRef = useRef<((item: SuggestionItem) => void) | null>(null);
+  const applySuggestionRef = useRef<((item: SuggestionItem) => void) | null>(
+    null,
+  );
   const handleSendRef = useRef<(() => void) | null>(null);
 
-  useEffect(() => { suggestionTypeRef.current = suggestionType; }, [suggestionType]);
-  useEffect(() => { suggestionIndexRef.current = suggestionIndex; }, [suggestionIndex]);
+  useEffect(() => {
+    suggestionTypeRef.current = suggestionType;
+  }, [suggestionType]);
+  useEffect(() => {
+    suggestionIndexRef.current = suggestionIndex;
+  }, [suggestionIndex]);
 
   function getSuggestions(): SuggestionItem[] {
-    if (suggestionType === 'user') {
+    if (suggestionType === "user") {
       return users
         .filter((u) =>
-          u.label.toLowerCase().includes(suggestionQuery.toLowerCase())
+          u.label.toLowerCase().includes(suggestionQuery.toLowerCase()),
         )
         .slice(0, 6);
     }
-    if (suggestionType === 'topic') {
+    if (suggestionType === "topic") {
       return topics
         .filter((t) =>
-          t.label.toLowerCase().includes(suggestionQuery.toLowerCase())
+          t.label.toLowerCase().includes(suggestionQuery.toLowerCase()),
         )
         .slice(0, 6);
     }
@@ -150,7 +160,9 @@ export default function QuillMessageInput({
   }
 
   const suggestions = getSuggestions();
-  useEffect(() => { suggestionsRef.current = suggestions; }, [suggestions]);
+  useEffect(() => {
+    suggestionsRef.current = suggestions;
+  }, [suggestions]);
 
   function detectTrigger(quill: Quill) {
     const selection = quill.getSelection();
@@ -163,13 +175,13 @@ export default function QuillMessageInput({
 
     if (atMatch) {
       triggerIndex.current = cursor - atMatch[0].length;
-      setSuggestionType('user');
+      setSuggestionType("user");
       setSuggestionQuery(atMatch[1]);
       setSuggestionIndex(0);
       updateSuggestionPos(quill, triggerIndex.current);
     } else if (hashMatch) {
       triggerIndex.current = cursor - hashMatch[0].length;
-      setSuggestionType('topic');
+      setSuggestionType("topic");
       setSuggestionQuery(hashMatch[1]);
       setSuggestionIndex(0);
       updateSuggestionPos(quill, triggerIndex.current);
@@ -195,21 +207,15 @@ export default function QuillMessageInput({
     if (!selection) return;
     const cursor = selection.index;
     const deleteLength = cursor - triggerIndex.current;
-    const prefix = suggestionType === 'user' ? '@' : '#';
+    const prefix = suggestionType === "user" ? "@" : "#";
     const insertText = `${prefix}${item.label} `;
     quill.deleteText(triggerIndex.current, deleteLength);
     quill.insertText(triggerIndex.current, insertText, {
       bold: false,
       color:
-        suggestionType === 'user'
-          ? 'hsl(213, 70%, 45%)'
-          : 'hsl(142, 50%, 35%)',
+        suggestionType === "user" ? "hsl(213, 70%, 45%)" : "hsl(142, 50%, 35%)",
     });
-    quill.formatText(
-      triggerIndex.current,
-      insertText.length,
-      { color: false }
-    );
+    quill.formatText(triggerIndex.current, insertText.length, { color: false });
     quill.setSelection(triggerIndex.current + insertText.length, 0);
     setSuggestionType(null);
   }
@@ -220,12 +226,12 @@ export default function QuillMessageInput({
     const socket = getSocket();
     if (!isTyping.current) {
       isTyping.current = true;
-      socket.emit('typing:start', topicId);
+      socket.emit("typing:start", topicId);
     }
     if (typingTimer.current) clearTimeout(typingTimer.current);
     typingTimer.current = setTimeout(() => {
       isTyping.current = false;
-      socket.emit('typing:stop', topicId);
+      socket.emit("typing:stop", topicId);
     }, 1500);
   }
 
@@ -239,7 +245,7 @@ export default function QuillMessageInput({
     const socket = getSocket();
     if (typingTimer.current) clearTimeout(typingTimer.current);
     isTyping.current = false;
-    socket.emit('typing:stop', topicId);
+    socket.emit("typing:stop", topicId);
     try {
       await onSend(html);
       quill.setContents([]);
@@ -265,7 +271,7 @@ export default function QuillMessageInput({
           }}
         >
           <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border">
-            {suggestionType === 'user' ? 'Members' : 'Topics'}
+            {suggestionType === "user" ? "Members" : "Topics"}
           </div>
           {suggestions.map((item, index) => (
             <button
@@ -277,12 +283,12 @@ export default function QuillMessageInput({
               }}
               className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors ${
                 index === suggestionIndex
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-popover-foreground hover:bg-accent/50'
+                  ? "bg-accent text-accent-foreground"
+                  : "text-popover-foreground hover:bg-accent/50"
               }`}
             >
               <span className="text-muted-foreground">
-                {suggestionType === 'user' ? '@' : '#'}
+                {suggestionType === "user" ? "@" : "#"}
               </span>
               {item.label}
             </button>

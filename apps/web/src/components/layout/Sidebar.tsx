@@ -1,11 +1,11 @@
-import { useAuthStore } from '@/store/auth.store';
-import { useWorkspaceStore } from '@/store/workspace.store';
-import { useTopicStore } from '@/store/topic.store';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+import { useAuthStore } from "@/store/auth.store";
+import { useWorkspaceStore } from "@/store/workspace.store";
+import { useTopicStore } from "@/store/topic.store";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import {
   Hash,
   Plus,
@@ -13,17 +13,17 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useNavigate } from 'react-router-dom';
-import { disconnectSocket } from '@/lib/socket';
-import ThemeToggle from '@/components/ui/ThemeToggle';
+} from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
+import { disconnectSocket } from "@/lib/socket";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 interface SidebarProps {
   onCreateTopic: () => void;
@@ -49,14 +49,14 @@ export default function Sidebar({
   function handleLogout() {
     disconnectSocket();
     clearAuth();
-    navigate('/login');
+    navigate("/login");
   }
 
   function getInitials(name: string) {
     return name
-      .split(' ')
+      .split(" ")
       .map((n) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   }
@@ -66,17 +66,17 @@ export default function Sidebar({
       {/* Workspace switcher strip */}
       <div
         className="w-14 flex flex-col items-center py-3 gap-2"
-        style={{ background: 'hsl(var(--sidebar))' }}
+        style={{ background: "hsl(var(--sidebar))" }}
       >
         {workspaces.map((ws) => (
           <button
             key={ws.id}
             onClick={() => setActiveWorkspace(ws)}
             className={cn(
-              'w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition-all',
+              "w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition-all",
               activeWorkspace?.id === ws.id
-                ? 'bg-primary text-primary-foreground rounded-xl'
-                : 'bg-secondary text-secondary-foreground hover:rounded-xl'
+                ? "bg-primary text-primary-foreground rounded-xl"
+                : "bg-secondary text-secondary-foreground hover:rounded-xl",
             )}
             title={ws.name}
           >
@@ -97,14 +97,14 @@ export default function Sidebar({
       {/* Channel/topic list */}
       <div
         className="flex-1 flex flex-col"
-        style={{ background: 'hsl(var(--sidebar))' }}
+        style={{ background: "hsl(var(--sidebar))" }}
       >
         {/* Workspace header */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 px-3 py-3 hover:bg-accent transition-colors w-full">
               <span className="font-semibold text-sm truncate flex-1 text-left">
-                {activeWorkspace?.name ?? 'Select workspace'}
+                {activeWorkspace?.name ?? "Select workspace"}
               </span>
               <ChevronDown size={14} className="text-muted-foreground" />
             </button>
@@ -140,10 +140,10 @@ export default function Sidebar({
                 key={topic.id}
                 onClick={() => setActiveTopic(topic)}
                 className={cn(
-                  'flex items-center gap-2 w-full px-2 py-1 rounded text-sm transition-colors',
+                  "flex items-center gap-2 w-full px-2 py-1 rounded text-sm transition-colors",
                   activeTopic?.id === topic.id
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
                 )}
               >
                 <Hash size={14} />
@@ -162,9 +162,7 @@ export default function Sidebar({
                 <Plus size={14} />
               </button>
             </div>
-            <p className="px-2 text-xs text-muted-foreground">
-              Coming soon
-            </p>
+            <p className="px-2 text-xs text-muted-foreground">Coming soon</p>
           </div>
         </ScrollArea>
 
@@ -177,7 +175,7 @@ export default function Sidebar({
               <button className="flex items-center gap-2 hover:bg-accent transition-colors rounded-md px-2 py-1 flex-1 min-w-0">
                 <Avatar className="w-7 h-7 flex-shrink-0">
                   <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                    {user ? getInitials(user.name) : '?'}
+                    {user ? getInitials(user.name) : "?"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium truncate flex-1 text-left">
