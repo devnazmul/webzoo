@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useTopicStore } from "@/store/topic.store";
-import { connectSocket } from "@/lib/socket";
+import { connectSocket, getSocket } from "@/lib/socket";
 import api from "@/lib/api";
 import Sidebar from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash } from "lucide-react";
+import MessageFeed from "@/components/chat/MessageFeed";
 
 export default function AppShell() {
   const user = useAuthStore((s) => s.user);
@@ -24,13 +24,39 @@ export default function AppShell() {
   const [topicName, setTopicName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [modalError, setModalError] = useState("");
+  const [memberNames, setMemberNames] = useState<Record<string, string>>({});
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [workspaceMembers, setWorkspaceMembers] = useState<
+    { id: string; label: string }[]
+  >([]);
+  const [allTopics, setAllTopics] = useState<
+    { id: string; label: string }[]
+  >([]);
 
   async function loadWorkspaces() {
     try {
       const res = await api.get("/workspaces");
       const data = res.data.data.workspaces;
       setWorkspaces(data);
-      if (data.length > 0) setActiveWorkspace(data[0]);
+      if (data.length > 0) {
+        setActiveWorkspace(data[0]);
+        // Build member names map
+        const members = data[0]?.members ?? [];
+        const names: Record<string, string> = {};
+        members.forEach((m: any) => {
+          names[m.user.id] = m.user.name;
+        });
+        setMemberNames(names);
+      }
+      if (data.length > 0) {
+        const members = data[0]?.members ?? [];
+        setWorkspaceMembers(
+          members.map((m: any) => ({
+            id: m.user.id,
+            label: m.user.name,
+          }))
+        );
+      }
     } catch {}
   }
 
@@ -40,6 +66,7 @@ export default function AppShell() {
       const data = res.data.data.topics;
       setTopics(data);
       if (data.length > 0) setActiveTopic(data[0]);
+      setAllTopics(data.map((t: any) => ({ id: t.id, label: t.name })));
     } catch {}
   }
 
@@ -56,6 +83,23 @@ export default function AppShell() {
     if (activeWorkspace) {
       loadTopics(activeWorkspace.id);
     }
+  }, [activeWorkspace]);
+
+  useEffect(() => {
+    if (!activeWorkspace) return;
+    const socket = getSocket();
+
+    function onPresenceUpdate(data: {
+      topicId: string;
+      onlineUsers: string[];
+    }) {
+      setOnlineUsers(data.onlineUsers);
+    }
+
+    socket.on("presence:update", onPresenceUpdate);
+    return () => {
+      socket.off("presence:update", onPresenceUpdate);
+    };
   }, [activeWorkspace]);
 
   async function handleCreateWorkspace(e: React.FormEvent) {
@@ -132,24 +176,16 @@ export default function AppShell() {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {activeTopic ? (
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-            <Hash size={18} className="text-muted-foreground" />
-            <span className="font-semibold">{activeTopic.name}</span>
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            {workspaces.length === 0
-              ? "Create a workspace to get started"
-              : "Select a topic to start messaging"}
-          </div>
-        )}
-
+      <div className="flex-1 flex flex-col min-h-0">
         {activeTopic && (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Message feed coming next
-          </div>
+          <MessageFeed
+            topic={activeTopic}
+            workspaceId={activeWorkspace!.id}
+            memberNames={memberNames}
+            onlineUsers={onlineUsers}
+            workspaceMembers={workspaceMembers}
+            allTopics={allTopics}
+          />
         )}
       </div>
 

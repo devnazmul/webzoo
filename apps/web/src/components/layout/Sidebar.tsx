@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { disconnectSocket } from '@/lib/socket';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface SidebarProps {
   onCreateTopic: () => void;
@@ -170,34 +171,37 @@ export default function Sidebar({
         <Separator />
 
         {/* User footer */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-3 py-3 hover:bg-accent transition-colors w-full">
-              <Avatar className="w-7 h-7">
-                <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                  {user ? getInitials(user.name) : '?'}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium truncate flex-1 text-left">
-                {user?.name}
-              </span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem>
-              <Settings size={14} className="mr-2" />
-              Profile settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="text-destructive focus:text-destructive"
-            >
-              <LogOut size={14} className="mr-2" />
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center px-3 py-2 gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 hover:bg-accent transition-colors rounded-md px-2 py-1 flex-1 min-w-0">
+                <Avatar className="w-7 h-7 flex-shrink-0">
+                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                    {user ? getInitials(user.name) : '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium truncate flex-1 text-left">
+                  {user?.name}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem>
+                <Settings size={14} className="mr-2" />
+                Profile settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut size={14} className="mr-2" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );
