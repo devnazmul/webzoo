@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useTopicStore } from "@/store/topic.store";
 import { connectSocket, getSocket } from "@/lib/socket";
 import api from "@/lib/api";
 import Sidebar from "@/components/layout/Sidebar";
+import SidebarNarrow from "@/components/layout/SidebarNarrow";
+import TopBar from "@/components/layout/TopBar";
+import RightPanel from "@/components/layout/RightPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +23,7 @@ export default function AppShell() {
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
   const [showCreateTopic, setShowCreateTopic] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [showRightPanel, setShowRightPanel] = useState(false);
   const [wsName, setWsName] = useState("");
   const [topicName, setTopicName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -33,23 +37,20 @@ export default function AppShell() {
     { id: string; label: string }[]
   >([]);
 
-  async function loadWorkspaces() {
+  // ... (keep loadWorkspaces, loadTopics, useEffects unchanged to preserve logic)
+  const loadWorkspaces = useCallback(async () => {
     try {
       const res = await api.get("/workspaces");
       const data = res.data.data.workspaces;
       setWorkspaces(data);
       if (data.length > 0) {
         setActiveWorkspace(data[0]);
-        // Build member names map
         const members = data[0]?.members ?? [];
         const names: Record<string, string> = {};
         members.forEach((m: any) => {
           names[m.user.id] = m.user.name;
         });
         setMemberNames(names);
-      }
-      if (data.length > 0) {
-        const members = data[0]?.members ?? [];
         setWorkspaceMembers(
           members.map((m: any) => ({
             id: m.user.id,
@@ -58,9 +59,9 @@ export default function AppShell() {
         );
       }
     } catch {}
-  }
+  }, [setWorkspaces, setActiveWorkspace]);
 
-  async function loadTopics(workspaceId: string) {
+  const loadTopics = useCallback(async (workspaceId: string) => {
     try {
       const res = await api.get(`/workspaces/${workspaceId}/topics`);
       const data = res.data.data.topics;
@@ -68,34 +69,30 @@ export default function AppShell() {
       if (data.length > 0) setActiveTopic(data[0]);
       setAllTopics(data.map((t: any) => ({ id: t.id, label: t.name })));
     } catch {}
-  }
+  }, [setTopics, setActiveTopic]);
 
-  // Initialize socket and load workspaces
   useEffect(() => {
     if (user) {
       connectSocket(user.id);
       loadWorkspaces();
     }
-  }, [user]);
+  }, [user, loadWorkspaces]);
 
-  // Load topics when active workspace changes
   useEffect(() => {
     if (activeWorkspace) {
       loadTopics(activeWorkspace.id);
     }
-  }, [activeWorkspace]);
+  }, [activeWorkspace, loadTopics]);
 
   useEffect(() => {
     if (!activeWorkspace) return;
     const socket = getSocket();
-
     function onPresenceUpdate(data: {
       topicId: string;
       onlineUsers: string[];
     }) {
       setOnlineUsers(data.onlineUsers);
     }
-
     socket.on("presence:update", onPresenceUpdate);
     return () => {
       socket.off("presence:update", onPresenceUpdate);
@@ -156,38 +153,58 @@ export default function AppShell() {
   const activeTopic = useTopicStore((s) => s.activeTopic);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
-      <div className="w-60 flex-shrink-0 border-r border-border">
-        <Sidebar
-          onCreateTopic={() => {
-            setModalError("");
-            setShowCreateTopic(true);
-          }}
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
+      {/* Top Header */}
+      <TopBar />
+
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Workspace Switcher */}
+        <SidebarNarrow 
           onCreateWorkspace={() => {
             setModalError("");
             setShowCreateWorkspace(true);
-          }}
-          onInviteMember={() => {
-            setModalError("");
-            setShowInvite(true);
-          }}
+          }} 
         />
-      </div>
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {activeTopic && (
-          <MessageFeed
-            topic={activeTopic}
-            workspaceId={activeWorkspace!.id}
-            memberNames={memberNames}
-            onlineUsers={onlineUsers}
-            workspaceMembers={workspaceMembers}
-            allTopics={allTopics}
+        {/* Navigation Sidebar */}
+        <div className="w-64 flex-shrink-0 flex">
+          <Sidebar
+            onCreateTopic={() => {
+              setModalError("");
+              setShowCreateTopic(true);
+            }}
+            onInviteMember={() => {
+              setModalError("");
+              setShowInvite(true);
+            }}
+          />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col min-w-0 bg-white shadow-[-1px_0_0_rgba(0,0,0,0.1)] z-10">
+          {activeTopic && (
+            <MessageFeed
+              topic={activeTopic}
+              workspaceId={activeWorkspace!.id}
+              memberNames={memberNames}
+              onlineUsers={onlineUsers}
+              workspaceMembers={workspaceMembers}
+              allTopics={allTopics}
+              onToggleDetails={() => setShowRightPanel(!showRightPanel)}
+            />
+          )}
+        </div>
+
+        {/* Right Panel */}
+        {showRightPanel && (
+          <RightPanel 
+            onClose={() => setShowRightPanel(false)}
+            onlineCount={onlineUsers.length}
           />
         )}
       </div>
+
+      {/* Modals ... */}
 
       {/* Modals */}
       {(showCreateWorkspace || showCreateTopic || showInvite) && (

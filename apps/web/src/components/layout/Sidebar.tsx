@@ -1,206 +1,241 @@
-import { useAuthStore } from "@/store/auth.store";
+import { useState } from "react";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useTopicStore } from "@/store/topic.store";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
   Hash,
   Plus,
+  MessageSquareText,
+  AtSign,
+  FileText,
+  History,
+  MoreVertical,
   ChevronDown,
-  MessageSquare,
-  Settings,
-  LogOut,
+  SquarePen,
+  Lock,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
-import { disconnectSocket } from "@/lib/socket";
-import ThemeToggle from "@/components/ui/ThemeToggle";
 
 interface SidebarProps {
   onCreateTopic: () => void;
-  onCreateWorkspace: () => void;
   onInviteMember: () => void;
 }
 
+interface NavItemProps {
+  icon: React.ElementType;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+  badge?: string;
+}
+
+const NavItem = ({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+  badge,
+}: NavItemProps) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "flex items-center cursor-pointer gap-2 w-full px-4 py-1 text-[13px] transition-colors group relative",
+      active
+        ? "bg-slack-active text-sidebar-text font-medium"
+        : "text-sidebar-dim hover:bg-sidebar-hover",
+    )}
+  >
+    <Icon
+      size={16}
+      className={active ? "text-sidebar-text" : "text-sidebar-dim"}
+    />
+    <span className="truncate flex-1 text-left">{label}</span>
+    {badge && (
+      <span className="bg-slack-unread text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+        {badge}
+      </span>
+    )}
+  </button>
+);
+
+interface SectionHeaderProps {
+  label: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onAdd?: () => void;
+}
+
+const SectionHeader = ({
+  label,
+  isOpen,
+  onToggle,
+  onAdd,
+}: SectionHeaderProps) => (
+  <div className="flex items-center justify-between px-4 mt-5 mb-1 group text-sidebar-dim">
+    <button
+      onClick={onToggle}
+      className="flex items-center gap-1.5 cursor-pointer transition-colors"
+    >
+      <ChevronDown
+        size={14}
+        className={cn(
+          "opacity-70 transition-transform duration-200",
+          !isOpen && "-rotate-90",
+        )}
+      />
+      <span className="text-[11px] font-semibold uppercase tracking-tight">
+        {label}
+      </span>
+    </button>
+    {onAdd && (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onAdd();
+        }}
+        className="opacity-0 cursor-pointer group-hover:opacity-100 transition-opacity hover:text-sidebar-text"
+      >
+        <Plus size={16} />
+      </button>
+    )}
+  </div>
+);
+
 export default function Sidebar({
   onCreateTopic,
-  onCreateWorkspace,
   onInviteMember,
 }: SidebarProps) {
-  const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
-  const workspaces = useWorkspaceStore((s) => s.workspaces);
   const activeWorkspace = useWorkspaceStore((s) => s.activeWorkspace);
-  const setActiveWorkspace = useWorkspaceStore((s) => s.setActiveWorkspace);
   const topics = useTopicStore((s) => s.topics);
   const activeTopic = useTopicStore((s) => s.activeTopic);
   const setActiveTopic = useTopicStore((s) => s.setActiveTopic);
 
-  function handleLogout() {
-    disconnectSocket();
-    clearAuth();
-    navigate("/login");
-  }
-
-  function getInitials(name: string) {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
+  const [topicsExpanded, setTopicsExpanded] = useState(true);
+  const [dmsExpanded, setDmsExpanded] = useState(true);
 
   return (
-    <div className="flex h-full">
-      {/* Workspace switcher strip */}
-      <div
-        className="w-14 flex flex-col items-center py-3 gap-2"
-        style={{ background: "hsl(var(--sidebar))" }}
-      >
-        {workspaces.map((ws) => (
-          <button
-            key={ws.id}
-            onClick={() => setActiveWorkspace(ws)}
-            className={cn(
-              "w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition-all",
-              activeWorkspace?.id === ws.id
-                ? "bg-primary text-primary-foreground rounded-xl"
-                : "bg-secondary text-secondary-foreground hover:rounded-xl",
-            )}
-            title={ws.name}
-          >
-            {getInitials(ws.name)}
-          </button>
-        ))}
-        <button
-          onClick={onCreateWorkspace}
-          className="w-9 h-9 rounded-lg bg-secondary hover:rounded-xl transition-all flex items-center justify-center text-muted-foreground hover:text-foreground"
-          title="Create workspace"
-        >
-          <Plus size={18} />
-        </button>
-      </div>
-
-      <Separator orientation="vertical" />
-
-      {/* Channel/topic list */}
-      <div
-        className="flex-1 flex flex-col"
-        style={{ background: "hsl(var(--sidebar))" }}
-      >
-        {/* Workspace header */}
+    <div
+      className="flex-1 flex flex-col bg-slack-wide border-r border-sidebar-border"
+      style={{
+        backgroundColor: "var(--slack-wide)",
+      }}
+    >
+      {/* Workspace Header */}
+      <div className="h-12 border-b border-sidebar-border flex items-center px-4 justify-between group">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-3 py-3 hover:bg-accent transition-colors w-full">
-              <span className="font-semibold text-sm truncate flex-1 text-left">
-                {activeWorkspace?.name ?? "Select workspace"}
+            <button className="flex items-center gap-1.5 hover:bg-sidebar-hover rounded px-1.5 -ml-1 transition-colors min-w-0 pointer-events-auto">
+              <span className="font-bold text-[15px] truncate text-shadow-slack-top text-sidebar-text">
+                {activeWorkspace?.name ?? "Webzoo"}
               </span>
-              <ChevronDown size={14} className="text-muted-foreground" />
+              <ChevronDown size={14} className="text-sidebar-dim" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuContent align="start" className="w-64">
             <DropdownMenuItem onClick={onInviteMember}>
-              Invite people
+              Invite people to {activeWorkspace?.name}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onCreateTopic}>
-              Create topic
+              Create a channel
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <button className="bg-white hover:bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center text-slack-wide shadow-sm transition-all active:scale-95 cursor-pointer">
+          <SquarePen size={16} />
+        </button>
+      </div>
 
-        <Separator />
+      <ScrollArea className="flex-1 py-3">
+        {/* Top items */}
+        <div className="space-y-1">
+          <NavItem icon={History} label="All unreads" badge="2" />
+          <NavItem icon={MessageSquareText} label="Threads" />
+          <NavItem icon={AtSign} label="Mentions & reactions" />
+          <NavItem icon={FileText} label="Drafts" />
+          <NavItem icon={MoreVertical} label="More" />
+        </div>
 
-        <ScrollArea className="flex-1 px-2 py-2">
-          {/* Topics */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between px-2 mb-1">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Topics
-              </span>
-              <button
-                onClick={onCreateTopic}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
+        {/* Topics */}
+        <SectionHeader
+          label="Topics"
+          isOpen={topicsExpanded}
+          onToggle={() => setTopicsExpanded(!topicsExpanded)}
+          onAdd={onCreateTopic}
+        />
+        {topicsExpanded && (
+          <div className="space-y-1 mb-4">
             {topics.map((topic) => (
               <button
                 key={topic.id}
                 onClick={() => setActiveTopic(topic)}
                 className={cn(
-                  "flex items-center gap-2 w-full px-2 py-1 rounded text-sm transition-colors",
+                  "flex items-center cursor-pointer gap-2 w-full px-4 py-1 text-[13px] transition-colors group relative",
                   activeTopic?.id === topic.id
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                    ? "bg-slack-top text-sidebar-text font-medium"
+                    : "text-sidebar-dim",
                 )}
               >
-                <Hash size={14} />
-                <span className="truncate">{topic.name}</span>
+                {topic.private ? (
+                  <Lock
+                    size={16}
+                    className={
+                      activeTopic?.id === topic.id
+                        ? "text-sidebar-text"
+                        : "text-sidebar-dim"
+                    }
+                  />
+                ) : (
+                  <Hash
+                    size={16}
+                    className={
+                      activeTopic?.id === topic.id
+                        ? "text-sidebar-text"
+                        : "text-sidebar-dim"
+                    }
+                  />
+                )}
+                <span className="truncate flex-1 text-left">{topic.name}</span>
               </button>
             ))}
+            <button
+              onClick={onCreateTopic}
+              className="flex items-center cursor-pointer gap-2 w-full px-4 py-1 text-[13px] text-sidebar-dim hover:bg-sidebar-hover transition-colors"
+            >
+              <div className="bg-sidebar-hover rounded p-0.5">
+                <Plus size={12} />
+              </div>
+              <span>Add topic</span>
+            </button>
           </div>
+        )}
 
-          {/* Direct Messages placeholder */}
-          <div>
-            <div className="flex items-center justify-between px-2 mb-1">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Direct Messages
-              </span>
-              <button className="text-muted-foreground hover:text-foreground transition-colors">
-                <Plus size={14} />
-              </button>
+        {/* Direct Messages Placeholder */}
+        <SectionHeader
+          label="Direct Messages"
+          isOpen={dmsExpanded}
+          onToggle={() => setDmsExpanded(!dmsExpanded)}
+          onAdd={() => {}}
+        />
+        {dmsExpanded && (
+          <div className="px-4 py-2 space-y-2">
+            <div className="flex items-center gap-2 text-sidebar-dim cursor-pointer transition-colors group">
+              <div className="w-5 h-5 rounded bg-sidebar-hover flex items-center justify-center text-[10px] group-hover:bg-sidebar-border transition-colors text-sidebar-text">
+                UN
+              </div>
+              <span className="text-[13px]">User Name</span>
             </div>
-            <p className="px-2 text-xs text-muted-foreground">Coming soon</p>
+            <p className="text-[11px] text-sidebar-dim/60 ml-7">
+              Add teammates to chat!
+            </p>
           </div>
-        </ScrollArea>
-
-        <Separator />
-
-        {/* User footer */}
-        <div className="flex items-center px-3 py-2 gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 hover:bg-accent transition-colors rounded-md px-2 py-1 flex-1 min-w-0">
-                <Avatar className="w-7 h-7 flex-shrink-0">
-                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                    {user ? getInitials(user.name) : "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium truncate flex-1 text-left">
-                  {user?.name}
-                </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem>
-                <Settings size={14} className="mr-2" />
-                Profile settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="text-destructive focus:text-destructive"
-              >
-                <LogOut size={14} className="mr-2" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <ThemeToggle />
-        </div>
-      </div>
+        )}
+      </ScrollArea>
     </div>
   );
 }

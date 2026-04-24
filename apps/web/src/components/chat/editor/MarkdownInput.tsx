@@ -3,12 +3,13 @@ import { getSocket } from '@/lib/socket';
 import { Button } from '@/components/ui/button';
 import {
   Bold, Italic, Strikethrough, Code,
-  CodeSquare, List, ListOrdered, SendHorizonal,
+  SendHorizonal,
   Smile, Eye, EyeOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import MessageRenderer from '../MessageRenderer';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SuggestionItem {
   id: string;
@@ -171,7 +172,7 @@ export default function MarkdownInput({
       }
       if (e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault();
-        applySuggestion(suggestions[suggestionIndex] as any);
+        applySuggestion(suggestions[suggestionIndex]);
         return;
       }
       if (e.key === 'Escape') {
@@ -376,148 +377,141 @@ export default function MarkdownInput({
   );
 
   return (
-    <div className="px-4 py-3 border-t border-border">
-      {/* Suggestion dropdown — rendered above the input */}
+    <div className="relative">
+      {/* Suggestion dropdown */}
       {suggestionType && suggestions.length > 0 && (
-        <div className="mb-2 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+        <div className="absolute bottom-full left-0 mb-2 w-72 bg-white border border-slack-border rounded-lg shadow-xl overflow-hidden z-50">
           {suggestionType === 'slash' && (
-            <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border">
+            <div className="px-3 py-1.5 text-[11px] font-bold text-slack-dim border-b border-slack-border uppercase tracking-wider bg-slack-wide">
               Commands
             </div>
           )}
-          {(suggestions as any[]).map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => applySuggestion(item)}
-              className={cn(
-                'flex items-center gap-3 w-full px-3 py-2 text-sm text-left transition-colors',
-                index === suggestionIndex
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-popover-foreground hover:bg-accent/50'
-              )}
-            >
-              {suggestionType === 'slash' ? (
-                <>
-                  <code className="text-xs bg-secondary px-1.5 py-0.5 rounded font-mono">
-                    {(item as SlashCommand).syntax.split('\n')[0]}
-                  </code>
-                  <div>
-                    <div className="font-medium">{item.label}</div>
-                    <div className="text-xs text-muted-foreground">
+          <ScrollArea className="max-h-60">
+            {suggestions.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => applySuggestion(item)}
+                className={cn(
+                  'flex items-center gap-3 w-full px-3 py-2 text-[13px] text-left transition-colors',
+                  index === suggestionIndex
+                    ? 'bg-slack-active text-white'
+                    : 'text-main-text hover:bg-[#F8F8F8]'
+                )}
+              >
+                {suggestionType === 'slash' ? (
+                  <div className="flex-1">
+                    <div className="font-bold flex items-center justify-between">
+                      <span>{item.label}</span>
+                      <span className="text-[10px] opacity-70">{(item as SlashCommand).syntax.split('\n')[0]}</span>
+                    </div>
+                    <div className={cn("text-[11px]", index === suggestionIndex ? "text-white/70" : "text-main-dim")}>
                       {(item as SlashCommand).description}
                     </div>
                   </div>
-                </>
-              ) : (
-                <span>
-                  {suggestionType === 'user' ? '@' : '#'}
-                  {item.label}
-                </span>
-              )}
-            </button>
-          ))}
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded bg-[#F8F8F8] flex items-center justify-center text-[10px] font-black">
+                      {(item as SuggestionItem).label[0].toUpperCase()}
+                    </div>
+                    <span className="font-bold">
+                      {suggestionType === 'user' ? '@' : '#'}
+                      {(item as SuggestionItem).label}
+                    </span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </ScrollArea>
         </div>
       )}
 
       {/* Editor box */}
-      <div className="border border-border rounded-lg bg-secondary">
-        {/* Toolbar */}
-        <div className="flex items-center gap-0.5 px-2 pt-2 pb-1 border-b border-border/50 flex-wrap">
-          {toolbarBtn(
-            () => insertSyntax('', '**'),
-            <Bold size={14} />, 'Bold (**text**)'
+      <div className={cn(
+        "border border-slack-border rounded-lg bg-white overflow-hidden transition-all",
+        content.trim() ? "border-gray-400" : ""
+      )}>
+        {/* Write mode / Preview mode container */}
+        <div className="p-1">
+          {!previewMode ? (
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder={`Message #${topicName}`}
+              className="w-full bg-transparent text-[15px] resize-none outline-none text-slack-text placeholder:text-slack-dim px-3 py-2 min-h-[44px] max-h-80"
+              rows={1}
+            />
+          ) : (
+            <div
+              className="px-3 py-2 min-h-[44px] max-h-80 overflow-y-auto cursor-text text-[15px] text-slack-text"
+              onClick={() => setPreviewMode(false)}
+            >
+              {renderInputPreview()}
+            </div>
           )}
-          {toolbarBtn(
-            () => insertSyntax('', '_'),
-            <Italic size={14} />, 'Italic (_text_)'
-          )}
-          {toolbarBtn(
-            () => insertSyntax('', '~~'),
-            <Strikethrough size={14} />, 'Strikethrough'
-          )}
-          <div className="w-px h-4 bg-border mx-1" />
-          {toolbarBtn(
-            () => insertSyntax('', '`'),
-            <Code size={14} />, 'Inline code'
-          )}
-          {toolbarBtn(
-            () => insertSyntax('```\n\n```'),
-            <CodeSquare size={14} />, 'Code block'
-          )}
-          <div className="w-px h-4 bg-border mx-1" />
-          {toolbarBtn(
-            () => insertSyntax('- '),
-            <List size={14} />, 'Bullet list'
-          )}
-          {toolbarBtn(
-            () => insertSyntax('1. '),
-            <ListOrdered size={14} />, 'Numbered list'
-          )}
-          <div className="w-px h-4 bg-border mx-1" />
-          <button
-            ref={emojiButtonRef}
-            type="button"
-            onClick={handleEmojiButtonClick}
-            title="Emoji"
-            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-          >
-            <Smile size={14} />
-          </button>
-          <div className="w-px h-4 bg-border mx-1" />
-          {/* Preview toggle */}
-          {toolbarBtn(
-            () => setPreviewMode((v) => !v),
-            previewMode ? <EyeOff size={14} /> : <Eye size={14} />,
-            previewMode ? 'Back to editing' : 'Preview',
-            previewMode
-          )}
-          <span className="text-xs text-muted-foreground ml-1 hidden sm:block">
-            @ mention · # topic · / commands
-          </span>
         </div>
 
-        {/* Write mode */}
-        {!previewMode && (
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder={`Message #${topicName}... (Markdown supported)`}
-            className="w-full bg-transparent text-sm resize-none outline-none text-foreground placeholder:text-muted-foreground px-3 py-2 min-h-[40px] max-h-40"
-            rows={1}
-          />
-        )}
-
-        {/* Preview mode */}
-        {previewMode && (
-          <div
-            className="px-3 py-2 min-h-[40px] max-h-40 overflow-y-auto cursor-text"
-            onClick={() => setPreviewMode(false)}
-          >
-            {renderInputPreview()}
+        {/* Toolbar & Footer Footer */}
+        <div className="flex items-center justify-between px-2 pb-1.5 pt-0.5 bg-gray-50/50">
+          <div className="flex items-center gap-0.5">
+            {toolbarBtn(
+              () => insertSyntax('', '**'),
+              <Bold size={15} />, 'Bold'
+            )}
+            {toolbarBtn(
+              () => insertSyntax('', '_'),
+              <Italic size={15} />, 'Italic'
+            )}
+            {toolbarBtn(
+              () => insertSyntax('', '~~'),
+              <Strikethrough size={15} />, 'Strike'
+            )}
+            <div className="w-px h-4 bg-slack-border mx-1" />
+            <button
+              ref={emojiButtonRef}
+              type="button"
+              onClick={handleEmojiButtonClick}
+              title="Emoji"
+              className="p-1.5 rounded text-slack-dim hover:text-slack-text hover:bg-slack-hover transition-colors"
+            >
+              <Smile size={16} />
+            </button>
+            {toolbarBtn(
+              () => insertSyntax('', '`'),
+              <Code size={15} />, 'Code'
+            )}
+            <div className="w-px h-4 bg-slack-border mx-1" />
+            {toolbarBtn(
+              () => setPreviewMode((v) => !v),
+              previewMode ? <EyeOff size={15} /> : <Eye size={15} />,
+              'Preview',
+              previewMode
+            )}
           </div>
-        )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-3 pb-2 pt-1">
-          <p className="text-xs text-muted-foreground">
-            Enter to send · Shift+Enter for new line / next list item
-          </p>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            disabled={!content.trim() || sending}
-            onClick={handleSend}
-            className="h-7 w-7"
-          >
-            <SendHorizonal size={16} />
-          </Button>
+          <div className="flex items-center gap-2">
+             <span className="text-[10px] text-slack-dim font-medium hidden md:block opacity-50">
+                Markdown Supported
+              </span>
+             <Button
+                type="button"
+                size="icon"
+                disabled={!content.trim() || sending}
+                onClick={handleSend}
+                className={cn(
+                  "h-7 w-7 rounded border shadow-sm transition-all active:scale-95",
+                  content.trim() 
+                    ? "bg-[#007a5a] hover:bg-[#005c44] border-transparent text-white" 
+                    : "bg-white text-slack-dim border-slack-border hover:bg-gray-100"
+                )}
+              >
+                <SendHorizonal size={14} className={sending ? "animate-pulse" : ""} />
+              </Button>
+          </div>
         </div>
       </div>
-
       {/* Emoji picker — fixed position */}
       {showEmoji && (
         <div

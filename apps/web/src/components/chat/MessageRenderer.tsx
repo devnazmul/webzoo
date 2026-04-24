@@ -113,7 +113,6 @@ export default function MessageRenderer({ content }: Props) {
         ol({ children }) {
           return (
             <ol className="list-decimal pl-4 my-1 space-y-0.5 text-sm">
-              {ol_item => <li className="text-foreground/90 leading-relaxed">{ol_item}</li>}
               {children}
             </ol>
           );
