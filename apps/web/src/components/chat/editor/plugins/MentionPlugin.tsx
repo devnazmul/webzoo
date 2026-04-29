@@ -1,0 +1,205 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import {
+  $getSelection,
+  $isRangeSelection,
+  $isTextNode,
+  COMMAND_PRIORITY_HIGH,
+  KEY_ARROW_DOWN_COMMAND,
+  KEY_ARROW_UP_COMMAND,
+  KEY_ENTER_COMMAND,
+  KEY_ESCAPE_COMMAND,
+  KEY_TAB_COMMAND,
+  TextNode,
+} from 'lexical';
+import { $createMentionNode } from '../nodes/MentionNode';
+import SuggestionDropdown, { SuggestionItem } from '../ui/SuggestionDropdown';
+import { MentionSuggestion } from '../utils/schema';
+import { User, Hash } from 'lucide-react';
+
+interface Props {
+  onSearch: (query: string, type: 'user' | 'topic') => Promise<MentionSuggestion[]>;
+}
+
+const TRIGGER_CHAR = '@';
+const TRIGGER_REGEX = /@([a-zA-Z0-9 ]*)$/;
+
+export default function MentionPlugin({ onSearch }: Props) {
+  const [editor] = useLexicalComposerContext();
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const triggerOffset = useRef<number>(0);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    setSuggestions([]);
+    setSelectedIndex(0);
+    setAnchorRect(null);
+  }, []);
+
+  const getAnchorRect = useCallback((): DOMRect | null => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+    const range = selection.getRangeAt(0);
+    return range.getBoundingClientRect();
+  }, []);
+
+  // Watch text changes for @ trigger
+  useEffect(() => {
+    return editor.registerNodeTransform(TextNode, (node) => {
+      const text = node.getTextContent();
+      const match = TRIGGER_REGEX.exec(text);
+      if (match) {
+        const q = match[1];
+        setQuery(q);
+        setIsOpen(true);
+        setSelectedIndex(0);
+        triggerOffset.current = match.index;
+        const rect = getAnchorRect();
+        if (rect) setAnchorRect(rect);
+
+        // Debounced search
+        if (searchTimer.current) clearTimeout(searchTimer.current);
+        searchTimer.current = setTimeout(async () => {
+          const results = await onSearch(q, 'user');
+          setSuggestions(
+            results.map((r) => ({
+              id: r.id,
+              label: r.label,
+              sublabel: r.type === 'user' ? 'Member' : 'Topic',
+              icon: r.type === 'user' ? <User size={14} /> : <Hash size={14} />,
+              type: r.type,
+            }))
+          );
+        }, 150);
+      } else {
+        if (isOpen) close();
+      }
+    });
+  }, [editor, onSearch, isOpen, close, getAnchorRect]);
+
+  const insertMention = useCallback(
+    (item: SuggestionItem) => {
+      editor.update(() => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) return;
+
+        const anchor = selection.anchor;
+        const anchorNode = anchor.getNode();
+
+        if (!$isTextNode(anchorNode)) return;
+
+        const textContent = anchorNode.getTextContent();
+        const match = TRIGGER_REGEX.exec(textContent);
+        if (!match) return;
+
+        // Delete the @ trigger and query text
+        const deleteStart = match.index;
+        const deleteEnd = textContent.length;
+        const before = textContent.slice(0, deleteStart);
+        const after = textContent.slice(deleteEnd);
+
+        anchorNode.setTextContent(before);
+
+        const mentionNode = $createMentionNode(
+          (item.type as 'user' | 'topic') ?? 'user',
+          item.id,
+          item.label
+        );
+
+        anchorNode.insertAfter(mentionNode);
+
+        // Insert space after mention
+        const { $createTextNode } = require('lexical');
+        const spaceNode = $createTextNode(after || ' ');
+        mentionNode.insertAfter(spaceNode);
+        spaceNode.select();
+      });
+      close();
+    },
+    [editor, close]
+  );
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const removeDown = editor.registerCommand(
+      KEY_ARROW_DOWN_COMMAND,
+      () => {
+        setSelectedIndex((i) => (i + 1) % Math.max(suggestions.length, 1));
+        return true;
+      },
+      COMMAND_PRIORITY_HIGH
+    );
+
+    const removeUp = editor.registerCommand(
+      KEY_ARROW_UP_COMMAND,
+      () => {
+        setSelectedIndex((i) =>
+          (i + suggestions.length - 1) % Math.max(suggestions.length, 1)
+        );
+        return true;
+      },
+      COMMAND_PRIORITY_HIGH
+    );
+
+    const removeEnter = editor.registerCommand(
+      KEY_ENTER_COMMAND,
+      () => {
+        if (suggestions[selectedIndex]) {
+          insertMention(suggestions[selectedIndex]);
+          return true;
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_HIGH
+    );
+
+    const removeTab = editor.registerCommand(
+      KEY_TAB_COMMAND,
+      () => {
+        if (suggestions[selectedIndex]) {
+          insertMention(suggestions[selectedIndex]);
+          return true;
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_HIGH
+    );
+
+    const removeEscape = editor.registerCommand(
+      KEY_ESCAPE_COMMAND,
+      () => {
+        close();
+        return true;
+      },
+      COMMAND_PRIORITY_HIGH
+    );
+
+    return () => {
+      removeDown();
+      removeUp();
+      removeEnter();
+      removeTab();
+      removeEscape();
+    };
+  }, [isOpen, suggestions, selectedIndex, insertMention, editor, close]);
+
+  if (!isOpen || suggestions.length === 0) return null;
+
+  return (
+    <SuggestionDropdown
+      items={suggestions}
+      selectedIndex={selectedIndex}
+      onSelect={insertMention}
+      onClose={close}
+      anchorRect={anchorRect}
+      header="Members"
+    />
+  );
+}
