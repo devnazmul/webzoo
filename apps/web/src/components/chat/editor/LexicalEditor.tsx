@@ -1,73 +1,72 @@
-import { useCallback, useRef, useState } from 'react';
-import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
-import { ContentEditable } from '@lexical/react/LexicalContentEditable';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
-import { ListPlugin } from '@lexical/react/LexicalListPlugin';
-
-import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
-import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { HeadingNode, QuoteNode } from '@lexical/rich-text';
-import { ListNode, ListItemNode } from '@lexical/list';
-import { CodeNode, CodeHighlightNode } from '@lexical/code';
-import { AutoLinkNode, LinkNode } from '@lexical/link';
+import { useCallback, useRef, useState } from "react";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import { ListNode, ListItemNode } from "@lexical/list";
+import { CodeNode, CodeHighlightNode } from "@lexical/code";
+import { AutoLinkNode, LinkNode } from "@lexical/link";
 import {
   $getRoot,
+  EditorState,
   $createParagraphNode,
+  $createTextNode,
   $getSelection,
   $isRangeSelection,
-  $createTextNode,
-  EditorState,
-} from 'lexical';
-import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
-import { Smile, SendHorizonal, Paperclip } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { MentionNode } from './nodes/MentionNode';
-import { EmojiNode } from './nodes/EmojiNode';
-import { FileNode } from './nodes/FileNode';
-import MentionPlugin from './plugins/MentionPlugin';
-import TopicPlugin from './plugins/TopicPlugin';
-import SlashCommandPlugin from './plugins/SlashCommandPlugin';
-import EmojiPlugin from './plugins/EmojiPlugin';
-import ToolbarPlugin from './plugins/ToolbarPlugin';
-import SendPlugin from './plugins/SendPlugin';
-import FilePlugin from './plugins/FilePlugin';
-import FilePreview from './ui/FilePreview';
-import { serializeEditor } from './utils/serializer';
-import { SerializedFileNode, MentionSuggestion } from './utils/schema';
-import { getSocket } from '@/lib/socket';
+} from "lexical";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import { Smile, SendHorizonal, Paperclip } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { MentionNode } from "./nodes/MentionNode";
+import { EmojiNode } from "./nodes/EmojiNode";
+import { FileNode } from "./nodes/FileNode";
+import MentionPlugin from "./plugins/MentionPlugin";
+import TopicPlugin from "./plugins/TopicPlugin";
+import SlashCommandPlugin from "./plugins/SlashCommandPlugin";
+import EmojiPlugin from "./plugins/EmojiPlugin";
+import ToolbarPlugin from "./plugins/ToolbarPlugin";
+import SendPlugin from "./plugins/SendPlugin";
+import FilePlugin from "./plugins/FilePlugin";
+import FilePreview from "./ui/FilePreview";
+import { serializeEditor } from "./utils/serializer";
+import { SerializedFileNode, MentionSuggestion } from "./utils/schema";
+import { getSocket } from "@/lib/socket";
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
 const editorTheme = {
-  paragraph: 'lexical-paragraph',
+  paragraph: "lexical-paragraph",
   text: {
-    bold: 'lexical-bold',
-    italic: 'lexical-italic',
-    strikethrough: 'lexical-strikethrough',
-    underline: 'lexical-underline',
-    code: 'lexical-code-inline',
+    bold: "lexical-bold",
+    italic: "lexical-italic",
+    strikethrough: "lexical-strikethrough",
+    underline: "lexical-underline",
+    code: "lexical-code-inline",
   },
   list: {
-    ul: 'lexical-ul',
-    ol: 'lexical-ol',
-    listitem: 'lexical-listitem',
+    ul: "lexical-ul",
+    ol: "lexical-ol",
+    listitem: "lexical-listitem",
   },
-  code: 'lexical-code-block',
-  quote: 'lexical-quote',
+  code: "lexical-code-block",
+  quote: "lexical-quote",
   heading: {
-    h1: 'lexical-h1',
-    h2: 'lexical-h2',
-    h3: 'lexical-h3',
+    h1: "lexical-h1",
+    h2: "lexical-h2",
+    h3: "lexical-h3",
   },
 };
 
 // ─── Initial config ───────────────────────────────────────────────────────────
 
 const initialConfig = {
-  namespace: 'WebZooMessageEditor',
+  namespace: "WebZooMessageEditor",
   theme: editorTheme,
   nodes: [
     HeadingNode,
@@ -83,7 +82,7 @@ const initialConfig = {
     FileNode,
   ],
   onError: (error: Error) => {
-    console.error('[LexicalEditor]', error);
+    console.error("[LexicalEditor]", error);
   },
 };
 
@@ -95,7 +94,7 @@ interface InnerProps {
   onSend: (content: string) => Promise<void>;
   onMentionSearch: (
     query: string,
-    type: 'user' | 'topic'
+    type: "user" | "topic",
   ) => Promise<MentionSuggestion[]>;
   onTopicSearch: (query: string) => Promise<MentionSuggestion[]>;
 }
@@ -122,12 +121,12 @@ function InnerEditor({
     const socket = getSocket();
     if (!isTyping.current) {
       isTyping.current = true;
-      socket.emit('typing:start', topicId);
+      socket.emit("typing:start", topicId);
     }
     if (typingTimer.current) clearTimeout(typingTimer.current);
     typingTimer.current = setTimeout(() => {
       isTyping.current = false;
-      socket.emit('typing:stop', topicId);
+      socket.emit("typing:stop", topicId);
     }, 1500);
   }
 
@@ -149,7 +148,7 @@ function InnerEditor({
     const socket = getSocket();
     if (typingTimer.current) clearTimeout(typingTimer.current);
     isTyping.current = false;
-    socket.emit('typing:stop', topicId);
+    socket.emit("typing:stop", topicId);
 
     try {
       // Serialize document to JSON string for storage
@@ -165,6 +164,7 @@ function InnerEditor({
       editor.update(() => {
         const root = $getRoot();
         root.clear();
+
         root.append($createParagraphNode());
       });
       setFiles([]);
@@ -191,19 +191,19 @@ function InnerEditor({
     const fileArray = Array.from(selectedFiles);
     Promise.all(
       fileArray.map(async (file) => {
-        const { v4: uuidv4 } = await import('uuid');
+        const { v4: uuidv4 } = await import("uuid");
         let previewUrl: string | null = null;
-        if (file.type.startsWith('image/')) {
+        if (file.type.startsWith("image/")) {
           previewUrl = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (ev) =>
-              resolve(ev.target?.result as string ?? null);
+              resolve((ev.target?.result as string) ?? null);
             reader.onerror = () => resolve(null);
             reader.readAsDataURL(file);
           });
         }
         return {
-          type: 'file' as const,
+          type: "file" as const,
           fileId: uuidv4(),
           name: file.name,
           mimeType: file.type,
@@ -211,9 +211,9 @@ function InnerEditor({
           previewUrl,
           version: 1 as const,
         };
-      })
+      }),
     ).then(handleFilesAdded);
-    e.target.value = '';
+    e.target.value = "";
   }
 
   function handleEmojiClick(data: EmojiClickData) {
@@ -246,8 +246,8 @@ function InnerEditor({
       {/* Editor container */}
       <div
         className={cn(
-          'border border-border rounded-xl bg-background transition-all',
-          'focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/20'
+          "border border-border rounded-xl bg-background transition-all",
+          "focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/20",
         )}
       >
         {/* Toolbar */}
@@ -310,15 +310,15 @@ function InnerEditor({
             disabled={(!hasContent && files.length === 0) || sending}
             onClick={handleSend}
             className={cn(
-              'h-7 w-7 rounded-lg border transition-all active:scale-95',
+              "h-7 w-7 rounded-lg border transition-all active:scale-95",
               hasContent || files.length > 0
-                ? 'bg-primary text-primary-foreground border-transparent hover:bg-primary/90'
-                : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
+                ? "bg-primary text-primary-foreground border-transparent hover:bg-primary/90"
+                : "bg-transparent text-muted-foreground border-border hover:bg-muted",
             )}
           >
             <SendHorizonal
               size={14}
-              className={sending ? 'animate-pulse' : ''}
+              className={sending ? "animate-pulse" : ""}
             />
           </Button>
         </div>
@@ -383,25 +383,21 @@ export default function LexicalEditor({
   const handleMentionSearch = useCallback(
     async (query: string): Promise<MentionSuggestion[]> => {
       return users
-        .filter((u) =>
-          u.label.toLowerCase().includes(query.toLowerCase())
-        )
+        .filter((u) => u.label.toLowerCase().includes(query.toLowerCase()))
         .slice(0, 6)
-        .map((u) => ({ id: u.id, label: u.label, type: 'user' as const }));
+        .map((u) => ({ id: u.id, label: u.label, type: "user" as const }));
     },
-    [users]
+    [users],
   );
 
   const handleTopicSearch = useCallback(
     async (query: string): Promise<MentionSuggestion[]> => {
       return topics
-        .filter((t) =>
-          t.label.toLowerCase().includes(query.toLowerCase())
-        )
+        .filter((t) => t.label.toLowerCase().includes(query.toLowerCase()))
         .slice(0, 6)
-        .map((t) => ({ id: t.id, label: t.label, type: 'topic' as const }));
+        .map((t) => ({ id: t.id, label: t.label, type: "topic" as const }));
     },
-    [topics]
+    [topics],
   );
 
   return (
