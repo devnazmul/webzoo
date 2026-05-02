@@ -5,6 +5,7 @@ import {
   $isRangeSelection,
   $isTextNode,
   TextNode,
+  $createTextNode,
 } from 'lexical';
 import { $createEmojiNode } from '../nodes/EmojiNode';
 
@@ -62,12 +63,10 @@ export default function EmojiPlugin() {
         latestNode.insertAfter(emojiNode);
 
         if (after) {
-          const { $createTextNode } = require('lexical');
           const afterNode = $createTextNode(after);
           emojiNode.insertAfter(afterNode);
           afterNode.select();
         } else {
-          const { $createTextNode } = require('lexical');
           const spaceNode = $createTextNode(' ');
           emojiNode.insertAfter(spaceNode);
           spaceNode.select();

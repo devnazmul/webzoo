@@ -11,6 +11,7 @@ import {
   KEY_ESCAPE_COMMAND,
   KEY_TAB_COMMAND,
   TextNode,
+  $createTextNode,
 } from 'lexical';
 import { $createMentionNode } from '../nodes/MentionNode';
 import SuggestionDropdown, { SuggestionItem } from '../ui/SuggestionDropdown';
@@ -114,7 +115,6 @@ export default function MentionPlugin({ onSearch }: Props) {
         anchorNode.insertAfter(mentionNode);
 
         // Insert space after mention
-        const { $createTextNode } = require('lexical');
         const spaceNode = $createTextNode(after || ' ');
         mentionNode.insertAfter(spaceNode);
         spaceNode.select();

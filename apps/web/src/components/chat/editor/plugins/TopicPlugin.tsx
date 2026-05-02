@@ -11,6 +11,7 @@ import {
   KEY_ESCAPE_COMMAND,
   KEY_TAB_COMMAND,
   TextNode,
+  $createTextNode,
 } from 'lexical';
 import { $createMentionNode } from '../nodes/MentionNode';
 import SuggestionDropdown, { SuggestionItem } from '../ui/SuggestionDropdown';
@@ -40,7 +41,7 @@ export default function TopicPlugin({ onSearch }: Props) {
 
   const getAnchorRect = useCallback((): DOMRect | null => {
     const selection = window.getSelection();
-    if (!selection || selection.count === 0) return null;
+
     return selection.getRangeAt(0).getBoundingClientRect();
   }, []);
 
@@ -89,7 +90,6 @@ export default function TopicPlugin({ onSearch }: Props) {
         anchorNode.setTextContent(before);
         const mentionNode = $createMentionNode('topic', item.id, item.label);
         anchorNode.insertAfter(mentionNode);
-        const { $createTextNode } = require('lexical');
         const spaceNode = $createTextNode(' ');
         mentionNode.insertAfter(spaceNode);
         spaceNode.select();
