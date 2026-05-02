@@ -380,10 +380,10 @@ export default function MarkdownInput({
     <div className="relative">
       {/* Suggestion dropdown */}
       {suggestionType && suggestions.length > 0 && (
-        <div className="absolute bottom-full left-0 mb-2 w-72 bg-white border border-slack-border rounded-lg shadow-xl overflow-hidden z-50">
+        <div className="absolute bottom-full left-0 mb-3 w-80 bg-black/90 backdrop-blur-xl border border-ghost-border rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden z-50">
           {suggestionType === 'slash' && (
-            <div className="px-3 py-1.5 text-[11px] font-bold text-slack-dim border-b border-slack-border uppercase tracking-wider bg-slack-wide">
-              Commands
+            <div className="px-4 py-2 text-[10px] font-bold text-spectral-white/40 border-b border-ghost-border uppercase tracking-[2px] bg-spectral-white/5">
+              TELEMETRY COMMANDS
             </div>
           )}
           <ScrollArea className="max-h-60">
@@ -393,25 +393,25 @@ export default function MarkdownInput({
                 type="button"
                 onClick={() => applySuggestion(item)}
                 className={cn(
-                  'flex items-center gap-3 w-full px-3 py-2 text-[13px] text-left transition-colors',
+                  'flex items-center gap-4 w-full px-4 py-2.5 text-[11px] text-left transition-all uppercase tracking-wider',
                   index === suggestionIndex
-                    ? 'bg-slack-active text-white'
-                    : 'text-main-text hover:bg-[#F8F8F8]'
+                    ? 'bg-spectral-white text-space-black'
+                    : 'text-spectral-white/60 hover:bg-ghost-surface hover:text-white'
                 )}
               >
                 {suggestionType === 'slash' ? (
                   <div className="flex-1">
                     <div className="font-bold flex items-center justify-between">
                       <span>{item.label}</span>
-                      <span className="text-[10px] opacity-70">{(item as SlashCommand).syntax.split('\n')[0]}</span>
+                      <span className="text-[9px] opacity-70">{(item as SlashCommand).syntax.split('\n')[0]}</span>
                     </div>
-                    <div className={cn("text-[11px]", index === suggestionIndex ? "text-white/70" : "text-main-dim")}>
+                    <div className={cn("text-[10px]", index === suggestionIndex ? "text-space-black/70" : "text-spectral-white/30")}>
                       {(item as SlashCommand).description}
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded bg-[#F8F8F8] flex items-center justify-center text-[10px] font-black">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-spectral-white/10 border border-ghost-border flex items-center justify-center text-[10px] font-bold">
                       {(item as SuggestionItem).label[0].toUpperCase()}
                     </div>
                     <span className="font-bold">
@@ -428,24 +428,24 @@ export default function MarkdownInput({
 
       {/* Editor box */}
       <div className={cn(
-        "border border-slack-border rounded-lg bg-white overflow-hidden transition-all",
-        content.trim() ? "border-gray-400" : ""
+        "border border-ghost-border rounded-2xl bg-black/40 backdrop-blur-md overflow-hidden transition-all",
+        content.trim() ? "border-spectral-white/50" : ""
       )}>
         {/* Write mode / Preview mode container */}
-        <div className="p-1">
+        <div className="p-2">
           {!previewMode ? (
             <textarea
               ref={textareaRef}
               value={content}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              placeholder={`Message #${topicName}`}
-              className="w-full bg-transparent text-[15px] resize-none outline-none text-slack-text placeholder:text-slack-dim px-3 py-2 min-h-[44px] max-h-80"
+              placeholder={`COMMAND_MESSAGE #${topicName.toUpperCase()}`}
+              className="w-full bg-transparent text-[14px] resize-none outline-none text-spectral-white placeholder:text-spectral-white/20 px-4 py-3 min-h-[50px] max-h-80 uppercase tracking-wider font-medium"
               rows={1}
             />
           ) : (
             <div
-              className="px-3 py-2 min-h-[44px] max-h-80 overflow-y-auto cursor-text text-[15px] text-slack-text"
+              className="px-4 py-3 min-h-[50px] max-h-80 overflow-y-auto cursor-text text-[14px] text-spectral-white"
               onClick={() => setPreviewMode(false)}
             >
               {renderInputPreview()}
@@ -453,58 +453,54 @@ export default function MarkdownInput({
           )}
         </div>
 
-        {/* Toolbar & Footer Footer */}
-        <div className="flex items-center justify-between px-2 pb-1.5 pt-0.5 bg-gray-50/50">
-          <div className="flex items-center gap-0.5">
+        {/* Toolbar & Footer */}
+        <div className="flex items-center justify-between px-3 pb-2 pt-1 bg-spectral-white/5 border-t border-ghost-border">
+          <div className="flex items-center gap-1">
             {toolbarBtn(
               () => insertSyntax('', '**'),
-              <Bold size={15} />, 'Bold'
+              <Bold size={14} />, 'Bold'
             )}
             {toolbarBtn(
               () => insertSyntax('', '_'),
-              <Italic size={15} />, 'Italic'
+              <Italic size={14} />, 'Italic'
             )}
-            {toolbarBtn(
-              () => insertSyntax('', '~~'),
-              <Strikethrough size={15} />, 'Strike'
-            )}
-            <div className="w-px h-4 bg-slack-border mx-1" />
+            <div className="w-px h-3 bg-ghost-border mx-1" />
             <button
               ref={emojiButtonRef}
               type="button"
               onClick={handleEmojiButtonClick}
               title="Emoji"
-              className="p-1.5 rounded text-slack-dim hover:text-slack-text hover:bg-slack-hover transition-colors"
+              className="p-1.5 rounded-full text-spectral-white/40 hover:text-white hover:bg-ghost-surface transition-all"
             >
               <Smile size={16} />
             </button>
             {toolbarBtn(
               () => insertSyntax('', '`'),
-              <Code size={15} />, 'Code'
+              <Code size={14} />, 'Code'
             )}
-            <div className="w-px h-4 bg-slack-border mx-1" />
+            <div className="w-px h-3 bg-ghost-border mx-1" />
             {toolbarBtn(
               () => setPreviewMode((v) => !v),
-              previewMode ? <EyeOff size={15} /> : <Eye size={15} />,
+              previewMode ? <EyeOff size={14} /> : <Eye size={14} />,
               'Preview',
               previewMode
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-             <span className="text-[10px] text-slack-dim font-medium hidden md:block opacity-50">
-                Markdown Supported
+          <div className="flex items-center gap-3">
+             <span className="text-[9px] text-spectral-white/30 font-bold hidden md:block uppercase tracking-[2px]">
+                TELEMETRY LINK ACTIVE
               </span>
              <Button
                 type="button"
-                size="icon"
+                size="icon-sm"
                 disabled={!content.trim() || sending}
                 onClick={handleSend}
                 className={cn(
-                  "h-7 w-7 rounded border shadow-sm transition-all active:scale-95",
+                  "rounded-full transition-all active:scale-95",
                   content.trim() 
-                    ? "bg-[#007a5a] hover:bg-[#005c44] border-transparent text-white" 
-                    : "bg-white text-slack-dim border-slack-border hover:bg-gray-100"
+                    ? "bg-spectral-white text-space-black hover:bg-white" 
+                    : "bg-ghost-surface text-spectral-white/20 border border-ghost-border"
                 )}
               >
                 <SendHorizonal size={14} className={sending ? "animate-pulse" : ""} />
@@ -512,6 +508,7 @@ export default function MarkdownInput({
           </div>
         </div>
       </div>
+
       {/* Emoji picker — fixed position */}
       {showEmoji && (
         <div

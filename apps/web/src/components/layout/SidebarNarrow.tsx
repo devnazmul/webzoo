@@ -22,19 +22,19 @@ export default function SidebarNarrow({
   }
 
   return (
-    <div className="w-[68px] flex flex-col items-center py-4 gap-4 shrink-0 bg-slack-top border-r border-white/5">
+    <div className="w-[68px] flex flex-col items-center py-6 gap-6 shrink-0 bg-black/40 backdrop-blur-md border-r border-ghost-border">
       {workspaces.map((ws) => (
         <div key={ws.id} className="relative group flex items-center">
           {activeWorkspace?.id === ws.id && (
-            <div className="absolute left-[-14px] w-1.5 h-8 bg-white rounded-r-md" />
+            <div className="absolute left-[-2px] w-1 h-8 bg-spectral-white rounded-r-full shadow-[0_0_10px_rgba(240,240,250,0.5)]" />
           )}
           <button
             onClick={() => setActiveWorkspace(ws)}
             className={cn(
-              "w-9 h-9 rounded-lg flex items-center justify-center text-[13px] font-black transition-all group-hover:rounded-xl",
+              "w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold industrial uppercase tracking-tighter transition-all border border-ghost-border",
               activeWorkspace?.id === ws.id
-                ? "bg-white text-slack-narrow shadow-lg scale-110"
-                : "bg-white/10 text-sidebar-text/70 hover:bg-white/20",
+                ? "bg-spectral-white text-space-black scale-110"
+                : "bg-ghost-surface text-spectral-white/70 hover:bg-spectral-white/20 hover:text-white",
             )}
             title={ws.name}
           >
@@ -45,11 +45,12 @@ export default function SidebarNarrow({
 
       <button
         onClick={onCreateWorkspace}
-        className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 hover:rounded-xl transition-all flex items-center justify-center text-sidebar-text/50 hover:text-white"
+        className="w-10 h-10 rounded-full bg-ghost-surface border border-dashed border-ghost-border hover:bg-spectral-white/10 transition-all flex items-center justify-center text-spectral-white/50 hover:text-white"
         title="Add Workspace"
       >
-        <Plus size={20} />
+        <Plus size={18} />
       </button>
     </div>
+
   );
 }

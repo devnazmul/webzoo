@@ -14,89 +14,90 @@ export default function RightPanel({ onClose, onlineCount }: RightPanelProps) {
   if (!activeTopic) return null;
 
   return (
-    <div className="w-80 flex flex-col bg-white border-l border-[#E2E2E2] shrink-0 animate-in slide-in-from-right duration-200">
-      <div className="h-12 border-b border-[#E2E2E2] flex items-center px-4 justify-between">
-        <span className="font-bold text-[15px] text-main-text">Details</span>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-main-dim hover:text-main-text hover:bg-[#F8F8F8]">
+    <div className="w-80 flex flex-col bg-black/30 backdrop-blur-xl border-l border-ghost-border shrink-0 animate-in slide-in-from-right duration-300">
+      <div className="h-12 border-b border-ghost-border flex items-center px-6 justify-between bg-black/20">
+        <span className="font-industrial font-bold text-[12px] uppercase tracking-[2px] text-spectral-white">Telemetry Details</span>
+        <Button variant="ghost" size="icon-sm" onClick={onClose} className="text-spectral-white/50 hover:text-white">
           <X size={18} />
         </Button>
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-6">
+        <div className="p-6 space-y-8">
           {/* Channel Name */}
           <div className="space-y-1">
-             <div className="flex items-center gap-1">
-              <Hash size={14} className="text-main-dim" />
-              <span className="font-bold text-base text-main-text">{activeTopic.name}</span>
+             <div className="flex items-center gap-2">
+              <Hash size={16} className="text-spectral-white/50" />
+              <span className="font-industrial font-bold text-lg text-spectral-white uppercase tracking-wider">{activeTopic.name}</span>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-3">
             {[
-              { icon: UserPlus, label: "Add" },
-              { icon: Search, label: "Find" },
-              { icon: Phone, label: "Call" },
-              { icon: MoreHorizontal, label: "More" },
+              { icon: UserPlus, label: "ADD" },
+              { icon: Search, label: "FIND" },
+              { icon: Phone, label: "LINK" },
+              { icon: MoreHorizontal, label: "DATA" },
             ].map((action) => (
-              <button key={action.label} className="flex flex-col items-center gap-1 group">
-                <div className="w-9 h-9 rounded-full bg-[#F8F8F8] flex items-center justify-center text-main-text group-hover:bg-[#E2E2E2] transition-colors">
-                  <action.icon size={18} />
+              <button key={action.label} className="flex flex-col items-center gap-2 group">
+                <div className="w-10 h-10 rounded-full bg-spectral-white/5 border border-ghost-border flex items-center justify-center text-spectral-white/70 group-hover:bg-spectral-white/20 group-hover:text-white transition-all">
+                  <action.icon size={16} />
                 </div>
-                <span className="text-[11px] text-main-dim group-hover:text-main-text">{action.label}</span>
+                <span className="text-[9px] font-bold tracking-widest text-spectral-white/40 group-hover:text-spectral-white/70">{action.label}</span>
               </button>
             ))}
           </div>
 
-          <div className="h-px bg-[#E2E2E2]" />
+          <div className="h-px bg-ghost-border" />
 
           {/* About Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-main-text cursor-pointer group">
-              <span className="font-bold text-[13px]">About</span>
-              <ChevronDown size={16} className="text-main-dim group-hover:text-main-text" />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-spectral-white cursor-pointer group">
+              <span className="font-industrial font-bold text-[11px] uppercase tracking-[1.5px]">Mission Objective</span>
+              <ChevronDown size={14} className="text-spectral-white/30 group-hover:text-white" />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <p className="text-[11px] font-bold text-main-dim uppercase tracking-wider mb-1">Topic</p>
-                <p className="text-[13px] text-main-text leading-relaxed">
-                  Main discussion about work and our life
+                <p className="text-[9px] font-bold text-spectral-white/30 uppercase tracking-[2px] mb-2">Subject</p>
+                <p className="text-[13px] text-spectral-white/70 leading-relaxed font-medium">
+                  Primary coordination for project Essence.
                 </p>
               </div>
               <div>
-                <p className="text-[11px] font-bold text-main-dim uppercase tracking-wider mb-1">Description</p>
-                <p className="text-[13px] text-main-text leading-relaxed">
-                  We live, we love, we grow together. Everything will be good if we stay together.
+                <p className="text-[9px] font-bold text-spectral-white/30 uppercase tracking-[2px] mb-2">Protocol</p>
+                <p className="text-[13px] text-spectral-white/70 leading-relaxed font-medium">
+                  Strict adherence to industrial standards and cinematic excellence is mandatory for all transmissions.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="h-px bg-[#E2E2E2]" />
+          <div className="h-px bg-ghost-border" />
 
           {/* Members Section Placeholder */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-main-text cursor-pointer group">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-[13px]">Members</span>
-                <span className="text-main-dim text-[13px]">{onlineCount}</span>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-spectral-white cursor-pointer group">
+              <div className="flex items-center gap-3">
+                <span className="font-industrial font-bold text-[11px] uppercase tracking-[1.5px]">Active Personnel</span>
+                <span className="text-spectral-white/30 text-[11px] font-bold border border-ghost-border px-2 rounded-full">{onlineCount}</span>
               </div>
-              <ChevronDown size={16} className="text-main-dim group-hover:text-main-text" />
+              <ChevronDown size={14} className="text-spectral-white/30 group-hover:text-white" />
             </div>
           </div>
 
-          <div className="h-px bg-[#E2E2E2]" />
+          <div className="h-px bg-ghost-border" />
 
           {/* Pinned Messages Placeholder */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-main-text cursor-pointer group">
-              <span className="font-bold text-[13px]">Pinned Messages</span>
-              <ChevronDown size={16} className="text-main-dim group-hover:text-main-text" />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-spectral-white cursor-pointer group">
+              <span className="font-industrial font-bold text-[11px] uppercase tracking-[1.5px]">Archived Data</span>
+              <ChevronDown size={14} className="text-spectral-white/30 group-hover:text-white" />
             </div>
           </div>
         </div>
       </ScrollArea>
     </div>
+
   );
 }

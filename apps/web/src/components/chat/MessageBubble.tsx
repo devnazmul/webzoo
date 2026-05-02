@@ -25,25 +25,26 @@ function formatTime(dateStr: string) {
 
 export default function MessageBubble({ message }: Props) {
   return (
-    <div className="flex items-start gap-3 px-5 py-2 hover:bg-[#F8F8F8] group transition-colors relative -mx-5 first:mt-0">
-      <Avatar className="w-9 h-9 rounded-md shrink-0">
-        <AvatarFallback className="text-[13px] bg-[#E2E2E2] text-main-text font-black rounded-md">
+    <div className="flex items-start gap-4 px-6 py-3 hover:bg-ghost-surface/20 group transition-all relative -mx-6 rounded-lg">
+      <Avatar className="w-10 h-10 rounded-full shrink-0 border border-ghost-border">
+        <AvatarFallback className="text-[11px] bg-spectral-white/10 text-spectral-white font-bold rounded-full font-industrial uppercase">
           {getInitials(message.author.name)}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-2 mb-0.5">
-          <span className="text-[15px] font-black text-main-text hover:underline cursor-pointer">
+        <div className="flex items-baseline gap-3 mb-1">
+          <span className="font-industrial text-[13px] font-bold text-spectral-white uppercase tracking-wider hover:underline cursor-pointer">
             {message.author.name}
           </span>
-          <span className="text-[12px] text-main-dim">
+          <span className="text-[9px] text-spectral-white/40 uppercase tracking-widest font-bold">
             {formatTime(message.createdAt)}
           </span>
         </div>
-        <div className="text-[15px] text-main-text leading-tight">
+        <div className="text-[14px] text-spectral-white/90 leading-relaxed font-medium">
           <MessageRenderer content={message.content} />
         </div>
       </div>
     </div>
+
   );
 }

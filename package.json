@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev": "pnpm --parallel -r dev"
+    "dev": "pnpm --parallel -r dev",
+    "dev:server": "pnpm --filter @webzoo/server dev",
+    "dev:web": "pnpm --filter @webzoo/web dev"
   },
   "workspaces": [
     "apps/*",

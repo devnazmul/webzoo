@@ -1,44 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  --color-slack-top: #350d36;
-  --color-slack-narrow: #19171d;
-  --color-slack-wide: #3f0e40;
-  --color-slack-active: #1164a3;
-  --color-slack-unread: #e01e5a;
+  /* SpaceX Core Palette */
+  --color-space-black: #000000;
+  --color-spectral-white: #f0f0fa;
+  --color-ghost-surface: rgba(240, 240, 250, 0.1);
+  --color-ghost-border: rgba(240, 240, 250, 0.35);
+  --color-hover-white: #ffffff;
 
-  /* Sidebar Specifics */
-  --color-sidebar-text: #ffffff;
-  --color-sidebar-dim: #543254;
-  --color-sidebar-hover: rgba(255, 255, 255, 0.1);
-  --color-sidebar-border: rgba(255, 255, 255, 0.1);
+  /* HUD / Glassmorphism */
+  --color-hud-bg: rgba(240, 240, 250, 0.05);
+  --color-hud-border: rgba(240, 240, 250, 0.15);
+  --color-hud-active: rgba(240, 240, 250, 0.12);
 
-  /* Main Content Specifics */
-  --color-main-text: #1d1c1d;
-  --color-main-dim: #616061;
-  --color-main-border: #e2e2e2;
+  /* Shadcn/UI Compatibility Overrides for SpaceX Theme */
+  --color-background: var(--color-space-black);
+  --color-foreground: var(--color-spectral-white);
+  --color-card: var(--color-hud-bg);
+  --color-card-foreground: var(--color-spectral-white);
+  --color-popover: var(--color-space-black);
+  --color-popover-foreground: var(--color-spectral-white);
+  --color-primary: var(--color-spectral-white);
+  --color-primary-foreground: var(--color-space-black);
+  --color-secondary: var(--color-ghost-surface);
+  --color-secondary-foreground: var(--color-spectral-white);
+  --color-muted: rgba(240, 240, 250, 0.1);
+  --color-muted-foreground: rgba(240, 240, 250, 0.5);
+  --color-accent: var(--color-ghost-surface);
+  --color-accent-foreground: var(--color-spectral-white);
+  --color-destructive: #ff4d4d;
+  --color-destructive-foreground: var(--color-spectral-white);
+  --color-border: var(--color-ghost-border);
+  --color-input: var(--color-ghost-surface);
+  --color-ring: var(--color-ghost-border);
+  --color-radius: 32px; /* SpaceX Button Radius as default for buttons */
 
-  /* Shadcn/UI Compatibility */
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-radius: var(--radius);
+  /* Industrial Typography */
+  --font-industrial: "Geist", "Inter", sans-serif;
+  --letter-spacing-industrial: 0.96px;
+  --letter-spacing-nav: 1.17px;
 
   --keyframes-accordion-down: {
     from {
@@ -58,7 +58,25 @@
   };
   --animation-accordion-down: accordion-down 0.2s ease-out;
   --animation-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes aurora {
+    0% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(2% , 2%) scale(1.1); }
+    66% { transform: translate(-2%, 1%) scale(0.9); }
+    100% { transform: translate(0, 0) scale(1); }
+  }
 }
+
+@layer utilities {
+  .bg-aurora {
+    background: radial-gradient(circle at 50% 50%, #000000 0%, #050510 100%);
+  }
+  .animate-aurora {
+    animation: aurora 20s ease-in-out infinite alternate;
+  }
+}
+
+
 
 @layer base {
   :root {

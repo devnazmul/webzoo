@@ -153,11 +153,19 @@ export default function AppShell() {
   const activeTopic = useTopicStore((s) => s.activeTopic);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
+    <div className="flex flex-col h-screen overflow-hidden bg-space-black relative">
+      {/* Aurora Blurry Gradients */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-aurora" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 blur-[150px] rounded-full animate-aurora" style={{ animationDelay: '-5s' }} />
+        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-spectral-white/5 blur-[100px] rounded-full animate-aurora" style={{ animationDelay: '-10s' }} />
+      </div>
+
       {/* Top Header */}
+
       <TopBar />
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden relative z-10">
         {/* Workspace Switcher */}
         <SidebarNarrow 
           onCreateWorkspace={() => {
@@ -181,7 +189,7 @@ export default function AppShell() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white shadow-[-1px_0_0_rgba(0,0,0,0.1)] z-10">
+        <div className="flex-1 flex flex-col min-w-0 bg-black/10 backdrop-blur-sm border-l border-ghost-border">
           {activeTopic && (
             <MessageFeed
               topic={activeTopic}
@@ -204,12 +212,14 @@ export default function AppShell() {
         )}
       </div>
 
+
       {/* Modals ... */}
 
       {/* Modals */}
       {(showCreateWorkspace || showCreateTopic || showInvite) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-sm border-ghost-border bg-black/40 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+
             {showCreateWorkspace && (
               <>
                 <CardHeader>

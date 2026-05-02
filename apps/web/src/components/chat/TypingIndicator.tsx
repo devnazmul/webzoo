@@ -11,15 +11,16 @@ export default function TypingIndicator({ typingUsers, memberNames }: Props) {
     .join(', ');
 
   return (
-    <div className="px-4 py-1 flex items-center gap-2">
-      <div className="flex gap-0.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
-        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
-        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+    <div className="px-6 py-2 flex items-center gap-3">
+      <div className="flex gap-1">
+        <span className="w-1 h-1 rounded-full bg-spectral-white/50 animate-pulse" style={{ animationDelay: '0ms' }} />
+        <span className="w-1 h-1 rounded-full bg-spectral-white/50 animate-pulse" style={{ animationDelay: '200ms' }} />
+        <span className="w-1 h-1 rounded-full bg-spectral-white/50 animate-pulse" style={{ animationDelay: '400ms' }} />
       </div>
-      <span className="text-xs text-muted-foreground">
-        {names} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+      <span className="text-[9px] font-bold uppercase tracking-[2px] text-spectral-white/40">
+        {names} {typingUsers.length === 1 ? 'is' : 'are'} transmitting...
       </span>
     </div>
+
   );
 }
