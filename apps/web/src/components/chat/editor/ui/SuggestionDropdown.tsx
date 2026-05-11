@@ -14,7 +14,7 @@ interface Props {
   selectedIndex: number;
   onSelect: (item: SuggestionItem) => void;
   onClose: () => void;
-  anchorRect: DOMRect | null;
+  anchorEl?: HTMLElement | null;
   header?: string;
   emptyMessage?: string;
 }
@@ -24,31 +24,11 @@ export default function SuggestionDropdown({
   selectedIndex,
   onSelect,
   onClose,
-  anchorRect,
+  anchorEl,
   header,
   emptyMessage = 'No results',
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-
-  // Position the dropdown above the anchor rect
-  useEffect(() => {
-    if (!ref.current || !anchorRect) return;
-    const dropdown = ref.current;
-    const dropdownHeight = dropdown.offsetHeight;
-    const spaceAbove = anchorRect.top;
-    const spaceBelow = window.innerHeight - anchorRect.bottom;
-
-    // Prefer above, fall back to below
-    if (spaceAbove > dropdownHeight || spaceAbove > spaceBelow) {
-      dropdown.style.top = `${anchorRect.top + window.scrollY - dropdownHeight - 4}px`;
-    } else {
-      dropdown.style.top = `${anchorRect.bottom + window.scrollY + 4}px`;
-    }
-    dropdown.style.left = `${Math.min(
-      anchorRect.left + window.scrollX,
-      window.innerWidth - 240
-    )}px`;
-  }, [anchorRect, items]);
 
   // Scroll selected item into view
   useEffect(() => {
@@ -60,22 +40,35 @@ export default function SuggestionDropdown({
   // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (
+        ref.current &&
+        !ref.current.contains(e.target as Node) &&
+        anchorEl &&
+        !anchorEl.contains(e.target as Node)
+      ) {
         onClose();
       }
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [onClose]);
+  }, [onClose, anchorEl]);
 
-  if (!anchorRect) return null;
+  if (!anchorEl) return null;
+
+  // Get position from anchor element (the editor container)
+  const rect = anchorEl.getBoundingClientRect();
+
+  const style: React.CSSProperties = {
+    position: 'fixed',
+    bottom: window.innerHeight - rect.top + 8,
+    left: rect.left + 8,
+    width: 260,
+    maxWidth: 'calc(100vw - 32px)',
+    zIndex: 9999,
+  };
 
   return (
-    <div
-      ref={ref}
-      className="fixed z-[9999] w-60 bg-popover border border-border rounded-lg shadow-lg overflow-hidden"
-      style={{ top: 0, left: 0 }}
-    >
+    <div ref={ref} style={style} className="bg-popover border border-border rounded-lg shadow-xl overflow-hidden">
       {header && (
         <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border bg-muted/50 uppercase tracking-wider">
           {header}

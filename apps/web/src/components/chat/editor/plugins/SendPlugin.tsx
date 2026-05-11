@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getRoot,
-  COMMAND_PRIORITY_HIGH,
+  COMMAND_PRIORITY_LOW,
   KEY_ENTER_COMMAND,
 } from 'lexical';
 
@@ -17,10 +17,12 @@ export default function SendPlugin({ onSend }: Props) {
     return editor.registerCommand(
       KEY_ENTER_COMMAND,
       (event: KeyboardEvent | null) => {
-        // Shift+Enter = new line (default behavior)
+        // Shift+Enter = new line (always allow)
         if (event?.shiftKey) return false;
 
-        // Enter = send if there is content
+        // Enter = send only if there is content
+        // Use LOW priority so MentionPlugin and other
+        // HIGH priority handlers get first chance
         let hasContent = false;
         editor.getEditorState().read(() => {
           const root = $getRoot();
@@ -35,7 +37,7 @@ export default function SendPlugin({ onSend }: Props) {
 
         return false;
       },
-      COMMAND_PRIORITY_HIGH
+      COMMAND_PRIORITY_LOW
     );
   }, [editor, onSend]);
 

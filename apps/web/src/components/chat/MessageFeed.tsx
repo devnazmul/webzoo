@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useAuthStore } from '@/store/auth.store';
-import { getSocket } from '@/lib/socket';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import MessageBubble from './MessageBubble';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { getSocket } from "@/lib/socket";
+import { useAuthStore } from "@/store/auth.store";
+import { useCallback, useEffect, useRef, useState } from "react";
+import MessageBubble from "./MessageBubble";
 
-import TypingIndicator from './TypingIndicator';
-import MarkdownInput from './editor/MarkdownInput';
-import api from '@/lib/api';
-import { Message, Topic } from '@webzoo/shared';
-import { Hash, Star, Info, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
+import { Message, Topic } from "@webzoo/shared";
+import { ChevronDown, Hash, Info } from "lucide-react";
+import TypingIndicator from "./TypingIndicator";
+import LexicalEditor from "./editor/LexicalEditor";
 
 interface Props {
   topic: Topic;
@@ -38,14 +38,14 @@ export default function MessageFeed({
   const prevTopicId = useRef<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get(
-        `/workspaces/${workspaceId}/topics/${topic.id}/messages`
+        `/workspaces/${workspaceId}/topics/${topic.id}/messages`,
       );
       setMessages(res.data.data.messages);
       setTimeout(scrollToBottom, 50);
@@ -58,10 +58,10 @@ export default function MessageFeed({
     const socket = getSocket();
 
     if (prevTopicId.current) {
-      socket.emit('topic:leave', prevTopicId.current);
+      socket.emit("topic:leave", prevTopicId.current);
     }
 
-    socket.emit('topic:join', topic.id);
+    socket.emit("topic:join", topic.id);
     prevTopicId.current = topic.id;
     setMessages([]);
     setTypingUsers([]);
@@ -84,25 +84,26 @@ export default function MessageFeed({
       if (data.userId === user?.id) return;
       setTypingUsers((prev) =>
         data.isTyping
-          ? prev.includes(data.userId) ? prev : [...prev, data.userId]
-          : prev.filter((id) => id !== data.userId)
+          ? prev.includes(data.userId)
+            ? prev
+            : [...prev, data.userId]
+          : prev.filter((id) => id !== data.userId),
       );
     }
 
-    socket.on('message:new', onNewMessage);
-    socket.on('typing:update', onTypingUpdate);
+    socket.on("message:new", onNewMessage);
+    socket.on("typing:update", onTypingUpdate);
 
     return () => {
-      socket.off('message:new', onNewMessage);
-      socket.off('typing:update', onTypingUpdate);
+      socket.off("message:new", onNewMessage);
+      socket.off("typing:update", onTypingUpdate);
     };
   }, [topic.id, user?.id, loadMessages, scrollToBottom]);
 
   async function handleSend(content: string) {
-    await api.post(
-      `/workspaces/${workspaceId}/topics/${topic.id}/messages`,
-      { content }
-    );
+    await api.post(`/workspaces/${workspaceId}/topics/${topic.id}/messages`, {
+      content,
+    });
   }
 
   return (
@@ -128,15 +129,28 @@ export default function MessageFeed({
           >
             <div className="flex -space-x-1.5 items-center">
               {[...Array(Math.min(3, onlineUsers.length))].map((_, i) => (
-                <div key={i} className="w-5 h-5 rounded-full border border-space-black bg-spectral-white/20 text-[8px] flex items-center justify-center font-bold text-spectral-white">
-                  {memberNames[onlineUsers[i]]?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                <div
+                  key={i}
+                  className="w-5 h-5 rounded-full border border-space-black bg-spectral-white/20 text-[8px] flex items-center justify-center font-bold text-spectral-white"
+                >
+                  {memberNames[onlineUsers[i]]
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2) || "U"}
                 </div>
               ))}
             </div>
             <span>{onlineUsers.length} ONLINE</span>
           </Button>
           <div className="w-px h-6 bg-ghost-border mx-1" />
-          <Button variant="ghost" size="icon-sm" onClick={onToggleDetails} className="text-spectral-white/50 hover:text-white">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onToggleDetails}
+            className="text-spectral-white/50 hover:text-white"
+          >
             <Info size={18} />
           </Button>
         </div>
@@ -144,15 +158,19 @@ export default function MessageFeed({
 
       <ScrollArea className="flex-1 overflow-y-auto">
         <div className="px-6 py-10">
-           {!loading && messages.length === 0 && (
+          {!loading && messages.length === 0 && (
             <div className="mb-12 border border-ghost-border bg-ghost-surface/20 p-8 rounded-2xl backdrop-blur-md max-w-2xl">
               <div className="w-14 h-14 bg-spectral-white/10 border border-ghost-border rounded-full flex items-center justify-center mb-6">
                 <Hash size={28} className="text-spectral-white" />
               </div>
-              <h2 className="text-3xl font-industrial font-bold text-spectral-white uppercase tracking-[1.17px] mb-4">Channel Initialized: #{topic.name}</h2>
+              <h2 className="text-3xl font-industrial font-bold text-spectral-white uppercase tracking-[1.17px] mb-4">
+                Channel Initialized: #{topic.name}
+              </h2>
               <p className="text-spectral-white/60 text-[14px] max-w-lg leading-relaxed uppercase tracking-wider font-medium">
-                Establishing communication in <span className="text-spectral-white">#{topic.name}</span>.
-                All telemetry and data transmissions are encrypted and archived for mission history.
+                Establishing communication in{" "}
+                <span className="text-spectral-white">#{topic.name}</span>. All
+                telemetry and data transmissions are encrypted and archived for
+                mission history.
               </p>
             </div>
           )}
@@ -175,7 +193,7 @@ export default function MessageFeed({
       </ScrollArea>
 
       <div className="px-6 pb-8">
-        <MarkdownInput
+        <LexicalEditor
           topicId={topic.id}
           topicName={topic.name}
           users={workspaceMembers}
@@ -184,6 +202,5 @@ export default function MessageFeed({
         />
       </div>
     </div>
-
   );
 }

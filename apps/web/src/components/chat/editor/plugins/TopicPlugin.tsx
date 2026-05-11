@@ -29,21 +29,21 @@ export default function TopicPlugin({ onSearch }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const close = useCallback(() => {
     setIsOpen(false);
     setSuggestions([]);
     setSelectedIndex(0);
-    setAnchorRect(null);
+    setAnchorEl(null);
   }, []);
 
-  const getAnchorRect = useCallback((): DOMRect | null => {
-    const selection = window.getSelection();
-
-    return selection.getRangeAt(0).getBoundingClientRect();
-  }, []);
+  const getAnchorEl = useCallback((): HTMLElement | null => {
+    return editor.getRootElement()?.closest('[data-lexical-editor-wrapper]') as HTMLElement
+      ?? editor.getRootElement()?.parentElement?.parentElement as HTMLElement
+      ?? null;
+  }, [editor]);
 
   useEffect(() => {
     return editor.registerNodeTransform(TextNode, (node) => {
@@ -53,8 +53,7 @@ export default function TopicPlugin({ onSearch }: Props) {
         const q = match[1];
         setIsOpen(true);
         setSelectedIndex(0);
-        const rect = getAnchorRect();
-        if (rect) setAnchorRect(rect);
+        setAnchorEl(getAnchorEl());
 
         if (searchTimer.current) clearTimeout(searchTimer.current);
         searchTimer.current = setTimeout(async () => {
@@ -73,7 +72,7 @@ export default function TopicPlugin({ onSearch }: Props) {
         if (isOpen) close();
       }
     });
-  }, [editor, onSearch, isOpen, close, getAnchorRect]);
+  }, [editor, onSearch, isOpen, close, getAnchorEl]);
 
   const insertTopic = useCallback(
     (item: SuggestionItem) => {
@@ -165,7 +164,7 @@ export default function TopicPlugin({ onSearch }: Props) {
       selectedIndex={selectedIndex}
       onSelect={insertTopic}
       onClose={close}
-      anchorRect={anchorRect}
+      anchorEl={anchorEl}
       header="Topics"
     />
   );

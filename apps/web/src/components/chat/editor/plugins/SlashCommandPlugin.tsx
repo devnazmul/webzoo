@@ -90,7 +90,7 @@ export default function SlashCommandPlugin() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const filteredCommands = SLASH_COMMANDS.filter((c) =>
     c.label.toLowerCase().includes(query.toLowerCase())
@@ -99,15 +99,15 @@ export default function SlashCommandPlugin() {
   const close = useCallback(() => {
     setIsOpen(false);
     setSelectedIndex(0);
-    setAnchorRect(null);
+    setAnchorEl(null);
     setQuery('');
   }, []);
 
-  const getAnchorRect = useCallback((): DOMRect | null => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return null;
-    return selection.getRangeAt(0).getBoundingClientRect();
-  }, []);
+  const getAnchorEl = useCallback((): HTMLElement | null => {
+    return editor.getRootElement()?.closest('[data-lexical-editor-wrapper]') as HTMLElement
+      ?? editor.getRootElement()?.parentElement?.parentElement as HTMLElement
+      ?? null;
+  }, [editor]);
 
   useEffect(() => {
     return editor.registerNodeTransform(TextNode, (node) => {
@@ -117,13 +117,12 @@ export default function SlashCommandPlugin() {
         setQuery(match[1]);
         setIsOpen(true);
         setSelectedIndex(0);
-        const rect = getAnchorRect();
-        if (rect) setAnchorRect(rect);
+        setAnchorEl(getAnchorEl());
       } else {
         if (isOpen) close();
       }
     });
-  }, [editor, isOpen, close, getAnchorRect]);
+  }, [editor, isOpen, close, getAnchorEl]);
 
   const executeCommand = useCallback(
     (item: SuggestionItem) => {
@@ -289,7 +288,7 @@ export default function SlashCommandPlugin() {
       selectedIndex={selectedIndex}
       onSelect={executeCommand}
       onClose={close}
-      anchorRect={anchorRect}
+      anchorEl={anchorEl}
       header="Commands"
       emptyMessage="No matching commands"
     />

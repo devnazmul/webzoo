@@ -31,7 +31,7 @@ export default function MentionPlugin({ onSearch }: Props) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const triggerOffset = useRef<number>(0);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -39,15 +39,14 @@ export default function MentionPlugin({ onSearch }: Props) {
     setIsOpen(false);
     setSuggestions([]);
     setSelectedIndex(0);
-    setAnchorRect(null);
+    setAnchorEl(null);
   }, []);
 
-  const getAnchorRect = useCallback((): DOMRect | null => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return null;
-    const range = selection.getRangeAt(0);
-    return range.getBoundingClientRect();
-  }, []);
+  const getAnchorEl = useCallback((): HTMLElement | null => {
+    return editor.getRootElement()?.closest('[data-lexical-editor-wrapper]') as HTMLElement
+      ?? editor.getRootElement()?.parentElement?.parentElement as HTMLElement
+      ?? null;
+  }, [editor]);
 
   // Watch text changes for @ trigger
   useEffect(() => {
@@ -60,8 +59,7 @@ export default function MentionPlugin({ onSearch }: Props) {
         setIsOpen(true);
         setSelectedIndex(0);
         triggerOffset.current = match.index;
-        const rect = getAnchorRect();
-        if (rect) setAnchorRect(rect);
+        setAnchorEl(getAnchorEl());
 
         // Debounced search
         if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -81,7 +79,7 @@ export default function MentionPlugin({ onSearch }: Props) {
         if (isOpen) close();
       }
     });
-  }, [editor, onSearch, isOpen, close, getAnchorRect]);
+  }, [editor, onSearch, isOpen, close, getAnchorEl]);
 
   const insertMention = useCallback(
     (item: SuggestionItem) => {
@@ -198,7 +196,7 @@ export default function MentionPlugin({ onSearch }: Props) {
       selectedIndex={selectedIndex}
       onSelect={insertMention}
       onClose={close}
-      anchorRect={anchorRect}
+      anchorEl={anchorEl}
       header="Members"
     />
   );

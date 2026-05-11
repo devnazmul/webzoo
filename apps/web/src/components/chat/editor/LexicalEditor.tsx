@@ -245,6 +245,7 @@ function InnerEditor({
 
       {/* Editor container */}
       <div
+        data-lexical-editor-wrapper
         className={cn(
           "border border-border rounded-xl bg-background transition-all",
           "focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/20",
