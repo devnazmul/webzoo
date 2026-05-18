@@ -18,6 +18,12 @@ model User {
   workspaces   WorkspaceMember[]
   messages     Message[]
   refreshTokens RefreshToken[]
+  attachments    Attachment[]   @relation("AttachmentUploader")
+  tasksCreated   Task[]         @relation("TaskCreatedBy")
+  tasksAssigned  Task[]         @relation("TaskAssignee")
+  vaultDocuments VaultDocument[] @relation("VaultDocumentCreator")
+  sharedLinks    SharedLink[]   @relation("SharedLinkUser")
+  reactions      Reaction[]
 }
 
 model Workspace {
@@ -51,6 +57,11 @@ model Topic {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   messages  Message[]
+  attachments    Attachment[]
+  taskStatuses   TaskStatus[]
+  tasks          Task[]
+  vaultDocuments VaultDocument[]
+  sharedLinks    SharedLink[]
 }
 
 model Message {
@@ -64,6 +75,13 @@ model Message {
   author User  @relation(fields: [authorId], references: [id])
 
   @@index([topicId, createdAt])
+  replyToId   String?
+  replyTo     Message?    @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     Message[]   @relation("MessageReplies")
+  attachments Attachment[]
+  tasks       Task[]
+  sharedLinks SharedLink[]
+  reactions   Reaction[]
 }
 
 model RefreshToken {
@@ -74,6 +92,125 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id           String   @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  topicId      String
+  uploadedById String
+  messageId    String?
+  createdAt    DateTime @default(now())
+
+  topic      Topic    @relation(fields: [topicId], references: [id])
+  uploadedBy User     @relation("AttachmentUploader", fields: [uploadedById], references: [id])
+  message    Message? @relation(fields: [messageId], references: [id])
+
+  @@index([topicId, createdAt])
+}
+
+model TaskStatus {
+  id        String   @id @default(uuid())
+  name      String
+  color     String   @default("#6366f1")
+  order     Int      @default(0)
+  topicId   String
+  createdAt DateTime @default(now())
+
+  topic Topic  @relation(fields: [topicId], references: [id])
+  tasks Task[]
+
+  @@index([topicId, order])
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?   @db.Text
+  statusId    String
+  topicId     String
+  createdById String
+  assigneeId  String?
+  messageId   String?
+  order       Int       @default(0)
+  version     Int       @default(0)
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  status    TaskStatus @relation(fields: [statusId], references: [id])
+  topic     Topic      @relation(fields: [topicId], references: [id])
+  createdBy User       @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  assignee  User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  message   Message?   @relation(fields: [messageId], references: [id])
+  subtasks  SubTask[]
+
+  @@index([topicId, statusId, order])
+}
+
+model SubTask {
+  id        String   @id @default(uuid())
+  title     String
+  completed Boolean  @default(false)
+  taskId    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, order])
+}
+
+model VaultDocument {
+  id          String   @id @default(uuid())
+  title       String
+  content     String   @db.LongText
+  topicId     String
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  topic     Topic @relation(fields: [topicId], references: [id])
+  createdBy User  @relation("VaultDocumentCreator", fields: [createdById], references: [id])
+
+  @@index([topicId, createdAt])
+}
+
+model SharedLink {
+  id          String   @id @default(uuid())
+  url         String   @db.Text
+  title       String?
+  description String?  @db.Text
+  imageUrl    String?
+  topicId     String
+  sharedById  String
+  messageId   String?
+  createdAt   DateTime @default(now())
+
+  topic     Topic    @relation(fields: [topicId], references: [id])
+  sharedBy  User     @relation("SharedLinkUser", fields: [sharedById], references: [id])
+  message   Message? @relation(fields: [messageId], references: [id])
+
+  @@index([topicId, createdAt])
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  messageId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
 }
 
 enum Role {

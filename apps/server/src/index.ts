@@ -7,6 +7,12 @@ import authRouter from './routes/auth';
 import workspacesRouter from './routes/workspaces';
 import topicsRouter from './routes/topics';
 import messagesRouter from './routes/messages';
+import uploadsRouter from './routes/uploads';
+import path from 'path';
+import tasksRouter from './routes/tasks';
+import vaultRouter from './routes/vault';
+import linksRouter from './routes/links';
+import reactionsRouter from './routes/reactions';
 
 const app = express();
 const httpServer = createServer(app);
@@ -26,6 +32,22 @@ app.use('/api/auth', authRouter);
 app.use('/api/workspaces', workspacesRouter);
 app.use('/api/workspaces/:workspaceId/topics', topicsRouter);
 app.use('/api/workspaces/:workspaceId/topics/:topicId/messages', messagesRouter);
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use(
+  '/api/workspaces/:workspaceId/topics/:topicId/upload',
+  uploadsRouter
+);
+app.use(
+  '/api/workspaces/:workspaceId/topics/:topicId/media',
+  uploadsRouter
+);
+app.use('/api/workspaces/:workspaceId/topics/:topicId', tasksRouter);
+app.use('/api/workspaces/:workspaceId/topics/:topicId/vault', vaultRouter);
+app.use('/api/workspaces/:workspaceId/topics/:topicId/links', linksRouter);
+app.use(
+  '/api/workspaces/:workspaceId/topics/:topicId/messages/:messageId/reactions',
+  reactionsRouter
+);
 
 // Health check
 app.get('/health', (req, res) => {
