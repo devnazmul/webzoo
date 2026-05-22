@@ -190,4 +190,77 @@ router.post("/:workspaceId/invite", async (req: AuthRequest, res: Response) => {
   }
 });
 
+// GET /api/workspaces/:workspaceId/members
+router.get('/:workspaceId/members', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId } = req.params;
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: req.user!.userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!member) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+
+    const members = await prisma.workspaceMember.findMany({
+      where: { workspaceId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, createdAt: true },
+        },
+      },
+      orderBy: { joinedAt: 'asc' },
+    });
+
+    res.status(200).json({ data: { members } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/workspaces/:workspaceId/members/:userId
+router.delete('/:workspaceId/members/:userId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId, userId } = req.params;
+
+    // Only owners can remove members
+    const requester = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: req.user!.userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!requester || requester.role !== 'OWNER') {
+      res.status(403).json({ status: 'error', message: 'Only owners can remove members' });
+      return;
+    }
+
+    // Cannot remove yourself if you are the only owner
+    if (userId === req.user!.userId) {
+      res.status(422).json({ status: 'error', message: 'Cannot remove yourself from the workspace' });
+      return;
+    }
+
+    await prisma.workspaceMember.delete({
+      where: {
+        userId_workspaceId: { userId, workspaceId },
+      },
+    });
+
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
 export default router;

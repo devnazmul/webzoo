@@ -7,9 +7,10 @@ import MessageBubble from "./MessageBubble";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { Message, Topic } from "@webzoo/shared";
-import { ChevronDown, Hash, Info } from "lucide-react";
+import { ChevronDown, Hash, Info, Reply } from "lucide-react";
 import TypingIndicator from "./TypingIndicator";
 import LexicalEditor from "./editor/LexicalEditor";
+import DateSeparator from './DateSeparator';
 
 interface Props {
   topic: Topic;
@@ -35,6 +36,7 @@ export default function MessageFeed({
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const prevTopicId = useRef<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -101,9 +103,11 @@ export default function MessageFeed({
   }, [topic.id, user?.id, loadMessages, scrollToBottom]);
 
   async function handleSend(content: string) {
-    await api.post(`/workspaces/${workspaceId}/topics/${topic.id}/messages`, {
-      content,
-    });
+    await api.post(
+      `/workspaces/${workspaceId}/topics/${topic.id}/messages`,
+      { content, replyToId: replyTo?.id }
+    );
+    setReplyTo(null);
   }
 
   return (
@@ -176,13 +180,32 @@ export default function MessageFeed({
           )}
 
           <div className="space-y-6">
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isOwn={message.authorId === user?.id}
-              />
-            ))}
+            {messages.map((message, index) => {
+              const prevMessage = messages[index - 1];
+              const showDateSeparator = !prevMessage ||
+                new Date(message.createdAt).toDateString() !==
+                new Date(prevMessage.createdAt).toDateString();
+
+              return (
+                <div key={message.id}>
+                  {showDateSeparator && (
+                    <DateSeparator date={new Date(message.createdAt)} />
+                  )}
+                  <MessageBubble
+                    message={message as any}
+                    isOwn={message.authorId === user?.id}
+                    currentUserId={user?.id ?? ''}
+                    workspaceId={workspaceId}
+                    topicId={topic.id}
+                    onReply={(msg) => setReplyTo(msg)}
+                    onCreateTask={(msg) => {
+                      // Will wire to task creation modal later
+                      console.log('Create task from message:', msg.id);
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
           <TypingIndicator
             typingUsers={typingUsers}
@@ -191,6 +214,21 @@ export default function MessageFeed({
           <div ref={bottomRef} className="h-4" />
         </div>
       </ScrollArea>
+
+      {replyTo && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-muted border-t border-border text-sm">
+          <Reply size={14} className="text-muted-foreground flex-shrink-0" />
+          <span className="text-muted-foreground">Replying to</span>
+          <span className="font-medium truncate">{replyTo.author.name}</span>
+          <button
+            type="button"
+            onClick={() => setReplyTo(null)}
+            className="ml-auto text-muted-foreground hover:text-foreground"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="px-6 pb-8">
         <LexicalEditor

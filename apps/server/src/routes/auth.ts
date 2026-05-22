@@ -187,4 +187,74 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// PATCH /api/auth/profile
+router.patch('/profile', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || typeof name !== 'string' || name.trim().length < 2) {
+      res.status(422).json({ status: 'error', message: 'Name must be at least 2 characters' });
+      return;
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { name: name.trim() },
+      select: { id: true, email: true, name: true, createdAt: true },
+    });
+
+    res.status(200).json({ data: { user } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// PATCH /api/auth/password
+router.patch('/password', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(422).json({ status: 'error', message: 'Both current and new password are required' });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(422).json({ status: 'error', message: 'New password must be at least 8 characters' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+    });
+
+    if (!user) {
+      res.status(404).json({ status: 'error', message: 'User not found' });
+      return;
+    }
+
+    const valid = await comparePassword(currentPassword, user.passwordHash);
+    if (!valid) {
+      res.status(401).json({ status: 'error', message: 'Current password is incorrect' });
+      return;
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { passwordHash },
+    });
+
+    // Revoke all refresh tokens — force re-login on all devices
+    await prisma.refreshToken.deleteMany({
+      where: { userId: req.user!.userId },
+    });
+
+    res.status(200).json({ data: { message: 'Password updated successfully' } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
 export default router;
+

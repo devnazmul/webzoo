@@ -73,6 +73,56 @@ router.post("/", async (req: AuthRequest, res: Response) => {
   }
 });
 
+// GET /api/workspaces/:workspaceId/topics/unread-counts
+router.get('/unread-counts', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId } = req.params;
+
+    if (!(await isMember(req.user!.userId, workspaceId))) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+
+    // Get all topics in workspace
+    const topics = await prisma.topic.findMany({
+      where: { workspaceId },
+      select: { id: true },
+    });
+
+    // Get read states for current user
+    const readStates = await prisma.topicReadState.findMany({
+      where: {
+        userId: req.user!.userId,
+        topicId: { in: topics.map((t) => t.id) },
+      },
+    });
+
+    const readStateMap = new Map(
+      readStates.map((rs) => [rs.topicId, rs.lastReadAt])
+    );
+
+    // Count unread messages per topic
+    const unreadCounts: Record<string, number> = {};
+
+    await Promise.all(
+      topics.map(async (topic) => {
+        const lastReadAt = readStateMap.get(topic.id);
+        const count = await prisma.message.count({
+          where: {
+            topicId: topic.id,
+            ...(lastReadAt && { createdAt: { gt: lastReadAt } }),
+          },
+        });
+        unreadCounts[topic.id] = count;
+      })
+    );
+
+    res.status(200).json({ data: { unreadCounts } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
 // GET /api/workspaces/:workspaceId/topics/:topicId
 router.get("/:topicId", async (req: AuthRequest, res: Response) => {
   try {
@@ -95,6 +145,37 @@ router.get("/:topicId", async (req: AuthRequest, res: Response) => {
     res.status(200).json({ data: { topic } });
   } catch (err) {
     res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+// POST /api/workspaces/:workspaceId/topics/:topicId/read
+router.post('/:topicId/read', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId, topicId } = req.params;
+
+    if (!(await isMember(req.user!.userId, workspaceId))) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+
+    await prisma.topicReadState.upsert({
+      where: {
+        userId_topicId: {
+          userId: req.user!.userId,
+          topicId,
+        },
+      },
+      update: { lastReadAt: new Date() },
+      create: {
+        userId: req.user!.userId,
+        topicId,
+        lastReadAt: new Date(),
+      },
+    });
+
+    res.status(200).json({ data: { success: true } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
 

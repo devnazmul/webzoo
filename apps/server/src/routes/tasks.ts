@@ -2,6 +2,8 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/authenticate';
+import { createNotification } from '../utils/notifications';
+import { io } from '../index';
 
 const router = Router({ mergeParams: true });
 router.use(authenticate);
@@ -197,6 +199,21 @@ router.post('/tasks', async (req: AuthRequest, res: Response) => {
       },
     });
 
+    // Emit real-time task created event
+    io.to(topicId).emit('task:created', { task });
+
+    // Notify assignee
+    if (body.data.assigneeId) {
+      await createNotification({
+        type: 'TASK_ASSIGNED',
+        userId: body.data.assigneeId,
+        actorId: req.user!.userId,
+        workspaceId,
+        topicId,
+        taskId: task.id,
+      });
+    }
+
     res.status(201).json({ data: { task } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
@@ -249,6 +266,25 @@ router.patch('/tasks/:taskId', async (req: AuthRequest, res: Response) => {
         status: true,
       },
     });
+
+    // Emit real-time task updated event
+    const { topicId } = req.params;
+    io.to(topicId).emit('task:updated', { task });
+
+    // Notify new assignee if assignee changed
+    if (
+      body.data.assigneeId &&
+      body.data.assigneeId !== existing.assigneeId
+    ) {
+      await createNotification({
+        type: 'TASK_ASSIGNED',
+        userId: body.data.assigneeId,
+        actorId: req.user!.userId,
+        workspaceId,
+        topicId,
+        taskId: task.id,
+      });
+    }
 
     res.status(200).json({ data: { task } });
   } catch (err) {

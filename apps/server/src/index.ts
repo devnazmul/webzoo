@@ -13,6 +13,8 @@ import tasksRouter from './routes/tasks';
 import vaultRouter from './routes/vault';
 import linksRouter from './routes/links';
 import reactionsRouter from './routes/reactions';
+import notificationsRouter from './routes/notifications';
+import dmRouter from './routes/dm';
 
 const app = express();
 const httpServer = createServer(app);
@@ -48,6 +50,8 @@ app.use(
   '/api/workspaces/:workspaceId/topics/:topicId/messages/:messageId/reactions',
   reactionsRouter
 );
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/dm', dmRouter);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -70,6 +74,8 @@ io.on('connection', (socket) => {
 
   socket.on('presence:init', (userId: string) => {
     currentUserId = userId;
+    // Join personal room for notifications
+    socket.join(`user:${userId}`);
     console.log(`User ${userId} initialized presence`);
   });
 
@@ -91,6 +97,16 @@ io.on('connection', (socket) => {
     }
 
     console.log(`Socket ${socket.id} joined topic ${topicId}`);
+  });
+
+  socket.on('dm:join', (conversationId: string) => {
+    socket.join(`dm:${conversationId}`);
+    console.log(`Socket ${socket.id} joined DM ${conversationId}`);
+  });
+
+  socket.on('dm:leave', (conversationId: string) => {
+    socket.leave(`dm:${conversationId}`);
+    console.log(`Socket ${socket.id} left DM ${conversationId}`);
   });
 
   socket.on('topic:leave', (topicId: string) => {

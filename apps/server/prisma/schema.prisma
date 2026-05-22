@@ -24,6 +24,12 @@ model User {
   vaultDocuments VaultDocument[] @relation("VaultDocumentCreator")
   sharedLinks    SharedLink[]   @relation("SharedLinkUser")
   reactions      Reaction[]
+  notifications         Notification[]              @relation("NotificationRecipient")
+  notificationsActed    Notification[]              @relation("NotificationActor")
+  directParticipations  DirectConversationParticipant[]
+  directMessages        DirectMessage[]             @relation("DirectMessageAuthor")
+  directMessageReactions DirectMessageReaction[]
+  topicReadStates       TopicReadState[]
 }
 
 model Workspace {
@@ -34,6 +40,7 @@ model Workspace {
 
   members  WorkspaceMember[]
   topics   Topic[]
+  notifications Notification[]
 }
 
 model WorkspaceMember {
@@ -62,6 +69,7 @@ model Topic {
   tasks          Task[]
   vaultDocuments VaultDocument[]
   sharedLinks    SharedLink[]
+  readStates TopicReadState[]
 }
 
 model Message {
@@ -211,6 +219,97 @@ model Reaction {
 
   @@unique([messageId, userId, emoji])
   @@index([messageId])
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  type        NotificationType
+  userId      String
+  actorId     String
+  workspaceId String
+  topicId     String?
+  messageId   String?
+  taskId      String?
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  user      User      @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User      @relation("NotificationActor", fields: [actorId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+  @@index([userId, createdAt])
+}
+
+model DirectConversation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants DirectConversationParticipant[]
+  messages     DirectMessage[]
+}
+
+model DirectConversationParticipant {
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+
+  conversation DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User               @relation(fields: [userId], references: [id])
+
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model DirectMessage {
+  id             String   @id @default(uuid())
+  content        String   @db.Text
+  conversationId String
+  authorId       String
+  replyToId      String?
+  createdAt      DateTime @default(now())
+
+  conversation DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       User               @relation("DirectMessageAuthor", fields: [authorId], references: [id])
+  replyTo      DirectMessage?     @relation("DirectMessageReplies", fields: [replyToId], references: [id])
+  replies      DirectMessage[]    @relation("DirectMessageReplies")
+  reactions    DirectMessageReaction[]
+
+  @@index([conversationId, createdAt])
+}
+
+model DirectMessageReaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  messageId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  message DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+model TopicReadState {
+  userId      String
+  topicId     String
+  lastReadAt  DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+}
+
+enum NotificationType {
+  MENTION
+  REPLY
+  TASK_ASSIGNED
+  REACTION
+  WORKSPACE_INVITE
 }
 
 enum Role {
