@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useTopicStore } from "@/store/topic.store";
+import { useDMStore } from '@/store/dm.store';
+import { useAuthStore } from '@/store/auth.store';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import NotificationBell from '@/components/ui/NotificationBell';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+import ProfileModal from '@/components/ui/ProfileModal';
+import api from '@/lib/api';
 import {
   Hash,
   Plus,
@@ -14,17 +20,22 @@ import {
   ChevronDown,
   SquarePen,
   Lock,
+  Settings,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 
 interface SidebarProps {
   onCreateTopic: () => void;
   onInviteMember: () => void;
+  onCreateWorkspace: () => void;
+  workspaceMembers: { id: string; label: string }[];
 }
 
 interface NavItemProps {
@@ -109,15 +120,38 @@ const SectionHeader = ({
 
 export default function Sidebar({
   onCreateTopic,
+  onCreateWorkspace,
   onInviteMember,
+  workspaceMembers,
 }: SidebarProps) {
   const activeWorkspace = useWorkspaceStore((s) => s.activeWorkspace);
   const topics = useTopicStore((s) => s.topics);
   const activeTopic = useTopicStore((s) => s.activeTopic);
   const setActiveTopic = useTopicStore((s) => s.setActiveTopic);
+  const unreadCounts = useTopicStore((s) => s.unreadCounts);
+  const user = useAuthStore((s) => s.user);
+  const { conversations, activeConversation, setConversations, setActiveConversation } = useDMStore();
+  const setActiveDM = setActiveConversation;
+  const dmUnreads = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
 
   const [topicsExpanded, setTopicsExpanded] = useState(true);
   const [dmsExpanded, setDmsExpanded] = useState(true);
+  const [showProfile, setShowProfile] = useState(false);
+
+  async function startDM(memberId: string) {
+    try {
+      const res = await api.post('/dm/conversations', { participantId: memberId });
+      const conv = res.data.data.conversation;
+      // Add to list if not already present
+      const exists = conversations.find((c) => c.id === conv.id);
+      if (!exists) setConversations([...conversations, conv]);
+      setActiveDM(conv);
+      // Clear active topic
+      useTopicStore.getState().setActiveTopic(
+        useTopicStore.getState().topics[0] ?? null as any
+      );
+    } catch {}
+  }
 
   return (
     <div
@@ -141,6 +175,26 @@ export default function Sidebar({
             <DropdownMenuItem onClick={onCreateTopic} className="uppercase text-[11px] font-bold tracking-wider">
               Create a channel
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowProfile(true)} className="uppercase text-[11px] font-bold tracking-wider">
+              <Settings size={14} className="mr-2" />
+              Profile settings
+            </DropdownMenuItem>
+            {workspaceMembers && workspaceMembers.length > 0 && (
+              <>
+                <DropdownMenuSeparator className="bg-ghost-border" />
+                <DropdownMenuLabel className="uppercase text-[10px] font-bold tracking-wider px-2 py-1.5 text-spectral-white/40">Message a member</DropdownMenuLabel>
+                {workspaceMembers.map((m) => (
+                  <DropdownMenuItem
+                    key={m.id}
+                    onClick={() => startDM(m.id)}
+                    className="uppercase text-[11px] font-bold tracking-wider"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-green-500 mr-2 flex-shrink-0" />
+                    {m.label}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         <button className="bg-spectral-white/10 hover:bg-spectral-white/20 w-8 h-8 rounded-full flex items-center justify-center text-spectral-white border border-ghost-border transition-all active:scale-95 cursor-pointer">
@@ -167,31 +221,43 @@ export default function Sidebar({
         />
         {topicsExpanded && (
           <div className="space-y-0.5 mb-6">
-            {topics.map((topic) => (
-              <button
-                key={topic.id}
-                onClick={() => setActiveTopic(topic)}
-                className={cn(
-                  "flex items-center cursor-pointer gap-2 w-full px-6 py-2 text-[11px] font-bold uppercase tracking-[1.17px] transition-all group relative",
-                  activeTopic?.id === topic.id
-                    ? "bg-ghost-surface text-white border-r-2 border-spectral-white"
-                    : "text-spectral-white/60 hover:text-spectral-white hover:bg-ghost-surface/50",
-                )}
-              >
-                {topic.private ? (
-                  <Lock
-                    size={14}
-                    className={activeTopic?.id === topic.id ? "text-white" : "text-spectral-white/60"}
-                  />
-                ) : (
-                  <Hash
-                    size={14}
-                    className={activeTopic?.id === topic.id ? "text-white" : "text-spectral-white/60"}
-                  />
-                )}
-                <span className="truncate flex-1 text-left">{topic.name}</span>
-              </button>
-            ))}
+            {topics.map((topic) => {
+              const unread = unreadCounts[topic.id] ?? 0;
+              const isActive = activeTopic?.id === topic.id;
+              const isPrivate = (topic as any).private;
+              return (
+                <button
+                  key={topic.id}
+                  onClick={() => { setActiveConversation(null); setActiveTopic(topic); }}
+                  className={cn(
+                    "flex items-center cursor-pointer gap-2 w-full px-6 py-2 text-[11px] font-bold uppercase tracking-[1.17px] transition-all group relative",
+                    isActive
+                      ? "bg-ghost-surface text-white border-r-2 border-spectral-white"
+                      : unread > 0
+                      ? "text-spectral-white hover:bg-ghost-surface/50 font-black"
+                      : "text-spectral-white/60 hover:text-spectral-white hover:bg-ghost-surface/50",
+                  )}
+                >
+                  {isPrivate ? (
+                    <Lock
+                      size={14}
+                      className={isActive ? "text-white" : unread > 0 ? "text-spectral-white" : "text-spectral-white/60"}
+                    />
+                  ) : (
+                    <Hash
+                      size={14}
+                      className={isActive ? "text-white" : unread > 0 ? "text-spectral-white" : "text-spectral-white/60"}
+                    />
+                  )}
+                  <span className="truncate flex-1 text-left">{topic.name}</span>
+                  {unread > 0 && !isActive && (
+                    <span className="ml-auto flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-spectral-white text-space-black text-[9px] font-bold flex items-center justify-center px-1">
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
             <button
               onClick={onCreateTopic}
               className="flex items-center cursor-pointer gap-2 w-full px-6 py-2 text-[11px] font-bold uppercase tracking-[1.17px] text-spectral-white/40 hover:text-spectral-white hover:bg-ghost-surface/50 transition-colors"
@@ -202,27 +268,51 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* Direct Messages Placeholder */}
+        {/* Direct Messages */}
         <SectionHeader
           label="Direct Messages"
           isOpen={dmsExpanded}
           onToggle={() => setDmsExpanded(!dmsExpanded)}
-          onAdd={() => {}}
         />
         {dmsExpanded && (
-          <div className="px-6 py-2 space-y-3">
-            <div className="flex items-center gap-2 text-spectral-white/60 cursor-pointer transition-colors group hover:text-spectral-white">
-              <div className="w-6 h-6 rounded-full bg-ghost-surface border border-ghost-border flex items-center justify-center text-[9px] font-bold font-industrial uppercase">
-                UN
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider">User Name</span>
-            </div>
-            <p className="text-[9px] text-spectral-white/30 ml-8 uppercase tracking-[1px]">
-              Add teammates to chat!
-            </p>
+          <div className="px-6 py-2 space-y-1">
+            {conversations.length === 0 && (
+              <p className="px-2 text-xs text-spectral-white/30 uppercase tracking-[1px]">No conversations yet</p>
+            )}
+            {conversations.map((conv) => {
+              const other = conv.participants.find((p) => p.id !== user?.id);
+              const isActive = activeConversation?.id === conv.id;
+              return (
+                <button
+                  key={conv.id}
+                  onClick={() => setActiveConversation(conv)}
+                  className={cn(
+                    'flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs transition-colors font-bold uppercase tracking-wider',
+                    isActive
+                      ? 'bg-ghost-surface text-white border-r-2 border-spectral-white'
+                      : conv.unreadCount > 0
+                      ? 'text-spectral-white font-medium hover:bg-ghost-surface/50'
+                      : 'text-spectral-white/60 hover:text-spectral-white hover:bg-ghost-surface/50'
+                  )}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                  <span className="truncate flex-1 text-left">{other?.name ?? 'Unknown'}</span>
+                  {conv.unreadCount > 0 && !isActive && (
+                    <span className="ml-auto flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-spectral-white text-space-black text-[9px] font-bold flex items-center justify-center px-1">
+                      {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </ScrollArea>
+      <div className="p-4 border-t border-ghost-border flex items-center justify-end gap-2">
+        <NotificationBell />
+        <ThemeToggle />
+      </div>
+      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
     </div>
 
   );

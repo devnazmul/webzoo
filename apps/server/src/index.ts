@@ -15,6 +15,8 @@ import linksRouter from './routes/links';
 import reactionsRouter from './routes/reactions';
 import notificationsRouter from './routes/notifications';
 import dmRouter from './routes/dm';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './lib/swagger';
 
 const app = express();
 const httpServer = createServer(app);
@@ -32,6 +34,8 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/workspaces', workspacesRouter);
+// Also mount uploads at top-level for editor convenience
+app.use('/api/upload', uploadsRouter);
 app.use('/api/workspaces/:workspaceId/topics', topicsRouter);
 app.use('/api/workspaces/:workspaceId/topics/:topicId/messages', messagesRouter);
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -56,6 +60,17 @@ app.use('/api/dm', dmRouter);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'webzoo-server' });
+});
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'WebZoo API Docs',
+  swaggerOptions: {
+    persistAuthorization: true,
+  },
+}));
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 // 404 handler

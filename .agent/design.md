@@ -1,218 +1,493 @@
-# Design System Inspired by SpaceX
+# ClickUp™ — Style Reference
 
-## 1. Visual Theme & Atmosphere
+> Vibrant productivity hub: a dynamic workspace with energetic highlights.
 
-SpaceX's website is a full-screen cinematic experience that treats aerospace engineering like a film — every section is a scene, every photograph is a frame, and the interface disappears entirely behind the imagery. The design is pure black (`#000000`) with photography of rockets, space, and planets occupying 100% of the viewport. Text overlays sit directly on these photographs with no background panels, cards, or containers — just type on image, bold and unapologetic.
+**Theme:** light
 
-The typography system uses D-DIN, an industrial geometric typeface with DIN heritage (the German industrial standard). The defining characteristic is that virtually ALL text is uppercase with positive letter-spacing (0.96px–1.17px), creating a military/aerospace labeling system where every word feels stenciled onto a spacecraft hull. D-DIN-Bold at 48px with uppercase and 0.96px tracking for the hero creates headlines that feel like mission briefing titles. Even body text at 16px maintains the uppercase/tracked treatment at smaller scales.
+ClickUp's interface channels a vibrant productivity hub atmosphere: an inviting white canvas contrasts with deep charcoal text, punctuated by vivid accents of violet and electric blue. Its visual identity relies on dynamic, lightweight UI elements, thin borders, and soft shadows, creating a sense of clarity and speed. Typography is confident and modern, leveraging condensed sans-serifs for headings and a highly legible sans-serif for body text, maintaining a tight visual rhythm. Gradients are strategically used for subtle flair and to highlight interactive states, reinforcing an energetic, forward-looking aesthetic.
 
-What makes SpaceX distinctive is its radical minimalism: no shadows, no borders (except one ghost button border at `rgba(240,240,250,0.35)`), no color (only black and a spectral near-white `#f0f0fa`), no cards, no grids. The only visual element is photography + text. The ghost button with `rgba(240,240,250,0.1)` background and 32px radius is the sole interactive element — barely visible, floating over the imagery like a heads-up display. This isn't a design system in the traditional sense — it's a photographic exhibition with a type system and a single button.
+## Tokens — Colors
 
-**Key Characteristics:**
+| Name                | Value                                                                                                              | Token                         | Role                                                                                                                                                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canvas White        | `#ffffff`                                                                                                          | `--color-canvas-white`        | Page backgrounds, card surfaces, ghost button backgrounds, default component fills. Creates a bright, expansive foundation                                                                                                                                    |
+| Midnight Charcoal   | `#292d34`                                                                                                          | `--color-midnight-charcoal`   | Primary body text, active state indicators, strong borders. Provides high contrast against light surfaces                                                                                                                                                     |
+| Dark Onyx           | `linear-gradient(97deg, rgb(32, 32, 32) 43.17%, rgb(143, 143, 143) 110.86%)`                                       | `--color-dark-onyx`           | Backgrounds for prominent buttons, card borders, and primary interactive elements. A deep neutral that commands attention when filled; Subtle background for UI elements, transitioning from dark to light gray                                               |
+| Ash Gray            | `#e8e8e8`                                                                                                          | `--color-ash-gray`            | Subtle borders, dividers, disabled states, ghost button borders. Provides separation without visual noise                                                                                                                                                     |
+| Smoke Gray          | `#b3b3b3`                                                                                                          | `--color-smoke-gray`          | Muted text, secondary icons, subtle outlines. For less prominent information or decorative details                                                                                                                                                            |
+| Hint of Sky         | `#e9ebf0`                                                                                                          | `--color-hint-of-sky`         | Subtle background tint for alternating content sections, providing a soft shift in surface elevation                                                                                                                                                          |
+| Shadow Tint Blue    | `#edf6fd`                                                                                                          | `--color-shadow-tint-blue`    | Light background for interactive states or subtle focus elements                                                                                                                                                                                              |
+| Deep Violet         | `#7b68ee`                                                                                                          | `--color-deep-violet`         | Interactive link text, image accents, decorative strokes – a core brand color, active and inviting                                                                                                                                                            |
+| Electric Blue       | `conic-gradient(rgb(0, 145, 255), rgb(255, 2, 240), rgb(247, 104, 8), rgb(102, 71, 240), rgb(0, 145, 255) 360deg)` | `--color-electric-blue`       | Blue accent for outlined action borders, linked labels, and lightweight interactive emphasis. Do not promote it to the primary CTA color; Decorative backgrounds, illustrative elements, and for conveying a dynamic, modern feel with a broad color spectrum |
+| Rich Plum           | `#514b81`                                                                                                          | `--color-rich-plum`           | Background details, subtle decorative elements, less prominent brand mentions. A deeper, more reserved brand color                                                                                                                                            |
+| Vivid Purple        | `#6647f0`                                                                                                          | `--color-vivid-purple`        | Violet outline accent for tags, dividers, and focused UI edges. Do not promote it to the primary CTA color                                                                                                                                                    |
+| Deep Space Charcoal | `#090c1d`                                                                                                          | `--color-deep-space-charcoal` | Main headings, high-contrast text elements, and specific UI backgrounds where extreme contrast is desired                                                                                                                                                     |
+| Warm Fade Gradient  | `linear-gradient(rgba(246, 233, 232, 0), rgba(255, 91, 54, 0.23))`                                                 | `--color-warm-fade-gradient`  | Subtle accent for visual interest or background texture, fading from transparent to a soft orange                                                                                                                                                             |
 
-- Pure black canvas with full-viewport cinematic photography — the interface is invisible
-- D-DIN / D-DIN-Bold — industrial DIN-heritage typeface
-- Universal uppercase + positive letter-spacing (0.96px–1.17px) — aerospace stencil aesthetic
-- Near-white spectral text (`#f0f0fa`) — not pure white, a slight blue-violet tint
-- Zero shadows, zero cards, zero containers — text on image only
-- Single ghost button: `rgba(240,240,250,0.1)` background with spectral border
-- Full-viewport sections — each section is a cinematic "scene"
-- No decorative elements — every pixel serves the photography
+## Tokens — Typography
 
-## 2. Color Palette & Roles
+### Plus Jakarta Sans — Used for headings and prominent UI elements. Its slightly condensed structure provides a modern, space-efficient feel, especially impactful with subtle negative letter-spacing at larger sizes. · `--font-plus-jakarta-sans`
 
-### Primary
+- **Substitute:** system-ui, sans-serif
+- **Weights:** 400, 500, 650, 700, 800
+- **Sizes:** 14px, 16px, 26px, 34px, 40px, 42px, 48px, 52px, 60px, 76px
+- **Line height:** 1.05, 1.10, 1.12, 1.14, 1.18, 1.20, 1.25, 1.43, 1.50
+- **Letter spacing:** -0.0500em at 76px, -0.0400em at 60px, -0.0350em at 52px, -0.0110em at 48px
+- **OpenType features:** `"calt" 0`
+- **Role:** Used for headings and prominent UI elements. Its slightly condensed structure provides a modern, space-efficient feel, especially impactful with subtle negative letter-spacing at larger sizes.
 
-- **Space Black** (`#000000`): Page background, the void of space — at 50% opacity for overlay gradient
-- **Spectral White** (`#f0f0fa`): Text color — not pure white, a slight blue-violet tint that mimics starlight
+### Inter — Dedicated to body text, UI labels, and captions. Its high legibility and variable font features ensure clarity across various sizes, enhancing the information-dense product experience. · `--font-inter`
 
-### Interactive
+- **Substitute:** system-ui, sans-serif
+- **Weights:** 400, 500, 600, 650, 700
+- **Sizes:** 8px, 9px, 12px, 13px, 14px, 15px, 16px, 17px, 18px, 19px
+- **Line height:** 1.00, 1.14, 1.33, 1.37, 1.38, 1.43, 1.50
+- **Letter spacing:** -0.0400em at 19px, -0.0200em at 18px, -0.0190em at 17px, -0.0160em at 16px, -0.0140em at 15px, -0.0110em at 14px
+- **OpenType features:** `"calt" 0, "clig" 0, "liga" 0`
+- **Role:** Dedicated to body text, UI labels, and captions. Its high legibility and variable font features ensure clarity across various sizes, enhancing the information-dense product experience.
 
-- **Ghost Surface** (`rgba(240, 240, 250, 0.1)`): Button background — nearly invisible, 10% opacity
-- **Ghost Border** (`rgba(240, 240, 250, 0.35)`): Button border — spectral, 35% opacity
-- **Hover White** (`var(--white-100)`): Link hover state — full spectral white
+### Sometype Mono — Used sparingly for code snippets, timestamps, and specific badge content, providing a technical, precise contrast to the primary sans-serifs. · `--font-sometype-mono`
 
-### Gradient
+- **Substitute:** monospace
+- **Weights:** 400, 500
+- **Sizes:** 12px, 14px, 16px, 24px, 40px
+- **Line height:** 1.25, 1.29, 1.38, 1.43
+- **Letter spacing:** 0.0600em
+- **Role:** Used sparingly for code snippets, timestamps, and specific badge content, providing a technical, precise contrast to the primary sans-serifs.
 
-- **Dark Overlay** (`rgba(0, 0, 0, 0.5)`): Gradient overlay on photographs to ensure text legibility
+### Type Scale
 
-## 3. Typography Rules
+| Role       | Size | Line Height | Letter Spacing | Token               |
+| ---------- | ---- | ----------- | -------------- | ------------------- |
+| caption    | 12px | 1.43        | -0.14px        | `--text-caption`    |
+| body-sm    | 14px | 1.43        | -0.15px        | `--text-body-sm`    |
+| body       | 16px | 1.5         | -0.26px        | `--text-body`       |
+| subheading | 26px | 1.25        | -0.91px        | `--text-subheading` |
+| heading-sm | 34px | 1.18        | -1.19px        | `--text-heading-sm` |
+| heading    | 40px | 1.14        | -1.6px         | `--text-heading`    |
+| heading-lg | 52px | 1.12        | -1.82px        | `--text-heading-lg` |
+| display    | 76px | 1.05        | -3.8px         | `--text-display`    |
 
-### Font Families
+## Tokens — Spacing & Shapes
 
-- **Display**: `D-DIN-Bold` — bold industrial geometric
-- **Body / UI**: `D-DIN`, fallbacks: `Arial, Verdana`
+**Base unit:** 4px
 
-### Hierarchy
+**Density:** compact
 
-| Role          | Font       | Size           | Weight | Line Height    | Letter Spacing | Notes                       |
-| ------------- | ---------- | -------------- | ------ | -------------- | -------------- | --------------------------- |
-| Display Hero  | D-DIN-Bold | 48px (3.00rem) | 700    | 1.00 (tight)   | 0.96px         | `text-transform: uppercase` |
-| Body          | D-DIN      | 16px (1.00rem) | 400    | 1.50–1.70      | normal         | Standard reading text       |
-| Nav Link Bold | D-DIN      | 13px (0.81rem) | 700    | 0.94 (tight)   | 1.17px         | `text-transform: uppercase` |
-| Nav Link      | D-DIN      | 12px (0.75rem) | 400    | 2.00 (relaxed) | normal         | `text-transform: uppercase` |
-| Caption Bold  | D-DIN      | 13px (0.81rem) | 700    | 0.94 (tight)   | 1.17px         | `text-transform: uppercase` |
-| Caption       | D-DIN      | 12px (0.75rem) | 400    | 1.00 (tight)   | normal         | `text-transform: uppercase` |
-| Micro         | D-DIN      | 10px (0.63rem) | 400    | 0.94 (tight)   | 1px            | `text-transform: uppercase` |
+### Spacing Scale
 
-### Principles
+| Name | Value | Token           |
+| ---- | ----- | --------------- |
+| 4    | 4px   | `--spacing-4`   |
+| 8    | 8px   | `--spacing-8`   |
+| 12   | 12px  | `--spacing-12`  |
+| 16   | 16px  | `--spacing-16`  |
+| 20   | 20px  | `--spacing-20`  |
+| 24   | 24px  | `--spacing-24`  |
+| 32   | 32px  | `--spacing-32`  |
+| 40   | 40px  | `--spacing-40`  |
+| 48   | 48px  | `--spacing-48`  |
+| 52   | 52px  | `--spacing-52`  |
+| 56   | 56px  | `--spacing-56`  |
+| 60   | 60px  | `--spacing-60`  |
+| 80   | 80px  | `--spacing-80`  |
+| 100  | 100px | `--spacing-100` |
+| 128  | 128px | `--spacing-128` |
 
-- **Universal uppercase**: Nearly every text element uses `text-transform: uppercase`. This creates a systematic military/aerospace voice where all communication feels like official documentation.
-- **Positive letter-spacing as identity**: 0.96px on display, 1.17px on nav — the wide tracking creates the stenciled, industrial feel that connects to DIN's heritage as a German engineering standard.
-- **Two weights, strict hierarchy**: D-DIN-Bold (700) for headlines and nav emphasis, D-DIN (400) for body. No medium or semibold weights exist in the system.
-- **Tight line-heights**: 0.94–1.00 across most text — compressed, efficient, mission-critical communication.
+### Border Radius
 
-## 4. Component Stylings
+| Element          | Value |
+| ---------------- | ----- |
+| cards            | 12px  |
+| pills            | 54px  |
+| buttons          | 9px   |
+| default          | 9px   |
+| largeCards       | 24px  |
+| circularElements | 653px |
 
-### Buttons
+### Shadows
 
-**Ghost Button**
+| Name     | Value                                                          | Token               |
+| -------- | -------------------------------------------------------------- | ------------------- |
+| subtle   | `rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0p...` | `--shadow-subtle`   |
+| xl       | `rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset, rgba(...` | `--shadow-xl`       |
+| subtle-2 | `rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px, rgba(18, 43, ...` | `--shadow-subtle-2` |
+| sm       | `rgba(13, 21, 48, 0.04) 0px 4px 4px 0px`                       | `--shadow-sm`       |
+| xl-2     | `rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset`           | `--shadow-xl-2`     |
 
-- Background: `rgba(240, 240, 250, 0.1)` (barely visible)
-- Text: Spectral White (`#f0f0fa`)
-- Padding: 18px
-- Radius: 32px
-- Border: `1px solid rgba(240, 240, 250, 0.35)`
-- Hover: background brightens, text to `var(--white-100)`
-- Use: The only button variant — "LEARN MORE" CTAs on photography
+### Layout
 
-### Cards & Containers
+- **Page max-width:** 1px
+- **Section gap:** 24px
+- **Card padding:** 12px
+- **Element gap:** 9px
 
-- **None.** SpaceX does not use cards, panels, or containers. All content is text directly on full-viewport photographs. The absence of containers IS the design.
+## Components
 
-### Inputs & Forms
+### Primary Filled Button
 
-- Not present on the homepage. The site is purely presentational.
+**Role:** Call to action
 
-### Navigation
+Filled with Dark Onyx (#202023), text in Canvas White (#ffffff). Rounded with 9px border-radius, using 4px vertical and 12px horizontal padding. Delivers a visually solid, high-priority action indicator.
 
-- Transparent overlay nav on photography
-- D-DIN 13px weight 700, uppercase, 1.17px tracking
-- Spectral white text on dark imagery
-- Logo: SpaceX wordmark at 147x19px
-- Mobile: hamburger collapse
+### Ghost Button
 
-### Image Treatment
+**Role:** Secondary action
 
-- Full-viewport (100vh) photography sections
-- Professional aerospace photography: rockets, Mars, space
-- Dark gradient overlays (`rgba(0,0,0,0.5)`) for text legibility
-- Each section = one full-screen photograph with text overlay
-- No border radius, no frames — edge-to-edge imagery
+Transparent background, text in Midnight Charcoal (#292d34). Features a small 4px border-radius without explicit padding, relying on surrounding layout for spacing, for a subtle interactive element.
 
-## 5. Layout Principles
+### Pill Button
 
-### Spacing System
+**Role:** Tertiary action/Tag
 
-- Base unit: 8px
-- Scale: 3px, 5px, 12px, 15px, 18px, 20px, 24px, 30px
-- Minimal scale — spacing is not the organizing principle; photography is
+Transparent background, text in Charcoal Gray (#646464), with 54px border-radius making them fully rounded. Uses 4px vertical and 12px horizontal padding to create a compact, tag-like appearance.
 
-### Grid & Container
+### Outline Button
 
-- No traditional grid — each section is a full-viewport cinematic frame
-- Text is positioned absolutely or with generous padding over imagery
-- Left-aligned text blocks on photography backgrounds
-- No max-width container — content bleeds to viewport edges
+**Role:** Bordered action/Navigation element
 
-### Whitespace Philosophy
+Transparent background, text in Midnight Charcoal (#000000), bordered by Ash Gray (#000000). Features an 8px border-radius and 4px vertical by 10px horizontal padding, offering a distinct but less assertive interactive state.
 
-- **Photography IS the whitespace**: Empty space in the design is never empty — it's filled with the dark expanse of space, the curve of a planet, or the flame of a rocket engine. Traditional whitespace concepts don't apply.
-- **Vertical pacing through viewport**: Each section is exactly one viewport tall, creating a rhythmic scroll where each "page" reveals a new scene.
+### Feature Card
 
-### Border Radius Scale
+**Role:** Content container
 
-- Sharp (4px): Small dividers, utility elements
-- Button (32px): Ghost buttons — the only rounded element
+Canvas White (#ffffff) background with a 12px border-radius and a light shadow (rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px). Includes 12px padding on all sides, providing a clear, visually separated content block.
 
-## 6. Depth & Elevation
+### Ghost Content Card
 
-| Level                 | Treatment                          | Use                                           |
-| --------------------- | ---------------------------------- | --------------------------------------------- |
-| Photography (Level 0) | Full-viewport imagery              | Background layer — always present             |
-| Overlay (Level 1)     | `rgba(0, 0, 0, 0.5)` gradient      | Text legibility layer over photography        |
-| Text (Level 2)        | Spectral white text, no shadow     | Content layer — text floats directly on image |
-| Ghost (Level 3)       | `rgba(240, 240, 250, 0.1)` surface | Barely-visible interactive layer              |
+**Role:** Visual content container without explicit bounding
 
-**Shadow Philosophy**: SpaceX uses ZERO shadows. In a design built entirely on photography, shadows are meaningless — every surface is already a photograph with natural lighting. Depth comes from the photographic content itself: the receding curvature of Earth, the diminishing trail of a rocket, the atmospheric haze around Mars.
+Fully transparent background (rgba(0, 0, 0, 0)), 20px border-radius, no boxShadow or padding. Designed for content that integrates seamlessly into the background, hinting at a boundary rather than overtly defining one.
 
-## 7. Do's and Don'ts
+### Subtle Badge
+
+**Role:** Informational tag
+
+Transparent background, text in Midnight Charcoal (#000000). No border-radius or padding. Used for discreet labels or category indicators.
+
+### Pill Badge
+
+**Role:** Compact informational tag
+
+Background rgba(0,0,0,0.1), text in Midnight Charcoal (#292d34). Features a 12px border-radius, 10px vertical and 12px horizontal padding. Used for highlighting short pieces of information such as 'Super Agent' labels.
+
+## Do's and Don'ts
 
 ### Do
 
-- Use full-viewport photography as the primary design element — every section is a scene
-- Apply uppercase + positive letter-spacing to ALL text — the aerospace stencil voice
-- Use D-DIN exclusively — no other fonts exist in the system
-- Keep the color palette to black + spectral white (`#f0f0fa`) only
-- Use ghost buttons (`rgba(240,240,250,0.1)`) as the sole interactive element
-- Apply dark gradient overlays for text legibility on photographs
-- Let photography carry the emotional weight — the type system is functional, not expressive
+- Use Plus Jakarta Sans for all headings and prominent brand statements, leveraging its negative letter-spacing at larger sizes for a premium, condensed feel.
+- Prioritize Canvas White (#ffffff) as the primary background for all page sections and elevated component surfaces to maintain a bright, open aesthetic.
+- Apply Midnight Charcoal (#292d34) for primary body text and main content to ensure readability across all contexts.
+- Utilize Electric Blue (#0091ff) or Deep Violet (#7b68ee) as the primary accent colors for interactive elements, links, and key brand highlights.
+- Employ a 9px border-radius for buttons and a 12px radius for cards, with a 54px radius reserved for pill-shaped elements and tags.
+- Create visual hierarchy and separation using thin, subtle borders in Ash Gray (#e8e8e8) or Dark Onyx (#202023) rather than heavy solid backgrounds.
+- Maintain a compact information density with 12px card padding and 9px element gaps, ensuring UI elements feel connected but not overcrowded.
 
 ### Don't
 
-- Don't add cards, panels, or containers — text sits directly on photography
-- Don't use shadows — they have no meaning in a photographic context
-- Don't introduce colors — the palette is strictly achromatic with spectral tint
-- Don't use sentence case — everything is uppercase
-- Don't use negative letter-spacing — all tracking is positive (0.96px–1.17px)
-- Don't reduce photography to thumbnails — every image is full-viewport
-- Don't add decorative elements (icons, badges, dividers) — the design is photography + type + one button
+- Avoid using achromatic grays like #000000 for body text; always prefer Midnight Charcoal (#292d34) for content clarity and consistency.
+- Do not use strong, opaque background colors for action buttons unless explicitly outlined as a Brand or Accent color; prefer Dark Onyx (#202023) for filled primary actions with white text.
+- Do not introduce new shadow styles; stick to the defined, subtle shadows (e.g., rgba(0, 0, 0, 0.1) 0px 1px 3px 0px) to maintain a lightweight elevation philosophy.
+- Refrain from using heavily decorative gradients as primary backgrounds; reserve complex gradients for illustrative and atmospheric elements.
+- Do not extend the use of Sometype Mono beyond code snippets or technical labels; it is not suitable for general body or heading text.
+- Avoid large, unpadded sections; use the defined `elementGap` of 9px and `cardPadding` of 12px to ensure consistent spacing and density.
+- Do not use bold weights indiscriminately; the combination of condensed letter-spacing in Plus Jakarta Sans and Inter provides sufficient visual weight when necessary.
 
-## 8. Responsive Behavior
+## Surfaces
 
-### Breakpoints
+| Level | Name                 | Value     | Purpose                                                                                     |
+| ----- | -------------------- | --------- | ------------------------------------------------------------------------------------------- |
+| 0     | Canvas White         | `#ffffff` | Primary page background and default container surface.                                      |
+| 1     | Hint of Sky          | `#e9ebf0` | Subtle background for alternating content sections, providing a soft shift in visual depth. |
+| 2     | Feature Card Surface | `#ffffff` | Elevated card backgrounds with a soft shadow to indicate interactive or contained content.  |
+| 3     | Shadow Tint Blue     | `#edf6fd` | Light background for interactive states or subtle focus elements.                           |
 
-| Name          | Width       | Key Changes                            |
-| ------------- | ----------- | -------------------------------------- |
-| Mobile        | <600px      | Stacked, reduced padding, smaller type |
-| Tablet Small  | 600–960px   | Adjusted layout                        |
-| Tablet        | 960–1280px  | Standard scaling                       |
-| Desktop       | 1280–1350px | Full layout                            |
-| Large Desktop | 1350–1500px | Expanded                               |
-| Ultra-wide    | >1500px     | Maximum viewport                       |
+## Elevation
 
-### Touch Targets
+- **Feature Card:** `rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px`
+- **Hover/Interactive Elements:** `rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px, rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px, rgba(18, 43, 165, 0.04) 0px 6px 6px -3px, rgba(18, 43, 165, 0.04) 0px 12px 12px -6px`
+- **Button Shadow (subtle):** `rgba(13, 21, 48, 0.04) 0px 4px 4px 0px`
 
-- Ghost buttons: 18px padding provides adequate touch area
-- Navigation links: uppercase with generous letter-spacing aids readability
+## Imagery
 
-### Collapsing Strategy
+Imagery primarily consists of bright, clean product screenshots embedded within UI mockups, often demonstrating the platform's features. These are typically contained within card-like structures or placed alongside explanatory text. Illustrations are abstract and organic, using fluid shapes and soft gradients, serving as decorative atmosphere rather than direct content explanation. Icons are predominantly outlined, conveying a lightweight feel, with a consistent stroke weight. The overall density is balanced: images punctuate text blocks to illustrate functionality without overwhelming the layout.
 
-- Photography: maintains full-viewport at all sizes, content reposition
-- Hero text: 48px → scales down proportionally
-- Navigation: horizontal → hamburger
-- Text blocks: reposition but maintain overlay-on-photography pattern
-- Full-viewport sections maintained on mobile
+## Layout
 
-### Image Behavior
+The page maintains a centered, max-width layout, approximately 1200px wide. The hero section is full-bleed, featuring a prominent headline over a product screenshot. Sections alternate between soft white and subtle gray backgrounds, creating a clear visual rhythm. Content is generally arranged in two-column layouts, often with text on the left and visuals or product UI on the right, or centered stacks for feature showcases. Grid patterns are prominent for displaying product capabilities and features, typically in a multi-column card grid. The navigation is a sticky top bar, providing persistent access to global navigation elements.
 
-- Edge-to-edge photography at all viewport sizes
-- Background-size: cover with center focus
-- Dark overlay gradients adapt to content position
-- No art direction changes — same photographs, responsive positioning
-
-## 9. Agent Prompt Guide
+## Agent Prompt Guide
 
 ### Quick Color Reference
 
-- Background: Space Black (`#000000`)
-- Text: Spectral White (`#f0f0fa`)
-- Button background: Ghost (`rgba(240, 240, 250, 0.1)`)
-- Button border: Ghost Border (`rgba(240, 240, 250, 0.35)`)
-- Overlay: `rgba(0, 0, 0, 0.5)`
+text: #292d34
+background: #ffffff
+border: #e8e8e8
+accent: #7b68ee
+primary action: #202023 (filled action)
 
-### Example Component Prompts
+### 3-5 Example Component Prompts
 
-- "Create a full-viewport hero: background-image covering 100vh, dark gradient overlay rgba(0,0,0,0.5). Headline at 48px D-DIN-Bold, uppercase, letter-spacing 0.96px, spectral white (#f0f0fa) text. Ghost CTA button: rgba(240,240,250,0.1) bg, 1px solid rgba(240,240,250,0.35) border, 32px radius, 18px padding."
-- "Design a navigation: transparent over photography. D-DIN 13px weight 700, uppercase, letter-spacing 1.17px, spectral white text. SpaceX wordmark left-aligned."
-- "Build a content section: full-viewport height, background photography with dark overlay. Left-aligned text block with 48px D-DIN-Bold uppercase heading, 16px D-DIN body text, and ghost button below."
-- "Create a micro label: D-DIN 10px, uppercase, letter-spacing 1px, spectral white, line-height 0.94."
+1. Create a Primary Action Button: #202023 background, #ffffff text, 9999px radius, compact pill padding. Use this filled treatment for the main CTA.
+2. Design a Feature Card: Canvas White (#ffffff) background, 12px border-radius, shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px. Inside, a heading at 26px Plus Jakarta Sans, weight 700, Deep Space Charcoal (#090c1d), letter-spacing -0.91px, 12px padding. Body text at 16px Inter, weight 400, Midnight Charcoal (#292d34), letter-spacing -0.26px.
+3. Implement a Pill Tag: Transparent background, text in Midnight Charcoal (#292d34) at 14px Inter, weight 500, letter-spacing -0.15px. 12px border-radius, 10px vertical / 12px horizontal padding. Border in Ash Gray (#e8e8e8).
+4. Create a Navigation Link: Text in Midnight Charcoal (#292d34) at 16px Inter, weight 500, letter-spacing -0.26px. On hover, text color changes to Deep Violet (#7b68ee) and an underline appears.
 
-### Iteration Guide
+## Similar Brands
 
-1. Start with photography — the image IS the design
-2. All text is uppercase with positive letter-spacing — no exceptions
-3. Only two colors: black and spectral white (#f0f0fa)
-4. Ghost buttons are the only interactive element — transparent, spectral-bordered
-5. Zero shadows, zero cards, zero decorative elements
-6. Every section is full-viewport (100vh) — cinematic pacing
+- **Notion** — Similar focus on white canvas, modular content blocks, and productivity software UI with clear typography.
+- **Asana** — Employs a clean, bright interface with distinct accent colors for task management and status, paired with functional sans-serif typography.
+- **Linear** — Uses a minimalist approach with a strong emphasis on content, subtle elevation, and precise typographic control in software development tools.
+- **Figma** — Leverages a light UI with carefully selected accent colors for interactive elements, featuring clear information hierarchy in a design tool context.
+
+## Quick Start
+
+### CSS Custom Properties
+
+```css
+:root {
+  /* Colors */
+  --color-canvas-white: #ffffff;
+  --color-midnight-charcoal: #292d34;
+  --color-dark-onyx: #202023;
+  --gradient-dark-onyx: linear-gradient(
+    97deg,
+    rgb(32, 32, 32) 43.17%,
+    rgb(143, 143, 143) 110.86%
+  );
+  --color-ash-gray: #e8e8e8;
+  --color-smoke-gray: #b3b3b3;
+  --color-hint-of-sky: #e9ebf0;
+  --color-shadow-tint-blue: #edf6fd;
+  --color-deep-violet: #7b68ee;
+  --color-electric-blue: #0091ff;
+  --gradient-electric-blue: conic-gradient(
+    rgb(0, 145, 255),
+    rgb(255, 2, 240),
+    rgb(247, 104, 8),
+    rgb(102, 71, 240),
+    rgb(0, 145, 255) 360deg
+  );
+  --color-rich-plum: #514b81;
+  --color-vivid-purple: #6647f0;
+  --color-deep-space-charcoal: #090c1d;
+  --color-warm-fade-gradient: #ff5b36;
+  --gradient-warm-fade-gradient: linear-gradient(
+    rgba(246, 233, 232, 0),
+    rgba(255, 91, 54, 0.23)
+  );
+
+  /* Typography — Font Families */
+  --font-plus-jakarta-sans:
+    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-inter:
+    "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --font-sometype-mono:
+    "Sometype Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
+  /* Typography — Scale */
+  --text-caption: 12px;
+  --leading-caption: 1.43;
+  --tracking-caption: -0.14px;
+  --text-body-sm: 14px;
+  --leading-body-sm: 1.43;
+  --tracking-body-sm: -0.15px;
+  --text-body: 16px;
+  --leading-body: 1.5;
+  --tracking-body: -0.26px;
+  --text-subheading: 26px;
+  --leading-subheading: 1.25;
+  --tracking-subheading: -0.91px;
+  --text-heading-sm: 34px;
+  --leading-heading-sm: 1.18;
+  --tracking-heading-sm: -1.19px;
+  --text-heading: 40px;
+  --leading-heading: 1.14;
+  --tracking-heading: -1.6px;
+  --text-heading-lg: 52px;
+  --leading-heading-lg: 1.12;
+  --tracking-heading-lg: -1.82px;
+  --text-display: 76px;
+  --leading-display: 1.05;
+  --tracking-display: -3.8px;
+
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-w650: 650;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Spacing */
+  --spacing-unit: 4px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-52: 52px;
+  --spacing-56: 56px;
+  --spacing-60: 60px;
+  --spacing-80: 80px;
+  --spacing-100: 100px;
+  --spacing-128: 128px;
+
+  /* Layout */
+  --page-max-width: 1px;
+  --section-gap: 24px;
+  --card-padding: 12px;
+  --element-gap: 9px;
+
+  /* Border Radius */
+  --radius-lg: 9px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 20px;
+  --radius-3xl: 24px;
+  --radius-3xl-2: 28px;
+  --radius-3xl-3: 32px;
+  --radius-3xl-4: 39px;
+  --radius-3xl-5: 45px;
+  --radius-full: 54px;
+  --radius-full-2: 653px;
+
+  /* Named Radii */
+  --radius-cards: 12px;
+  --radius-pills: 54px;
+  --radius-buttons: 9px;
+  --radius-default: 9px;
+  --radius-largecards: 24px;
+  --radius-circularelements: 653px;
+
+  /* Shadows */
+  --shadow-subtle:
+    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+  --shadow-xl:
+    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset,
+    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
+  --shadow-subtle-2:
+    rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px,
+    rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px,
+    rgba(18, 43, 165, 0.04) 0px 6px 6px -3px,
+    rgba(18, 43, 165, 0.04) 0px 12px 12px -6px;
+  --shadow-sm: rgba(13, 21, 48, 0.04) 0px 4px 4px 0px;
+  --shadow-xl-2: rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
+
+  /* Surfaces */
+  --surface-canvas-white: #ffffff;
+  --surface-hint-of-sky: #e9ebf0;
+  --surface-feature-card-surface: #ffffff;
+  --surface-shadow-tint-blue: #edf6fd;
+}
+```
+
+### Tailwind v4
+
+```css
+@theme {
+  /* Colors */
+  --color-canvas-white: #ffffff;
+  --color-midnight-charcoal: #292d34;
+  --color-dark-onyx: #202023;
+  --color-ash-gray: #e8e8e8;
+  --color-smoke-gray: #b3b3b3;
+  --color-hint-of-sky: #e9ebf0;
+  --color-shadow-tint-blue: #edf6fd;
+  --color-deep-violet: #7b68ee;
+  --color-electric-blue: #0091ff;
+  --color-rich-plum: #514b81;
+  --color-vivid-purple: #6647f0;
+  --color-deep-space-charcoal: #090c1d;
+  --color-warm-fade-gradient: #ff5b36;
+
+  /* Typography */
+  --font-plus-jakarta-sans:
+    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-inter:
+    "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --font-sometype-mono:
+    "Sometype Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
+  /* Typography — Scale */
+  --text-caption: 12px;
+  --leading-caption: 1.43;
+  --tracking-caption: -0.14px;
+  --text-body-sm: 14px;
+  --leading-body-sm: 1.43;
+  --tracking-body-sm: -0.15px;
+  --text-body: 16px;
+  --leading-body: 1.5;
+  --tracking-body: -0.26px;
+  --text-subheading: 26px;
+  --leading-subheading: 1.25;
+  --tracking-subheading: -0.91px;
+  --text-heading-sm: 34px;
+  --leading-heading-sm: 1.18;
+  --tracking-heading-sm: -1.19px;
+  --text-heading: 40px;
+  --leading-heading: 1.14;
+  --tracking-heading: -1.6px;
+  --text-heading-lg: 52px;
+  --leading-heading-lg: 1.12;
+  --tracking-heading-lg: -1.82px;
+  --text-display: 76px;
+  --leading-display: 1.05;
+  --tracking-display: -3.8px;
+
+  /* Spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-52: 52px;
+  --spacing-56: 56px;
+  --spacing-60: 60px;
+  --spacing-80: 80px;
+  --spacing-100: 100px;
+  --spacing-128: 128px;
+
+  /* Border Radius */
+  --radius-lg: 9px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 20px;
+  --radius-3xl: 24px;
+  --radius-3xl-2: 28px;
+  --radius-3xl-3: 32px;
+  --radius-3xl-4: 39px;
+  --radius-3xl-5: 45px;
+  --radius-full: 54px;
+  --radius-full-2: 653px;
+
+  /* Shadows */
+  --shadow-subtle:
+    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+  --shadow-xl:
+    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset,
+    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
+  --shadow-subtle-2:
+    rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px,
+    rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px,
+    rgba(18, 43, 165, 0.04) 0px 6px 6px -3px,
+    rgba(18, 43, 165, 0.04) 0px 12px 12px -6px;
+  --shadow-sm: rgba(13, 21, 48, 0.04) 0px 4px 4px 0px;
+  --shadow-xl-2: rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
+}
+```

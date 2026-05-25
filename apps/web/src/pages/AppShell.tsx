@@ -13,17 +13,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MessageFeed from "@/components/chat/MessageFeed";
+import { useDMStore } from '@/store/dm.store';
+import DMFeed from '@/components/dm/DMFeed';
 
 export default function AppShell() {
   const user = useAuthStore((s) => s.user);
   const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace } =
     useWorkspaceStore();
-  const { setTopics, setActiveTopic } = useTopicStore();
+  const { setTopics, setActiveTopic, setUnreadCounts, incrementUnread, clearUnread } = useTopicStore();
+  const {
+    conversations,
+    activeConversation,
+    setConversations,
+    setActiveConversation,
+    incrementUnread: dmIncrementUnread,
+    clearUnread: dmClearUnread,
+  } = useDMStore();
 
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
   const [showCreateTopic, setShowCreateTopic] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
-  const [showRightPanel, setShowRightPanel] = useState(false);
   const [wsName, setWsName] = useState("");
   const [topicName, setTopicName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -63,18 +72,30 @@ export default function AppShell() {
 
   const loadTopics = useCallback(async (workspaceId: string) => {
     try {
-      const res = await api.get(`/workspaces/${workspaceId}/topics`);
-      const data = res.data.data.topics;
+      const [topicsRes, unreadRes] = await Promise.all([
+        api.get(`/workspaces/${workspaceId}/topics`),
+        api.get(`/workspaces/${workspaceId}/topics/unread-counts`),
+      ]);
+      const data = topicsRes.data.data.topics;
       setTopics(data);
       if (data.length > 0) setActiveTopic(data[0]);
       setAllTopics(data.map((t: any) => ({ id: t.id, label: t.name })));
+      setUnreadCounts(unreadRes.data.data.unreadCounts);
     } catch {}
-  }, [setTopics, setActiveTopic]);
+  }, [setTopics, setActiveTopic, setUnreadCounts]);
+
+  async function loadDMs() {
+    try {
+      const res = await api.get('/dm/conversations');
+      setConversations(res.data.data.conversations ?? []);
+    } catch {}
+  }
 
   useEffect(() => {
     if (user) {
       connectSocket(user.id);
       loadWorkspaces();
+      loadDMs();
     }
   }, [user, loadWorkspaces]);
 
@@ -87,17 +108,36 @@ export default function AppShell() {
   useEffect(() => {
     if (!activeWorkspace) return;
     const socket = getSocket();
-    function onPresenceUpdate(data: {
-      topicId: string;
-      onlineUsers: string[];
-    }) {
+
+    function onPresenceUpdate(data: { topicId: string; onlineUsers: string[] }) {
       setOnlineUsers(data.onlineUsers);
     }
-    socket.on("presence:update", onPresenceUpdate);
+
+    function onNewMessage(data: { message: { topicId: string } }) {
+      const { activeTopic } = useTopicStore.getState();
+      if (data.message.topicId !== activeTopic?.id) {
+        incrementUnread(data.message.topicId);
+      }
+    }
+
+    function onNewDMMessage(data: { message: { conversationId: string } }) {
+      const { activeConversation } = useDMStore.getState();
+      if (data.message.conversationId !== activeConversation?.id) {
+        dmIncrementUnread(data.message.conversationId);
+      } else {
+        dmClearUnread(data.message.conversationId);
+      }
+    }
+
+    socket.on('presence:update', onPresenceUpdate);
+    socket.on('message:new', onNewMessage);
+    socket.on('dm:message:new', onNewDMMessage);
     return () => {
-      socket.off("presence:update", onPresenceUpdate);
+      socket.off('presence:update', onPresenceUpdate);
+      socket.off('message:new', onNewMessage);
+      socket.off('dm:message:new', onNewDMMessage);
     };
-  }, [activeWorkspace]);
+  }, [activeWorkspace, incrementUnread, dmIncrementUnread, dmClearUnread]);
 
   async function handleCreateWorkspace(e: React.FormEvent) {
     e.preventDefault();
@@ -152,6 +192,18 @@ export default function AppShell() {
 
   const activeTopic = useTopicStore((s) => s.activeTopic);
 
+  // Mark topic as read when user switches to it
+  useEffect(() => {
+    if (!activeTopic || !activeWorkspace) return;
+    clearUnread(activeTopic.id);
+    api.post(`/workspaces/${activeWorkspace.id}/topics/${activeTopic.id}/read`).catch(() => {});
+  }, [activeTopic?.id, activeWorkspace, clearUnread]);
+
+  useEffect(() => {
+    if (!activeConversation) return;
+    dmClearUnread(activeConversation.id);
+  }, [activeConversation?.id, dmClearUnread]);
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-space-black relative">
       {/* Aurora Blurry Gradients */}
@@ -181,35 +233,48 @@ export default function AppShell() {
               setModalError("");
               setShowCreateTopic(true);
             }}
+            onCreateWorkspace={() => {
+              setModalError("");
+              setShowCreateWorkspace(true);
+            }}
             onInviteMember={() => {
               setModalError("");
               setShowInvite(true);
             }}
+            workspaceMembers={workspaceMembers}
           />
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0 bg-black/10 backdrop-blur-sm border-l border-ghost-border">
-          {activeTopic && (
-            <MessageFeed
-              topic={activeTopic}
-              workspaceId={activeWorkspace!.id}
-              memberNames={memberNames}
-              onlineUsers={onlineUsers}
-              workspaceMembers={workspaceMembers}
-              allTopics={allTopics}
-              onToggleDetails={() => setShowRightPanel(!showRightPanel)}
-            />
+        <div className="flex-1 flex min-h-0 overflow-hidden bg-black/10 backdrop-blur-sm border-l border-ghost-border">
+          <div className="flex-1 flex flex-col min-h-0 min-w-0">
+            {activeConversation ? (
+              <DMFeed
+                conversation={activeConversation}
+                currentUserId={user?.id ?? ''}
+              />
+            ) : activeTopic && (
+              <MessageFeed
+                topic={activeTopic}
+                workspaceId={activeWorkspace!.id}
+                memberNames={memberNames}
+                onlineUsers={onlineUsers}
+                workspaceMembers={workspaceMembers}
+                allTopics={allTopics}
+                onToggleDetails={() => {}}
+              />
+            )}
+          </div>
+          {!activeConversation && activeTopic && (
+            <div className="w-72 flex-shrink-0">
+              <RightPanel
+                topic={activeTopic}
+                workspaceId={activeWorkspace!.id}
+                workspaceMembers={workspaceMembers}
+              />
+            </div>
           )}
         </div>
-
-        {/* Right Panel */}
-        {showRightPanel && (
-          <RightPanel 
-            onClose={() => setShowRightPanel(false)}
-            onlineCount={onlineUsers.length}
-          />
-        )}
       </div>
 
 

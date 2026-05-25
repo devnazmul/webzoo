@@ -3,6 +3,8 @@ import { getSocket } from "@/lib/socket";
 import { useAuthStore } from "@/store/auth.store";
 import { useCallback, useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
+import CreateTaskModal from '@/components/tasks/CreateTaskModal';
+import { useTaskStore } from '@/store/task.store';
 
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -37,6 +39,9 @@ export default function MessageFeed({
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [taskFromMessage, setTaskFromMessage] = useState<{ content: string } | null>(null);
+  const statuses = useTaskStore((s) => s.statuses);
+  const addTask = useTaskStore((s) => s.addTask);
   const prevTopicId = useRef<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -199,8 +204,13 @@ export default function MessageFeed({
                     topicId={topic.id}
                     onReply={(msg) => setReplyTo(msg)}
                     onCreateTask={(msg) => {
-                      // Will wire to task creation modal later
-                      console.log('Create task from message:', msg.id);
+                      const plain = (() => {
+                        try {
+                          const p = JSON.parse(msg.content);
+                          return p?.plainText ?? msg.content;
+                        } catch { return msg.content; }
+                      })();
+                      setTaskFromMessage({ content: plain.slice(0, 200) });
                     }}
                   />
                 </div>
@@ -239,6 +249,21 @@ export default function MessageFeed({
           onSend={handleSend}
         />
       </div>
+      {taskFromMessage && statuses.length > 0 && (
+        <CreateTaskModal
+          workspaceId={workspaceId}
+          topicId={topic.id}
+          statusId={statuses[0].id}
+          statuses={statuses}
+          workspaceMembers={workspaceMembers}
+          onClose={() => setTaskFromMessage(null)}
+          onCreated={(task) => {
+            addTask(task);
+            setTaskFromMessage(null);
+          }}
+          prefillTitle={taskFromMessage.content}
+        />
+      )}
     </div>
   );
 }

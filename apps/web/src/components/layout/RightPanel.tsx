@@ -1,103 +1,71 @@
-import { X, UserPlus, Phone, Search, MoreHorizontal, ChevronDown, Hash } from "lucide-react";
-import { useTopicStore } from "@/store/topic.store";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from 'react';
+import { CheckSquare, BookOpen, Image, Link } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Topic } from '@webzoo/shared';
+import TasksTab from '@/components/tasks/TasksTab';
+import VaultTab from '@/components/vault/VaultTab';
+import MediaTab from '@/components/media/MediaTab';
+import LinksTab from '@/components/links/LinksTab';
 
-interface RightPanelProps {
-  onClose: () => void;
-  onlineCount: number;
+type Tab = 'tasks' | 'vault' | 'media' | 'links';
+
+interface Props {
+  topic: Topic;
+  workspaceId: string;
+  workspaceMembers: { id: string; label: string }[];
 }
 
-export default function RightPanel({ onClose, onlineCount }: RightPanelProps) {
-  const activeTopic = useTopicStore((s) => s.activeTopic);
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: 'tasks', label: 'Tasks', icon: <CheckSquare size={15} /> },
+  { id: 'vault', label: 'Vault', icon: <BookOpen size={15} /> },
+  { id: 'media', label: 'Media', icon: <Image size={15} /> },
+  { id: 'links', label: 'Links', icon: <Link size={15} /> },
+];
 
-  if (!activeTopic) return null;
+export default function RightPanel({ topic, workspaceId, workspaceMembers }: Props) {
+  const [activeTab, setActiveTab] = useState<Tab>('tasks');
 
   return (
-    <div className="w-80 flex flex-col bg-black/30 backdrop-blur-xl border-l border-ghost-border shrink-0 animate-in slide-in-from-right duration-300">
-      <div className="h-12 border-b border-ghost-border flex items-center px-6 justify-between bg-black/20">
-        <span className="font-industrial font-bold text-[12px] uppercase tracking-[2px] text-spectral-white">Telemetry Details</span>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} className="text-spectral-white/50 hover:text-white">
-          <X size={18} />
-        </Button>
+    <div className="flex flex-col h-full border-l border-border bg-background">
+      {/* Tab bar */}
+      <div className="flex border-b border-border flex-shrink-0">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px',
+              activeTab === tab.id
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-6 space-y-8">
-          {/* Channel Name */}
-          <div className="space-y-1">
-             <div className="flex items-center gap-2">
-              <Hash size={16} className="text-spectral-white/50" />
-              <span className="font-industrial font-bold text-lg text-spectral-white uppercase tracking-wider">{activeTopic.name}</span>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { icon: UserPlus, label: "ADD" },
-              { icon: Search, label: "FIND" },
-              { icon: Phone, label: "LINK" },
-              { icon: MoreHorizontal, label: "DATA" },
-            ].map((action) => (
-              <button key={action.label} className="flex flex-col items-center gap-2 group">
-                <div className="w-10 h-10 rounded-full bg-spectral-white/5 border border-ghost-border flex items-center justify-center text-spectral-white/70 group-hover:bg-spectral-white/20 group-hover:text-white transition-all">
-                  <action.icon size={16} />
-                </div>
-                <span className="text-[9px] font-bold tracking-widest text-spectral-white/40 group-hover:text-spectral-white/70">{action.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="h-px bg-ghost-border" />
-
-          {/* About Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-spectral-white cursor-pointer group">
-              <span className="font-industrial font-bold text-[11px] uppercase tracking-[1.5px]">Mission Objective</span>
-              <ChevronDown size={14} className="text-spectral-white/30 group-hover:text-white" />
-            </div>
-            <div className="space-y-5">
-              <div>
-                <p className="text-[9px] font-bold text-spectral-white/30 uppercase tracking-[2px] mb-2">Subject</p>
-                <p className="text-[13px] text-spectral-white/70 leading-relaxed font-medium">
-                  Primary coordination for project Essence.
-                </p>
-              </div>
-              <div>
-                <p className="text-[9px] font-bold text-spectral-white/30 uppercase tracking-[2px] mb-2">Protocol</p>
-                <p className="text-[13px] text-spectral-white/70 leading-relaxed font-medium">
-                  Strict adherence to industrial standards and cinematic excellence is mandatory for all transmissions.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="h-px bg-ghost-border" />
-
-          {/* Members Section Placeholder */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-spectral-white cursor-pointer group">
-              <div className="flex items-center gap-3">
-                <span className="font-industrial font-bold text-[11px] uppercase tracking-[1.5px]">Active Personnel</span>
-                <span className="text-spectral-white/30 text-[11px] font-bold border border-ghost-border px-2 rounded-full">{onlineCount}</span>
-              </div>
-              <ChevronDown size={14} className="text-spectral-white/30 group-hover:text-white" />
-            </div>
-          </div>
-
-          <div className="h-px bg-ghost-border" />
-
-          {/* Pinned Messages Placeholder */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-spectral-white cursor-pointer group">
-              <span className="font-industrial font-bold text-[11px] uppercase tracking-[1.5px]">Archived Data</span>
-              <ChevronDown size={14} className="text-spectral-white/30 group-hover:text-white" />
-            </div>
-          </div>
-        </div>
-      </ScrollArea>
+      {/* Tab content */}
+      <div className="flex-1 overflow-hidden">
+        {activeTab === 'tasks' && (
+          <TasksTab
+            topic={topic}
+            workspaceId={workspaceId}
+            workspaceMembers={workspaceMembers}
+          />
+        )}
+        {activeTab === 'vault' && (
+          <VaultTab topic={topic} workspaceId={workspaceId} />
+        )}
+        {activeTab === 'media' && (
+          <MediaTab topic={topic} workspaceId={workspaceId} />
+        )}
+        {activeTab === 'links' && (
+          <LinksTab topic={topic} workspaceId={workspaceId} />
+        )}
+      </div>
     </div>
-
   );
 }

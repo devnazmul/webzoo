@@ -37,6 +37,7 @@ import FilePreview from "./ui/FilePreview";
 import { serializeEditor } from "./utils/serializer";
 import { SerializedFileNode, MentionSuggestion } from "./utils/schema";
 import { getSocket } from "@/lib/socket";
+import { uploadFile, UploadedFile } from '@/lib/upload';
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
@@ -175,45 +176,22 @@ function InnerEditor({
     }
   }, [editor, sending, files, topicId, onSend]);
 
-  function handleFilesAdded(newFiles: SerializedFileNode[]) {
-    setFiles((prev) => [...prev, ...newFiles]);
-    setHasContent(true);
+  function handleFilesChange(uploadedList: UploadedFile[]) {
+    const mapped: SerializedFileNode[] = uploadedList.map((uploaded) => ({
+      type: "file" as const,
+      fileId: uploaded.id,
+      name: uploaded.originalName,
+      mimeType: uploaded.mimeType,
+      size: uploaded.size,
+      previewUrl: `${import.meta.env.VITE_API_URL ?? 'http://localhost:4000'}${uploaded.url}`,
+      version: 1 as const,
+    }));
+    setFiles(mapped);
+    setHasContent(mapped.length > 0);
   }
 
   function handleFileRemove(fileId: string) {
     setFiles((prev) => prev.filter((f) => f.fileId !== fileId));
-  }
-
-  function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles || selectedFiles.length === 0) return;
-    // Process through FilePlugin logic inline
-    const fileArray = Array.from(selectedFiles);
-    Promise.all(
-      fileArray.map(async (file) => {
-        const { v4: uuidv4 } = await import("uuid");
-        let previewUrl: string | null = null;
-        if (file.type.startsWith("image/")) {
-          previewUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (ev) =>
-              resolve((ev.target?.result as string) ?? null);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(file);
-          });
-        }
-        return {
-          type: "file" as const,
-          fileId: uuidv4(),
-          name: file.name,
-          mimeType: file.type,
-          size: file.size,
-          previewUrl,
-          version: 1 as const,
-        };
-      }),
-    ).then(handleFilesAdded);
-    e.target.value = "";
   }
 
   function handleEmojiClick(data: EmojiClickData) {
@@ -331,7 +309,15 @@ function InnerEditor({
         type="file"
         multiple
         className="hidden"
-        onChange={handleFileInputChange}
+        onChange={async (e) => {
+          const files = e.target.files;
+          if (!files) return;
+          const root = editor.getRootElement();
+          if (root && (root as any).__handleFiles) {
+            await (root as any).__handleFiles(files);
+          }
+          e.target.value = '';
+        }}
       />
 
       {/* Emoji picker */}
@@ -357,7 +343,7 @@ function InnerEditor({
       <SlashCommandPlugin />
       <MentionPlugin onSearch={onMentionSearch} />
       <TopicPlugin onSearch={onTopicSearch} />
-      <FilePlugin onFilesAdded={handleFilesAdded} />
+      <FilePlugin onFilesChange={handleFilesChange} />
       <SendPlugin onSend={handleSend} />
       <OnChangePlugin onChange={handleEditorChange} />
     </div>

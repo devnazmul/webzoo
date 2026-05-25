@@ -1,102 +1,98 @@
-import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import {
-  $createParagraphNode,
-  $getRoot,
-  $insertNodes,
-  COMMAND_PRIORITY_HIGH,
-  PASTE_COMMAND,
-  DROP_COMMAND,
-} from 'lexical';
+import { useEffect, useRef } from 'react';
+import { $getRoot, $createParagraphNode } from 'lexical';
 import { $createFileNode } from '../nodes/FileNode';
-import { SerializedFileNode } from '../utils/schema';
-import { v4 as uuidv4 } from 'uuid';
+import { uploadFile, UploadedFile } from '@/lib/upload';
 
 interface Props {
-  onFilesAdded: (files: SerializedFileNode[]) => void;
+  onFilesChange?: (files: UploadedFile[]) => void;
 }
 
-async function fileToPreviewUrl(file: File): Promise<string | null> {
-  if (!file.type.startsWith('image/')) return null;
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target?.result as string ?? null);
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
-  });
-}
-
-async function processFiles(
-  files: FileList | File[],
-  onFilesAdded: (files: SerializedFileNode[]) => void
-) {
-  const fileArray = Array.from(files);
-  const serialized: SerializedFileNode[] = await Promise.all(
-    fileArray.map(async (file) => ({
-      type: 'file' as const,
-      fileId: uuidv4(),
-      name: file.name,
-      mimeType: file.type,
-      size: file.size,
-      previewUrl: await fileToPreviewUrl(file),
-      version: 1 as const,
-    }))
-  );
-  onFilesAdded(serialized);
-}
-
-export default function FilePlugin({ onFilesAdded }: Props) {
+export default function FilePlugin({ onFilesChange }: Props) {
   const [editor] = useLexicalComposerContext();
+  const uploadedFiles = useRef<UploadedFile[]>([]);
 
-  // Handle paste events with files
   useEffect(() => {
-    return editor.registerCommand(
-      PASTE_COMMAND,
-      (event: ClipboardEvent) => {
-        const files = event.clipboardData?.files;
-        if (files && files.length > 0) {
-          event.preventDefault();
-          processFiles(files, onFilesAdded);
-          return true;
+    // Expose a trigger function on the editor's root element
+    const root = editor.getRootElement();
+    if (!root) return;
+
+    async function handleFiles(files: FileList | File[]) {
+      const fileArray = Array.from(files);
+      for (const file of fileArray) {
+        try {
+          const uploaded = await uploadFile(file);
+          uploadedFiles.current = [...uploadedFiles.current, uploaded];
+          onFilesChange?.(uploadedFiles.current);
+
+          editor.update(() => {
+            const root = $getRoot();
+            const lastChild = root.getLastChild();
+            const fileNode = $createFileNode(
+              uploaded.id,
+              uploaded.originalName,
+              uploaded.mimeType,
+              uploaded.size,
+              `${import.meta.env.VITE_API_URL ?? 'http://localhost:4000'}${uploaded.url}`
+            );
+            const para = $createParagraphNode();
+            para.append(fileNode);
+            if (lastChild) {
+              lastChild.insertAfter(para);
+            } else {
+              root.append(para);
+            }
+          });
+        } catch (err) {
+          console.error('Upload failed:', err);
         }
-        return false;
-      },
-      COMMAND_PRIORITY_HIGH
-    );
-  }, [editor, onFilesAdded]);
-
-  // Handle drag and drop
-  useEffect(() => {
-    return editor.registerCommand(
-      DROP_COMMAND,
-      (event: DragEvent) => {
-        const files = event.dataTransfer?.files;
-        if (files && files.length > 0) {
-          event.preventDefault();
-          processFiles(files, onFilesAdded);
-          return true;
-        }
-        return false;
-      },
-      COMMAND_PRIORITY_HIGH
-    );
-  }, [editor, onFilesAdded]);
-
-  // Handle dragover on the editor DOM element
-  useEffect(() => {
-    const editorEl = editor.getRootElement();
-    if (!editorEl) return;
-
-    const handleDragOver = (e: DragEvent) => {
-      if (e.dataTransfer?.types.includes('Files')) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
       }
-    };
+    }
 
-    editorEl.addEventListener('dragover', handleDragOver);
-    return () => editorEl.removeEventListener('dragover', handleDragOver);
-  }, [editor]);
+    // File input handler
+    function onFileInput(e: Event) {
+      const input = e.target as HTMLInputElement;
+      if (input.files) handleFiles(input.files);
+    }
+
+    // Drag & drop handler on the editor root
+    function onDrop(e: DragEvent) {
+      e.preventDefault();
+      if (e.dataTransfer?.files) handleFiles(e.dataTransfer.files);
+    }
+
+    // Dragover handler
+    function onDragOver(e: DragEvent) {
+      e.preventDefault();
+    }
+
+    // Paste handler
+    function onPaste(e: ClipboardEvent) {
+      if (!e.clipboardData) return;
+      const files = Array.from(e.clipboardData.items)
+        .filter((i) => i.kind === 'file')
+        .map((i) => i.getAsFile())
+        .filter(Boolean) as File[];
+      if (files.length > 0) {
+        e.preventDefault();
+        handleFiles(files);
+      }
+    }
+
+    root.addEventListener('drop', onDrop);
+    root.addEventListener('dragover', onDragOver);
+    root.addEventListener('paste', onPaste);
+
+    // Store handler ref so toolbar attach button can call it
+    (root as any).__handleFiles = handleFiles;
+
+    return () => {
+      root.removeEventListener('drop', onDrop);
+      root.removeEventListener('dragover', onDragOver);
+      root.removeEventListener('paste', onPaste);
+      delete (root as any).__handleFiles;
+    };
+  }, [editor, onFilesChange]);
 
   return null;
 }
