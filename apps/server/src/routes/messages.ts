@@ -44,12 +44,12 @@ function extractPlainText(content: string): string {
 }
 
 // GET /api/workspaces/:workspaceId/topics/:topicId/messages
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.get("/", async (req: AuthRequest, res: Response) => {
   try {
     const { workspaceId, topicId } = req.params;
 
     if (!(await isMember(req.user!.userId, workspaceId))) {
-      res.status(403).json({ status: 'error', message: 'Access denied' });
+      res.status(403).json({ status: "error", message: "Access denied" });
       return;
     }
 
@@ -57,8 +57,11 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const limit = 50;
 
     const messages = await prisma.message.findMany({
-      where: { topicId },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        topicId,
+        replyToId: null,
+      },
+      orderBy: { createdAt: "desc" },
       take: limit,
       ...(cursor && {
         skip: 1,
@@ -67,16 +70,6 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       include: {
         author: {
           select: { id: true, name: true },
-        },
-        reactions: {
-          include: {
-            user: { select: { id: true, name: true } },
-          },
-        },
-        replyTo: {
-          include: {
-            author: { select: { id: true, name: true } },
-          },
         },
         _count: {
           select: { replies: true },
@@ -94,7 +87,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 });
 
@@ -126,26 +119,29 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    const replyToId = req.body.replyToId as string | undefined;
+
+    // Validate replyToId exists if provided
+    if (replyToId) {
+      const parent = await prisma.message.findUnique({
+        where: { id: replyToId },
+      });
+      if (!parent || parent.topicId !== topicId) {
+        res.status(404).json({ status: "error", message: "Parent message not found" });
+        return;
+      }
+    }
+
     const message = await prisma.message.create({
       data: {
         content: body.data.content,
         topicId,
         authorId: req.user!.userId,
-        replyToId: body.data.replyToId,
+        ...(replyToId ? { replyToId } : {}),
       },
       include: {
         author: {
           select: { id: true, name: true },
-        },
-        reactions: {
-          include: {
-            user: { select: { id: true, name: true } },
-          },
-        },
-        replyTo: {
-          include: {
-            author: { select: { id: true, name: true } },
-          },
         },
         _count: {
           select: { replies: true },
@@ -201,6 +197,78 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     }
 
     res.status(201).json({ data: { message } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// GET /api/workspaces/:workspaceId/topics/:topicId/messages/:messageId/replies
+router.get('/:messageId/replies', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId, topicId, messageId } = req.params;
+
+    if (!(await isMember(req.user!.userId, workspaceId))) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+
+    const replies = await prisma.message.findMany({
+      where: { topicId, replyToId: messageId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        author: { select: { id: true, name: true } },
+      },
+    });
+
+    res.status(200).json({ data: { messages: replies } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/workspaces/:workspaceId/topics/:topicId/messages/:messageId
+router.delete('/:messageId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId, topicId, messageId } = req.params;
+    const { deleteFor } = req.query; // 'me' | 'everyone'
+
+    if (!(await isMember(req.user!.userId, workspaceId))) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+    });
+
+    if (!message || message.topicId !== topicId) {
+      res.status(404).json({ status: 'error', message: 'Message not found' });
+      return;
+    }
+
+    if (deleteFor === 'everyone') {
+      // Only author can delete for everyone
+      if (message.authorId !== req.user!.userId) {
+        res.status(403).json({ status: 'error', message: 'Only the author can delete for everyone' });
+        return;
+      }
+      // Soft-delete: mark as deleted
+      const updated = await prisma.message.update({
+        where: { id: messageId },
+        data: { content: '__deleted__', deletedAt: new Date() } as any,
+        include: { author: { select: { id: true, name: true } } },
+      });
+      io.to(topicId).emit('message:deleted', { messageId, topicId, deletedFor: 'everyone' });
+      res.status(200).json({ data: { message: updated } });
+    } else {
+      // Delete for me — just acknowledge, frontend handles local removal
+      io.to(topicId).emit('message:deleted:me', {
+        messageId,
+        topicId,
+        userId: req.user!.userId,
+      });
+      res.status(200).json({ data: { messageId, deletedFor: 'me' } });
+    }
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }

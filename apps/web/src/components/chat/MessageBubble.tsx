@@ -6,33 +6,31 @@ import MessageActions from './MessageActions';
 import ReactionBar from './ReactionBar';
 import api from '@/lib/api';
 
+interface ExtendedMessage extends Message {
+  reactions?: { id: string; emoji: string; user: { id: string; name: string } }[];
+  replyTo?: { id: string; content: string; author: { id: string; name: string } } | null;
+  deletedAt?: string | null;
+}
+
 interface Props {
-  message: Message & {
-    reactions?: { id: string; emoji: string; user: { id: string; name: string } }[];
-    replyTo?: { id: string; content: string; author: { id: string; name: string } } | null;
-  };
+  message: ExtendedMessage;
   isOwn: boolean;
   currentUserId: string;
   workspaceId: string;
   topicId: string;
   onReply: (message: Message) => void;
   onCreateTask: (message: Message) => void;
+  onDeleteLocal: (messageId: string) => void;
+  onReactionUpdate: (messageId: string, reactions: any[]) => void;
+  onOpenThread: (message: Message) => void;
 }
 
 function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
 function formatTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function extractPlainText(content: string): string {
@@ -51,9 +49,16 @@ export default function MessageBubble({
   topicId,
   onReply,
   onCreateTask,
+  onDeleteLocal,
+  onReactionUpdate,
+  onOpenThread,
 }: Props) {
   const [reactions, setReactions] = useState(message.reactions ?? []);
   const [showActions, setShowActions] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(
+    !!(message.deletedAt || message.content === '__deleted__')
+  );
+  const replyCount = (message as any)._count?.replies ?? 0;
 
   async function handleReact(emoji: string) {
     try {
@@ -61,7 +66,27 @@ export default function MessageBubble({
         `/workspaces/${workspaceId}/topics/${topicId}/messages/${message.id}/reactions`,
         { emoji }
       );
-      setReactions(res.data.data.reactions);
+      const updated = res.data.data.reactions;
+      setReactions(updated);
+      onReactionUpdate(message.id, updated);
+    } catch {}
+  }
+
+  async function handleDeleteForMe() {
+    try {
+      await api.delete(
+        `/workspaces/${workspaceId}/topics/${topicId}/messages/${message.id}?deleteFor=me`
+      );
+      onDeleteLocal(message.id);
+    } catch {}
+  }
+
+  async function handleDeleteForEveryone() {
+    try {
+      await api.delete(
+        `/workspaces/${workspaceId}/topics/${topicId}/messages/${message.id}?deleteFor=everyone`
+      );
+      setIsDeleted(true);
     } catch {}
   }
 
@@ -79,10 +104,10 @@ export default function MessageBubble({
 
       <div className="flex-1 min-w-0">
         {/* Reply context */}
-        {message.replyTo && (
+        {message.replyTo && !isDeleted && (
           <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground border-l-2 border-border pl-2">
             <span className="font-medium">{message.replyTo.author.name}</span>
-            <span className="truncate max-w-xs">
+            <span className="truncate max-w-xs opacity-70">
               {extractPlainText(message.replyTo.content).slice(0, 80)}
             </span>
           </div>
@@ -97,22 +122,45 @@ export default function MessageBubble({
           </span>
         </div>
 
-        <MessageRenderer content={message.content} />
-        <ReactionBar
-          reactions={reactions}
-          currentUserId={currentUserId}
-          onToggle={handleReact}
-        />
+        {isDeleted ? (
+          <p className="text-sm text-muted-foreground italic">
+            This message was deleted.
+          </p>
+        ) : (
+          <>
+            <MessageRenderer content={message.content} />
+            <ReactionBar
+              reactions={reactions}
+              currentUserId={currentUserId}
+              onToggle={handleReact}
+            />
+            {replyCount > 0 && !isDeleted && (
+              <button
+                type="button"
+                onClick={() => onOpenThread(message)}
+                className="mt-1 flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+              </button>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Action buttons — visible on hover */}
-      {showActions && (
-        <div className="absolute right-4 top-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Actions — only for non-deleted messages */}
+      {showActions && !isDeleted && (
+        <div className="absolute right-4 top-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <MessageActions
             message={message}
+            isOwn={isOwn}
             onReact={handleReact}
             onReply={() => onReply(message)}
             onCreateTask={() => onCreateTask(message)}
+            onDeleteForMe={handleDeleteForMe}
+            onDeleteForEveryone={handleDeleteForEveryone}
           />
         </div>
       )}

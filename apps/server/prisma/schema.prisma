@@ -73,23 +73,24 @@ model Topic {
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
+  id        String    @id @default(uuid())
+  content   String    @db.Text
   topicId   String
   authorId  String
-  createdAt DateTime @default(now())
+  replyToId String?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
 
-  topic  Topic @relation(fields: [topicId], references: [id])
-  author User  @relation(fields: [authorId], references: [id])
-
-  @@index([topicId, createdAt])
-  replyToId   String?
-  replyTo     Message?    @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies     Message[]   @relation("MessageReplies")
+  topic   Topic    @relation(fields: [topicId], references: [id])
+  author  User     @relation(fields: [authorId], references: [id])
+  replyTo Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies Message[] @relation("MessageReplies")
   attachments Attachment[]
   tasks       Task[]
   sharedLinks SharedLink[]
   reactions   Reaction[]
+
+  @@index([topicId, createdAt])
 }
 
 model RefreshToken {

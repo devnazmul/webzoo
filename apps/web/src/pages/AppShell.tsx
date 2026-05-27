@@ -7,7 +7,6 @@ import api from "@/lib/api";
 import Sidebar from "@/components/layout/Sidebar";
 import SidebarNarrow from "@/components/layout/SidebarNarrow";
 import TopBar from "@/components/layout/TopBar";
-import RightPanel from "@/components/layout/RightPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -246,7 +245,7 @@ export default function AppShell() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex min-h-0 overflow-hidden bg-black/10 backdrop-blur-sm border-l border-ghost-border">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-black/10 backdrop-blur-sm border-l border-ghost-border">
           <div className="flex-1 flex flex-col min-h-0 min-w-0">
             {activeConversation ? (
               <DMFeed
@@ -261,19 +260,9 @@ export default function AppShell() {
                 onlineUsers={onlineUsers}
                 workspaceMembers={workspaceMembers}
                 allTopics={allTopics}
-                onToggleDetails={() => {}}
               />
             )}
           </div>
-          {!activeConversation && activeTopic && (
-            <div className="w-72 flex-shrink-0">
-              <RightPanel
-                topic={activeTopic}
-                workspaceId={activeWorkspace!.id}
-                workspaceMembers={workspaceMembers}
-              />
-            </div>
-          )}
         </div>
       </div>
 

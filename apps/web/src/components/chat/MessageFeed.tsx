@@ -1,18 +1,21 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { getSocket } from "@/lib/socket";
-import { useAuthStore } from "@/store/auth.store";
-import { useCallback, useEffect, useRef, useState } from "react";
-import MessageBubble from "./MessageBubble";
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useAuthStore } from '@/store/auth.store';
+import { getSocket } from '@/lib/socket';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import MessageBubble from './MessageBubble';
+import TypingIndicator from './TypingIndicator';
+import DateSeparator from './DateSeparator';
+import TopicTabs, { TopicTab } from './TopicTabs';
 import CreateTaskModal from '@/components/tasks/CreateTaskModal';
 import { useTaskStore } from '@/store/task.store';
-
-import { Button } from "@/components/ui/button";
-import api from "@/lib/api";
-import { Message, Topic } from "@webzoo/shared";
-import { ChevronDown, Hash, Info, Reply } from "lucide-react";
-import TypingIndicator from "./TypingIndicator";
-import LexicalEditor from "./editor/LexicalEditor";
-import DateSeparator from './DateSeparator';
+import TasksTab from '@/components/tasks/TasksTab';
+import VaultTab from '@/components/vault/VaultTab';
+import MediaTab from '@/components/media/MediaTab';
+import LinksTab from '@/components/links/LinksTab';
+import LexicalEditor from './editor/LexicalEditor';
+import api from '@/lib/api';
+import { Message, Topic } from '@webzoo/shared';
+import ThreadPanel from './ThreadPanel';
 
 interface Props {
   topic: Topic;
@@ -21,7 +24,6 @@ interface Props {
   onlineUsers: string[];
   workspaceMembers: { id: string; label: string }[];
   allTopics: { id: string; label: string }[];
-  onToggleDetails: () => void;
 }
 
 export default function MessageFeed({
@@ -31,81 +33,121 @@ export default function MessageFeed({
   onlineUsers,
   workspaceMembers,
   allTopics,
-  onToggleDetails,
 }: Props) {
   const user = useAuthStore((s) => s.user);
   const [messages, setMessages] = useState<Message[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [threadMessage, setThreadMessage] = useState<Message | null>(null);
   const [taskFromMessage, setTaskFromMessage] = useState<{ content: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<TopicTab>('messages');
   const statuses = useTaskStore((s) => s.statuses);
   const addTask = useTaskStore((s) => s.addTask);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const prevTopicId = useRef<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  const loadMessages = useCallback(async () => {
+  useEffect(() => {
+    const socket = getSocket();
+    if (prevTopicId.current) socket.emit('topic:leave', prevTopicId.current);
+    socket.emit('topic:join', topic.id);
+    prevTopicId.current = topic.id;
+    setMessages([]);
+    setTypingUsers([]);
+    setActiveTab('messages');
+    loadMessages();
+
+    function onNewMessage(data: { message: Message & { replyToId?: string } }) {
+      const msg = data.message;
+
+      // If this is a reply, increment the parent's reply count
+      // and do NOT add it to the main feed
+      if (msg.replyToId) {
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m.id !== msg.replyToId) return m;
+            const current = (m as any)._count?.replies ?? 0;
+            return {
+              ...m,
+              _count: { ...((m as any)._count ?? {}), replies: current + 1 },
+            } as any;
+          })
+        );
+        return;
+      }
+
+      // Top-level message — add to main feed
+      setMessages((prev) => {
+        if (prev.find((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+      setTimeout(scrollToBottom, 50);
+    }
+
+    function onTypingUpdate(data: {
+      topicId: string; userId: string; isTyping: boolean;
+    }) {
+      if (data.topicId !== topic.id) return;
+      if (data.userId === user?.id) return;
+      setTypingUsers((prev) =>
+        data.isTyping
+          ? prev.includes(data.userId) ? prev : [...prev, data.userId]
+          : prev.filter((id) => id !== data.userId)
+      );
+    }
+
+    function onMessageDeleted(data: { messageId: string; deletedFor: string }) {
+      if (data.deletedFor === 'everyone') {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.messageId
+              ? { ...m, content: '__deleted__', deletedAt: new Date().toISOString() } as any
+              : m
+          )
+        );
+      }
+    }
+
+    function onReactionUpdate(data: { messageId: string; reactions: any[] }) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === data.messageId ? { ...m, reactions: data.reactions } as any : m
+        )
+      );
+    }
+
+    socket.on('message:new', onNewMessage);
+    socket.on('typing:update', onTypingUpdate);
+    socket.on('message:deleted', onMessageDeleted);
+    socket.on('reaction:update', onReactionUpdate);
+    return () => {
+      socket.off('message:new', onNewMessage);
+      socket.off('typing:update', onTypingUpdate);
+      socket.off('message:deleted', onMessageDeleted);
+      socket.off('reaction:update', onReactionUpdate);
+    };
+  }, [topic.id]);
+
+  async function loadMessages() {
     setLoading(true);
     try {
       const res = await api.get(
-        `/workspaces/${workspaceId}/topics/${topic.id}/messages`,
+        `/workspaces/${workspaceId}/topics/${topic.id}/messages`
       );
       setMessages(res.data.data.messages);
       setTimeout(scrollToBottom, 50);
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, topic.id, scrollToBottom]);
+  }
 
-  useEffect(() => {
-    const socket = getSocket();
-
-    if (prevTopicId.current) {
-      socket.emit("topic:leave", prevTopicId.current);
-    }
-
-    socket.emit("topic:join", topic.id);
-    prevTopicId.current = topic.id;
-    setMessages([]);
-    setTypingUsers([]);
-    loadMessages();
-
-    function onNewMessage(data: { message: Message }) {
-      setMessages((prev) => {
-        if (prev.find((m) => m.id === data.message.id)) return prev;
-        return [...prev, data.message];
-      });
-      setTimeout(scrollToBottom, 50);
-    }
-
-    function onTypingUpdate(data: {
-      topicId: string;
-      userId: string;
-      isTyping: boolean;
-    }) {
-      if (data.topicId !== topic.id) return;
-      if (data.userId === user?.id) return;
-      setTypingUsers((prev) =>
-        data.isTyping
-          ? prev.includes(data.userId)
-            ? prev
-            : [...prev, data.userId]
-          : prev.filter((id) => id !== data.userId),
-      );
-    }
-
-    socket.on("message:new", onNewMessage);
-    socket.on("typing:update", onTypingUpdate);
-
-    return () => {
-      socket.off("message:new", onNewMessage);
-      socket.off("typing:update", onTypingUpdate);
-    };
-  }, [topic.id, user?.id, loadMessages, scrollToBottom]);
+  function handleDeleteLocal(messageId: string) {
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }
 
   async function handleSend(content: string) {
     await api.post(
@@ -116,139 +158,129 @@ export default function MessageFeed({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-black/5 backdrop-blur-sm">
-      {/* SpaceX-style header */}
-      <div className="h-12 border-b border-ghost-border flex items-center px-6 justify-between flex-shrink-0 bg-black/20">
-        <div className="flex items-center gap-4 min-w-0">
-          <button className="flex items-center gap-2 hover:bg-ghost-surface rounded-full px-3 py-1 -ml-2 transition-all group border border-transparent hover:border-ghost-border">
-            <Hash size={16} className="text-spectral-white" />
-            <span className="font-industrial font-bold text-[14px] uppercase tracking-[1.17px] truncate text-spectral-white">
-              {topic.name}
-            </span>
-            <ChevronDown size={14} className="text-spectral-white/50" />
-          </button>
-        </div>
+    <div className="flex flex-col h-full min-h-0">
+      {/* Topic tab bar */}
+      <TopicTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        topicName={topic.name}
+        onlineCount={onlineUsers.length}
+      />
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleDetails}
-            className="h-8 px-4 gap-2 text-spectral-white hover:bg-ghost-surface hover:text-white font-bold uppercase text-[10px] tracking-wider rounded-full border border-ghost-border"
-          >
-            <div className="flex -space-x-1.5 items-center">
-              {[...Array(Math.min(3, onlineUsers.length))].map((_, i) => (
-                <div
-                  key={i}
-                  className="w-5 h-5 rounded-full border border-space-black bg-spectral-white/20 text-[8px] flex items-center justify-center font-bold text-spectral-white"
-                >
-                  {memberNames[onlineUsers[i]]
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2) || "U"}
+      {/* Tab content */}
+      {activeTab === 'messages' && (
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* Main feed */}
+          <div className="flex flex-col flex-1 min-h-0 min-w-0">
+            <ScrollArea className="flex-1 py-4 overflow-y-auto">
+              {loading && (
+                <div className="flex justify-center py-8 text-muted-foreground text-sm">
+                  Loading messages...
                 </div>
-              ))}
-            </div>
-            <span>{onlineUsers.length} ONLINE</span>
-          </Button>
-          <div className="w-px h-6 bg-ghost-border mx-1" />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onToggleDetails}
-            className="text-spectral-white/50 hover:text-white"
-          >
-            <Info size={18} />
-          </Button>
-        </div>
-      </div>
-
-      <ScrollArea className="flex-1 overflow-y-auto">
-        <div className="px-6 py-10">
-          {!loading && messages.length === 0 && (
-            <div className="mb-12 border border-ghost-border bg-ghost-surface/20 p-8 rounded-2xl backdrop-blur-md max-w-2xl">
-              <div className="w-14 h-14 bg-spectral-white/10 border border-ghost-border rounded-full flex items-center justify-center mb-6">
-                <Hash size={28} className="text-spectral-white" />
-              </div>
-              <h2 className="text-3xl font-industrial font-bold text-spectral-white uppercase tracking-[1.17px] mb-4">
-                Channel Initialized: #{topic.name}
-              </h2>
-              <p className="text-spectral-white/60 text-[14px] max-w-lg leading-relaxed uppercase tracking-wider font-medium">
-                Establishing communication in{" "}
-                <span className="text-spectral-white">#{topic.name}</span>. All
-                telemetry and data transmissions are encrypted and archived for
-                mission history.
-              </p>
-            </div>
-          )}
-
-          <div className="space-y-6">
-            {messages.map((message, index) => {
-              const prevMessage = messages[index - 1];
-              const showDateSeparator = !prevMessage ||
-                new Date(message.createdAt).toDateString() !==
-                new Date(prevMessage.createdAt).toDateString();
-
-              return (
-                <div key={message.id}>
-                  {showDateSeparator && (
-                    <DateSeparator date={new Date(message.createdAt)} />
-                  )}
-                  <MessageBubble
-                    message={message as any}
-                    isOwn={message.authorId === user?.id}
-                    currentUserId={user?.id ?? ''}
-                    workspaceId={workspaceId}
-                    topicId={topic.id}
-                    onReply={(msg) => setReplyTo(msg)}
-                    onCreateTask={(msg) => {
-                      const plain = (() => {
-                        try {
-                          const p = JSON.parse(msg.content);
-                          return p?.plainText ?? msg.content;
-                        } catch { return msg.content; }
-                      })();
-                      setTaskFromMessage({ content: plain.slice(0, 200) });
-                    }}
-                  />
+              )}
+              {!loading && messages.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <span className="text-4xl mb-3 opacity-20">#</span>
+                  <p className="font-medium">Welcome to #{topic.name}</p>
+                  <p className="text-sm">Send the first message!</p>
                 </div>
-              );
-            })}
+              )}
+              {messages.map((message, index) => {
+                const prev = messages[index - 1];
+                const showDate = !prev ||
+                  new Date(message.createdAt).toDateString() !==
+                  new Date(prev.createdAt).toDateString();
+                return (
+                  <div key={message.id}>
+                    {showDate && <DateSeparator date={new Date(message.createdAt)} />}
+                    <MessageBubble
+                      message={message as any}
+                      isOwn={message.authorId === user?.id}
+                      currentUserId={user?.id ?? ''}
+                      workspaceId={workspaceId}
+                      topicId={topic.id}
+                      onReply={(msg) => setThreadMessage(msg)}
+                      onOpenThread={(msg) => setThreadMessage(msg)}
+                      onCreateTask={(msg) => {
+                        const plain = (() => {
+                          try {
+                            const p = JSON.parse(msg.content);
+                            return p?.plainText ?? msg.content;
+                          } catch { return msg.content; }
+                        })();
+                        setTaskFromMessage({ content: plain.slice(0, 200) });
+                      }}
+                      onDeleteLocal={handleDeleteLocal}
+                      onReactionUpdate={(messageId, reactions) => {
+                        setMessages((prev) =>
+                          prev.map((m) =>
+                            m.id === messageId ? { ...m, reactions } as any : m
+                          )
+                        );
+                      }}
+                    />
+                  </div>
+                );
+              })}
+              <TypingIndicator typingUsers={typingUsers} memberNames={memberNames} />
+              <div ref={bottomRef} />
+            </ScrollArea>
+
+
+
+            <LexicalEditor
+              topicId={topic.id}
+              topicName={topic.name}
+              users={workspaceMembers}
+              topics={allTopics}
+              onSend={handleSend}
+            />
           </div>
-          <TypingIndicator
-            typingUsers={typingUsers}
-            memberNames={memberNames}
-          />
-          <div ref={bottomRef} className="h-4" />
-        </div>
-      </ScrollArea>
 
-      {replyTo && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-muted border-t border-border text-sm">
-          <Reply size={14} className="text-muted-foreground flex-shrink-0" />
-          <span className="text-muted-foreground">Replying to</span>
-          <span className="font-medium truncate">{replyTo.author.name}</span>
-          <button
-            type="button"
-            onClick={() => setReplyTo(null)}
-            className="ml-auto text-muted-foreground hover:text-foreground"
-          >
-            ✕
-          </button>
+          {/* Thread panel */}
+          {threadMessage && (
+            <ThreadPanel
+              parentMessage={threadMessage}
+              workspaceId={workspaceId}
+              topicId={topic.id}
+              topicName={topic.name}
+              workspaceMembers={workspaceMembers}
+              allTopics={allTopics}
+              onClose={() => setThreadMessage(null)}
+            />
+          )}
         </div>
       )}
 
-      <div className="px-6 pb-8">
-        <LexicalEditor
-          topicId={topic.id}
-          topicName={topic.name}
-          users={workspaceMembers}
-          topics={allTopics}
-          onSend={handleSend}
-        />
-      </div>
+      {activeTab === 'tasks' && (
+        <div className="flex-1 overflow-hidden">
+          <TasksTab
+            topic={topic}
+            workspaceId={workspaceId}
+            workspaceMembers={workspaceMembers}
+          />
+        </div>
+      )}
+
+      {activeTab === 'vault' && (
+        <div className="flex-1 overflow-hidden">
+          <VaultTab topic={topic} workspaceId={workspaceId} />
+        </div>
+      )}
+
+      {activeTab === 'media' && (
+        <div className="flex-1 overflow-hidden">
+          <MediaTab topic={topic} workspaceId={workspaceId} />
+        </div>
+      )}
+
+      {activeTab === 'links' && (
+        <div className="flex-1 overflow-hidden">
+          <LinksTab topic={topic} workspaceId={workspaceId} />
+        </div>
+      )}
+
+      {/* Create task modal */}
       {taskFromMessage && statuses.length > 0 && (
         <CreateTaskModal
           workspaceId={workspaceId}
@@ -257,10 +289,7 @@ export default function MessageFeed({
           statuses={statuses}
           workspaceMembers={workspaceMembers}
           onClose={() => setTaskFromMessage(null)}
-          onCreated={(task) => {
-            addTask(task);
-            setTaskFromMessage(null);
-          }}
+          onCreated={(task) => { addTask(task); setTaskFromMessage(null); }}
           prefillTitle={taskFromMessage.content}
         />
       )}

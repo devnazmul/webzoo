@@ -12,11 +12,6 @@ import api from '@/lib/api';
 import {
   Hash,
   Plus,
-  MessageSquareText,
-  AtSign,
-  FileText,
-  History,
-  MoreVertical,
   ChevronDown,
   SquarePen,
   Lock,
@@ -37,43 +32,6 @@ interface SidebarProps {
   onCreateWorkspace: () => void;
   workspaceMembers: { id: string; label: string }[];
 }
-
-interface NavItemProps {
-  icon: React.ElementType;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-  badge?: string;
-}
-
-const NavItem = ({
-  icon: Icon,
-  label,
-  active,
-  onClick,
-  badge,
-}: NavItemProps) => (
-  <button
-    onClick={onClick}
-    className={cn(
-      "flex items-center cursor-pointer gap-2 w-full px-6 py-2 text-[11px] font-bold uppercase tracking-[1.17px] transition-all group relative",
-      active
-        ? "bg-ghost-surface text-white border-r-2 border-spectral-white"
-        : "text-spectral-white/60 hover:text-spectral-white hover:bg-ghost-surface/50",
-    )}
-  >
-    <Icon
-      size={14}
-      className={active ? "text-white" : "text-spectral-white/60 group-hover:text-spectral-white"}
-    />
-    <span className="truncate flex-1 text-left">{label}</span>
-    {badge && (
-      <span className="bg-spectral-white text-space-black text-[9px] px-1.5 py-0.5 rounded-full font-bold">
-        {badge}
-      </span>
-    )}
-  </button>
-);
 
 interface SectionHeaderProps {
   label: string;
@@ -203,14 +161,6 @@ export default function Sidebar({
       </div>
 
       <ScrollArea className="flex-1 py-4">
-        {/* Top items */}
-        <div className="space-y-0.5">
-          <NavItem icon={History} label="All unreads" badge="2" />
-          <NavItem icon={MessageSquareText} label="Threads" />
-          <NavItem icon={AtSign} label="Mentions & reactions" />
-          <NavItem icon={FileText} label="Drafts" />
-          <NavItem icon={MoreVertical} label="More" />
-        </div>
 
         {/* Topics */}
         <SectionHeader
