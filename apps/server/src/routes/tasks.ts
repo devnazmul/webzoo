@@ -2,153 +2,94 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/authenticate';
-import { createNotification } from '../utils/notifications';
 import { io } from '../index';
 
 const router = Router({ mergeParams: true });
 router.use(authenticate);
 
-// Helper: check workspace membership
-async function isMember(userId: string, workspaceId: string): Promise<boolean> {
-  const member = await prisma.workspaceMember.findUnique({
+async function isMember(userId: string, workspaceId: string) {
+  const m = await prisma.workspaceMember.findUnique({
     where: { userId_workspaceId: { userId, workspaceId } },
   });
-  return !!member;
+  return !!m;
 }
 
-const createStatusSchema = z.object({
-  name: z.string().min(1).max(50),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#6366f1'),
-});
+// ─── Task Statuses ───────────────────────────────────────
 
-const createTaskSchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().optional(),
-  statusId: z.string(),
-  assigneeId: z.string().optional(),
-  messageId: z.string().optional(),
-  dueDate: z.string().optional(),
-});
-
-const updateTaskSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
-  statusId: z.string().optional(),
-  assigneeId: z.string().nullable().optional(),
-  order: z.number().optional(),
-  dueDate: z.string().nullable().optional(),
-  version: z.number(),
-});
-
-const createSubtaskSchema = z.object({
-  title: z.string().min(1).max(200),
-});
-
-// ─── Task Statuses ────────────────────────────────────────────────────────────
-
-// GET /api/workspaces/:workspaceId/topics/:topicId/task-statuses
-router.get('/task-statuses', async (req: AuthRequest, res: Response) => {
+// GET /api/workspaces/:workspaceId/tasks/statuses
+router.get('/statuses', async (req: AuthRequest, res: Response) => {
   try {
-    const { workspaceId, topicId } = req.params;
+    const { workspaceId } = req.params;
+    const topicId = req.query.topicId as string;
+    
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
+    if (!topicId) {
+      res.status(400).json({ status: 'error', message: 'topicId is required' });
+      return;
+    }
 
-    const statuses = await prisma.taskStatus.findMany({
+    let statuses = await prisma.taskStatus.findMany({
       where: { topicId },
       orderBy: { order: 'asc' },
-      include: {
-        tasks: {
-          orderBy: { order: 'asc' },
-          include: {
-            assignee: { select: { id: true, name: true } },
-            createdBy: { select: { id: true, name: true } },
-            subtasks: { orderBy: { order: 'asc' } },
-            _count: { select: { subtasks: true } },
-          },
-        },
-      },
     });
 
-    // Seed default statuses if none exist
+    // Auto-seed if empty
     if (statuses.length === 0) {
       const defaults = [
-        { name: 'To Do', color: '#6366f1', order: 0 },
+        { name: 'Todo',        color: '#6366f1', order: 0 },
         { name: 'In Progress', color: '#f59e0b', order: 1 },
-        { name: 'Done', color: '#10b981', order: 2 },
+        { name: 'Bugs',        color: '#ef4444', order: 2 },
+        { name: 'Done',        color: '#22c55e', order: 3 },
       ];
-      const created = await Promise.all(
-        defaults.map((d) =>
-          prisma.taskStatus.create({ data: { ...d, topicId } })
-        )
-      );
-      res.status(200).json({
-        data: { statuses: created.map((s) => ({ ...s, tasks: [] })) },
+      await prisma.taskStatus.createMany({
+        data: defaults.map((s) => ({ ...s, topicId })),
       });
-      return;
+      statuses = await prisma.taskStatus.findMany({
+        where: { topicId },
+        orderBy: { order: 'asc' },
+      });
     }
 
     res.status(200).json({ data: { statuses } });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
 
-// POST /api/workspaces/:workspaceId/topics/:topicId/task-statuses
-router.post('/task-statuses', async (req: AuthRequest, res: Response) => {
+// POST /api/workspaces/:workspaceId/tasks/statuses
+router.post('/statuses', async (req: AuthRequest, res: Response) => {
   try {
-    const { workspaceId, topicId } = req.params;
+    const { workspaceId } = req.params;
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
-
-    const body = createStatusSchema.safeParse(req.body);
-    if (!body.success) {
-      res.status(422).json({ status: 'error', message: body.error.errors[0].message });
+    const { name, color, position, topicId } = req.body;
+    if (!name || !color || !topicId) {
+      res.status(422).json({ status: 'error', message: 'name, color and topicId required' });
       return;
     }
-
-    const lastStatus = await prisma.taskStatus.findFirst({
-      where: { topicId },
-      orderBy: { order: 'desc' },
-    });
-
     const status = await prisma.taskStatus.create({
-      data: {
-        name: body.data.name,
-        color: body.data.color,
-        order: (lastStatus?.order ?? -1) + 1,
-        topicId,
-      },
+      data: { name, color, order: position ?? 0, topicId },
     });
-
     res.status(201).json({ data: { status } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
 
-// DELETE /api/workspaces/:workspaceId/topics/:topicId/task-statuses/:statusId
-router.delete('/task-statuses/:statusId', async (req: AuthRequest, res: Response) => {
+// DELETE /api/workspaces/:workspaceId/tasks/statuses/:statusId
+router.delete('/statuses/:statusId', async (req: AuthRequest, res: Response) => {
   try {
-    const { workspaceId, topicId, statusId } = req.params;
+    const { workspaceId, statusId } = req.params;
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
-
-    // Check no tasks in this status
-    const taskCount = await prisma.task.count({ where: { statusId } });
-    if (taskCount > 0) {
-      res.status(409).json({
-        status: 'error',
-        message: 'Move or delete tasks in this status first',
-      });
-      return;
-    }
-
     await prisma.taskStatus.delete({ where: { id: statusId } });
     res.status(204).send();
   } catch (err) {
@@ -156,151 +97,124 @@ router.delete('/task-statuses/:statusId', async (req: AuthRequest, res: Response
   }
 });
 
-// ─── Tasks ────────────────────────────────────────────────────────────────────
+// ─── Tasks ───────────────────────────────────────────────
 
-// POST /api/workspaces/:workspaceId/topics/:topicId/tasks
-router.post('/tasks', async (req: AuthRequest, res: Response) => {
+const createTaskSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  statusId: z.string().min(1),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM').optional(),
+  assigneeId: z.string().optional(),
+  dueDate: z.string().optional(),
+  topicId: z.string().min(1),
+});
+
+// GET /api/workspaces/:workspaceId/tasks
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const { workspaceId, topicId } = req.params;
+    const { workspaceId } = req.params;
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
-
-    const body = createTaskSchema.safeParse(req.body);
-    if (!body.success) {
-      res.status(422).json({ status: 'error', message: body.error.errors[0].message });
+    const topicId = req.query.topicId as string | undefined;
+    if (!topicId) {
+      res.status(400).json({ status: 'error', message: 'topicId is required' });
       return;
     }
-
-    // Get last order in this status
-    const lastTask = await prisma.task.findFirst({
-      where: { statusId: body.data.statusId },
-      orderBy: { order: 'desc' },
-    });
-
-    const task = await prisma.task.create({
-      data: {
-        title: body.data.title,
-        description: body.data.description,
-        statusId: body.data.statusId,
-        topicId,
-        createdById: req.user!.userId,
-        assigneeId: body.data.assigneeId,
-        messageId: body.data.messageId,
-        dueDate: body.data.dueDate ? new Date(body.data.dueDate) : null,
-        order: (lastTask?.order ?? -1) + 1,
+    const tasks = await prisma.task.findMany({
+      where: {
+        topicId
       },
+      orderBy: { createdAt: 'asc' },
       include: {
         assignee: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, name: true } },
+        assignees: { include: { user: { select: { id: true, name: true } } } },
         subtasks: true,
-        status: true,
       },
     });
-
-    // Emit real-time task created event
-    io.to(topicId).emit('task:created', { task });
-
-    // Notify assignee
-    if (body.data.assigneeId) {
-      await createNotification({
-        type: 'TASK_ASSIGNED',
-        userId: body.data.assigneeId,
-        actorId: req.user!.userId,
-        workspaceId,
-        topicId,
-        taskId: task.id,
-      });
-    }
-
-    res.status(201).json({ data: { task } });
+    res.status(200).json({ data: { tasks } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
 
-// PATCH /api/workspaces/:workspaceId/topics/:topicId/tasks/:taskId
-router.patch('/tasks/:taskId', async (req: AuthRequest, res: Response) => {
+// POST /api/workspaces/:workspaceId/tasks
+router.post('/', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId } = req.params;
+    if (!(await isMember(req.user!.userId, workspaceId))) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+    const body = createTaskSchema.safeParse(req.body);
+    if (!body.success) {
+      res.status(422).json({ status: 'error', message: body.error.errors[0].message });
+      return;
+    }
+    const task = await prisma.task.create({
+      data: {
+        title: body.data.title,
+        description: body.data.description,
+        statusId: body.data.statusId,
+        topicId: body.data.topicId,
+        createdById: req.user!.userId,
+        assigneeId: body.data.assigneeId || null,
+        dueDate: body.data.dueDate ? new Date(body.data.dueDate) : null,
+      },
+      include: {
+        assignee: { select: { id: true, name: true } },
+        assignees: { include: { user: { select: { id: true, name: true } } } },
+        subtasks: true,
+      },
+    });
+    io.to(body.data.topicId).emit('task:created', { task });
+    res.status(201).json({ data: { task } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// PATCH /api/workspaces/:workspaceId/tasks/:taskId
+router.patch('/:taskId', async (req: AuthRequest, res: Response) => {
   try {
     const { workspaceId, taskId } = req.params;
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
-
-    const body = updateTaskSchema.safeParse(req.body);
-    if (!body.success) {
-      res.status(422).json({ status: 'error', message: body.error.errors[0].message });
-      return;
-    }
-
-    // Optimistic locking
-    const existing = await prisma.task.findUnique({ where: { id: taskId } });
-    if (!existing) {
-      res.status(404).json({ status: 'error', message: 'Task not found' });
-      return;
-    }
-    if (existing.version !== body.data.version) {
-      res.status(409).json({ status: 'error', message: 'Task was modified by someone else. Please refresh.' });
-      return;
-    }
-
     const task = await prisma.task.update({
       where: { id: taskId },
       data: {
-        ...(body.data.title && { title: body.data.title }),
-        ...(body.data.description !== undefined && { description: body.data.description }),
-        ...(body.data.statusId && { statusId: body.data.statusId }),
-        ...(body.data.assigneeId !== undefined && { assigneeId: body.data.assigneeId }),
-        ...(body.data.order !== undefined && { order: body.data.order }),
-        ...(body.data.dueDate !== undefined && {
-          dueDate: body.data.dueDate ? new Date(body.data.dueDate) : null,
-        }),
-        version: { increment: 1 },
+        ...(req.body.title !== undefined && { title: req.body.title }),
+        ...(req.body.description !== undefined && { description: req.body.description }),
+        ...(req.body.statusId !== undefined && { statusId: req.body.statusId }),
+        ...(req.body.priority !== undefined && { priority: req.body.priority }),
+        ...(req.body.assigneeId !== undefined && { assigneeId: req.body.assigneeId || null }),
+        ...(req.body.dueDate !== undefined && { dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null }),
       },
       include: {
         assignee: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, name: true } },
-        subtasks: { orderBy: { order: 'asc' } },
-        status: true,
+        assignees: { include: { user: { select: { id: true, name: true } } } },
+        subtasks: true,
       },
     });
-
-    // Emit real-time task updated event
-    const { topicId } = req.params;
-    io.to(topicId).emit('task:updated', { task });
-
-    // Notify new assignee if assignee changed
-    if (
-      body.data.assigneeId &&
-      body.data.assigneeId !== existing.assigneeId
-    ) {
-      await createNotification({
-        type: 'TASK_ASSIGNED',
-        userId: body.data.assigneeId,
-        actorId: req.user!.userId,
-        workspaceId,
-        topicId,
-        taskId: task.id,
-      });
-    }
-
+    io.to(task.topicId).emit('task:updated', { task });
     res.status(200).json({ data: { task } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
 
-// DELETE /api/workspaces/:workspaceId/topics/:topicId/tasks/:taskId
-router.delete('/tasks/:taskId', async (req: AuthRequest, res: Response) => {
+// DELETE /api/workspaces/:workspaceId/tasks/:taskId
+router.delete('/:taskId', async (req: AuthRequest, res: Response) => {
   try {
     const { workspaceId, taskId } = req.params;
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
-
     await prisma.task.delete({ where: { id: taskId } });
     res.status(204).send();
   } catch (err) {
@@ -308,77 +222,158 @@ router.delete('/tasks/:taskId', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ─── Subtasks ─────────────────────────────────────────────────────────────────
+// ─── Subtasks ─────────────────────────────────────────────
 
-// POST /api/workspaces/:workspaceId/topics/:topicId/tasks/:taskId/subtasks
-router.post('/tasks/:taskId/subtasks', async (req: AuthRequest, res: Response) => {
+router.post('/:taskId/subtasks', async (req: AuthRequest, res: Response) => {
   try {
     const { workspaceId, taskId } = req.params;
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
-
-    const body = createSubtaskSchema.safeParse(req.body);
-    if (!body.success) {
-      res.status(422).json({ status: 'error', message: body.error.errors[0].message });
+    const { title } = req.body;
+    if (!title) {
+      res.status(422).json({ status: 'error', message: 'title required' });
       return;
     }
-
-    const lastSubtask = await prisma.subTask.findFirst({
-      where: { taskId },
-      orderBy: { order: 'desc' },
+    const subTask = await prisma.subTask.create({
+      data: { title, taskId },
     });
-
-    const subtask = await prisma.subTask.create({
-      data: {
-        title: body.data.title,
-        taskId,
-        order: (lastSubtask?.order ?? -1) + 1,
-      },
-    });
-
-    res.status(201).json({ data: { subtask } });
+    res.status(201).json({ data: { subTask } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
 
-// PATCH /api/workspaces/:workspaceId/topics/:topicId/tasks/:taskId/subtasks/:subtaskId
-router.patch('/tasks/:taskId/subtasks/:subtaskId', async (req: AuthRequest, res: Response) => {
+router.patch('/:taskId/subtasks/:subtaskId', async (req: AuthRequest, res: Response) => {
   try {
-    const { workspaceId, subtaskId } = req.params;
-    if (!(await isMember(req.user!.userId, workspaceId))) {
-      res.status(403).json({ status: 'error', message: 'Access denied' });
-      return;
-    }
-
-    const { title, completed } = req.body;
-    const subtask = await prisma.subTask.update({
+    const { subtaskId } = req.params;
+    const subTask = await prisma.subTask.update({
       where: { id: subtaskId },
       data: {
-        ...(title !== undefined && { title }),
-        ...(completed !== undefined && { completed }),
+        ...(req.body.title !== undefined && { title: req.body.title }),
+        ...(req.body.completed !== undefined && { completed: req.body.completed }),
       },
     });
-
-    res.status(200).json({ data: { subtask } });
+    res.status(200).json({ data: { subTask } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });
 
-// DELETE /api/workspaces/:workspaceId/topics/:topicId/tasks/:taskId/subtasks/:subtaskId
-router.delete('/tasks/:taskId/subtasks/:subtaskId', async (req: AuthRequest, res: Response) => {
+router.delete('/:taskId/subtasks/:subtaskId', async (req: AuthRequest, res: Response) => {
   try {
-    const { workspaceId, subtaskId } = req.params;
+    const { subtaskId } = req.params;
+    await prisma.subTask.delete({ where: { id: subtaskId } });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// GET /api/workspaces/:workspaceId/tasks/:taskId/comments
+router.get('/:taskId/comments', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId, taskId } = req.params;
     if (!(await isMember(req.user!.userId, workspaceId))) {
       res.status(403).json({ status: 'error', message: 'Access denied' });
       return;
     }
+    const comments = await prisma.taskComment.findMany({
+      where: { taskId },
+      orderBy: { createdAt: 'asc' },
+      include: { author: { select: { id: true, name: true } } },
+    });
+    res.status(200).json({ data: { comments } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
 
-    await prisma.subTask.delete({ where: { id: subtaskId } });
+// POST /api/workspaces/:workspaceId/tasks/:taskId/comments
+router.post('/:taskId/comments', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId, taskId } = req.params;
+    if (!(await isMember(req.user!.userId, workspaceId))) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+    const { content } = req.body;
+    if (!content?.trim()) {
+      res.status(422).json({ status: 'error', message: 'content required' });
+      return;
+    }
+    const comment = await prisma.taskComment.create({
+      data: { content, taskId, authorId: req.user!.userId },
+      include: { author: { select: { id: true, name: true } } },
+    });
+    res.status(201).json({ data: { comment } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/workspaces/:workspaceId/tasks/:taskId/comments/:commentId
+router.delete('/:taskId/comments/:commentId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { commentId } = req.params;
+    await prisma.taskComment.delete({ where: { id: commentId } });
     res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// GET /api/workspaces/:workspaceId/tasks/:taskId/assignees
+router.get('/:taskId/assignees', async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const assignees = await prisma.taskAssignee.findMany({
+      where: { taskId },
+      include: { user: { select: { id: true, name: true } } },
+    });
+    res.status(200).json({ data: { assignees: assignees.map((a) => a.user) } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// POST /api/workspaces/:workspaceId/tasks/:taskId/assignees
+router.post('/:taskId/assignees', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId, taskId } = req.params;
+    if (!(await isMember(req.user!.userId, workspaceId))) {
+      res.status(403).json({ status: 'error', message: 'Access denied' });
+      return;
+    }
+    const { userId } = req.body;
+    await prisma.taskAssignee.upsert({
+      where: { taskId_userId: { taskId, userId } },
+      create: { taskId, userId },
+      update: {},
+    });
+    const assignees = await prisma.taskAssignee.findMany({
+      where: { taskId },
+      include: { user: { select: { id: true, name: true } } },
+    });
+    res.status(200).json({ data: { assignees: assignees.map((a) => a.user) } });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/workspaces/:workspaceId/tasks/:taskId/assignees/:userId
+router.delete('/:taskId/assignees/:userId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId, userId } = req.params;
+    await prisma.taskAssignee.delete({
+      where: { taskId_userId: { taskId, userId } },
+    });
+    const assignees = await prisma.taskAssignee.findMany({
+      where: { taskId },
+      include: { user: { select: { id: true, name: true } } },
+    });
+    res.status(200).json({ data: { assignees: assignees.map((a) => a.user) } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }

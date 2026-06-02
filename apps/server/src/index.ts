@@ -47,7 +47,7 @@ app.use(
   '/api/workspaces/:workspaceId/topics/:topicId/media',
   uploadsRouter
 );
-app.use('/api/workspaces/:workspaceId/topics/:topicId', tasksRouter);
+app.use('/api/workspaces/:workspaceId/tasks', tasksRouter);
 app.use('/api/workspaces/:workspaceId/topics/:topicId/vault', vaultRouter);
 app.use('/api/workspaces/:workspaceId/topics/:topicId/links', linksRouter);
 app.use(

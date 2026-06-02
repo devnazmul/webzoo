@@ -13,6 +13,7 @@ interface Props {
   workspaceMembers: { id: string; label: string }[];
   workspaceId: string;
   topicId: string;
+  onOpen: (task: Task) => void;
 }
 
 export default function KanbanColumn({
@@ -22,6 +23,7 @@ export default function KanbanColumn({
   onDragStart,
   onDrop,
   workspaceId,
+  onOpen,
 }: Props) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -64,6 +66,7 @@ export default function KanbanColumn({
             task={task}
             workspaceId={workspaceId}
             onDragStart={onDragStart}
+            onOpen={onOpen}
           />
         ))}
         {!isDragOver && tasks.length === 0 && (

@@ -40,7 +40,11 @@ export default function MessageFeed({
   const [loading, setLoading] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [threadMessage, setThreadMessage] = useState<Message | null>(null);
-  const [taskFromMessage, setTaskFromMessage] = useState<{ content: string } | null>(null);
+  const [taskFromMessage, setTaskFromMessage] = useState<{
+    content: string;
+    description: string;
+    mentionedIds: string[];
+  } | null>(null);
   const [activeTab, setActiveTab] = useState<TopicTab>('messages');
   const statuses = useTaskStore((s) => s.statuses);
   const addTask = useTaskStore((s) => s.addTask);
@@ -202,13 +206,23 @@ export default function MessageFeed({
                       onReply={(msg) => setThreadMessage(msg)}
                       onOpenThread={(msg) => setThreadMessage(msg)}
                       onCreateTask={(msg) => {
-                        const plain = (() => {
-                          try {
-                            const p = JSON.parse(msg.content);
-                            return p?.plainText ?? msg.content;
-                          } catch { return msg.content; }
-                        })();
-                        setTaskFromMessage({ content: plain.slice(0, 200) });
+                        let plain = msg.content;
+                        let mentionedIds: string[] = [];
+                        try {
+                          const p = JSON.parse(msg.content);
+                          plain = p?.plainText ?? msg.content;
+                          // Extract mentioned user IDs from Lexical mentions array
+                          if (Array.isArray(p?.mentions)) {
+                            mentionedIds = p.mentions
+                              .map((m: any) => m.id)
+                              .filter(Boolean);
+                          }
+                        } catch {}
+                        setTaskFromMessage({
+                          content: plain.slice(0, 200),
+                          description: plain,
+                          mentionedIds,
+                        });
                       }}
                       onDeleteLocal={handleDeleteLocal}
                       onReactionUpdate={(messageId, reactions) => {
@@ -291,6 +305,9 @@ export default function MessageFeed({
           onClose={() => setTaskFromMessage(null)}
           onCreated={(task) => { addTask(task); setTaskFromMessage(null); }}
           prefillTitle={taskFromMessage.content}
+          prefillDescription={taskFromMessage.description}
+          creatorName={user?.name}
+          prefillAssigneeIds={taskFromMessage.mentionedIds}
         />
       )}
     </div>

@@ -6,6 +6,7 @@ import { useTaskStore, Task } from '@/store/task.store';
 import { getSocket } from '@/lib/socket';
 import KanbanColumn from './KanbanColumn';
 import CreateTaskModal from './CreateTaskModal';
+import TaskDetailModal from './TaskDetailModal';
 
 interface Props {
   topic: Topic;
@@ -18,13 +19,20 @@ export default function TasksTab({ topic, workspaceId, workspaceMembers }: Props
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createStatusId, setCreateStatusId] = useState('');
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
   const draggingTaskId = useRef<string | null>(null);
 
   useEffect(() => {
+    setTasks([]);
     load();
+
     const socket = getSocket();
-    socket.on('task:created', (data: { task: Task }) => addTask(data.task));
-    socket.on('task:updated', (data: { task: Task }) => updateTask(data.task));
+    socket.on('task:created', (data: { task: Task }) => {
+      if (data.task.topicId === topic.id) addTask(data.task);
+    });
+    socket.on('task:updated', (data: { task: Task }) => {
+      if (data.task.topicId === topic.id) updateTask(data.task);
+    });
     return () => {
       socket.off('task:created');
       socket.off('task:updated');
@@ -35,7 +43,7 @@ export default function TasksTab({ topic, workspaceId, workspaceMembers }: Props
     setLoading(true);
     try {
       const [statusRes, taskRes] = await Promise.all([
-        api.get(`/workspaces/${workspaceId}/task-statuses`),
+        api.get(`/workspaces/${workspaceId}/tasks/statuses?topicId=${topic.id}`),
         api.get(`/workspaces/${workspaceId}/tasks?topicId=${topic.id}`),
       ]);
       setStatuses(statusRes.data.data.statuses);
@@ -103,6 +111,7 @@ export default function TasksTab({ topic, workspaceId, workspaceMembers }: Props
               onAddTask={() => { setCreateStatusId(status.id); setShowCreate(true); }}
               onDragStart={(id) => { draggingTaskId.current = id; }}
               onDrop={handleDrop}
+              onOpen={(task) => setActiveTask(task)}
               workspaceMembers={workspaceMembers}
               workspaceId={workspaceId}
               topicId={topic.id}
@@ -120,6 +129,20 @@ export default function TasksTab({ topic, workspaceId, workspaceMembers }: Props
           workspaceMembers={workspaceMembers}
           onClose={() => setShowCreate(false)}
           onCreated={(task) => { addTask(task); setShowCreate(false); }}
+        />
+      )}
+
+      {activeTask && (
+        <TaskDetailModal
+          task={activeTask}
+          workspaceId={workspaceId}
+          workspaceMembers={workspaceMembers}
+          statuses={statuses}
+          onClose={() => setActiveTask(null)}
+          onUpdated={(updated) => {
+            updateTask(updated);
+            setActiveTask(updated);
+          }}
         />
       )}
     </div>

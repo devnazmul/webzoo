@@ -15,6 +15,9 @@ interface Props {
   onClose: () => void;
   onCreated: (task: Task) => void;
   prefillTitle?: string;
+  prefillDescription?: string;
+  creatorName?: string;
+  prefillAssigneeIds?: string[];
 }
 
 export default function CreateTaskModal({
@@ -26,11 +29,18 @@ export default function CreateTaskModal({
   onClose,
   onCreated,
   prefillTitle,
+  prefillDescription,
+  creatorName,
+  prefillAssigneeIds,
 }: Props) {
-  const [title, setTitle] = useState(prefillTitle ?? '');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(
+    creatorName ? `${creatorName} added this task` : (prefillTitle ?? '')
+  );
+  const [description, setDescription] = useState(prefillDescription ?? '');
   const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'>('MEDIUM');
-  const [assigneeId, setAssigneeId] = useState('');
+  const [assigneeId, setAssigneeId] = useState(
+    prefillAssigneeIds?.[0] ?? ''
+  );
   const [dueDate, setDueDate] = useState('');
   const [selectedStatusId, setSelectedStatusId] = useState(statusId);
   const [loading, setLoading] = useState(false);
@@ -97,9 +107,13 @@ export default function CreateTaskModal({
                 onChange={(e) => setSelectedStatusId(e.target.value)}
                 className="w-full text-sm bg-background border border-input rounded-lg px-2.5 py-1.5 outline-none focus-visible:border-ring"
               >
-                {statuses.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
+                {statuses.length === 0 ? (
+                  <option value="">No statuses available</option>
+                ) : (
+                  statuses.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))
+                )}
               </select>
             </div>
 

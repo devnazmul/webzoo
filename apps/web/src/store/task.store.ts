@@ -10,7 +10,7 @@ export interface TaskStatus {
 export interface SubTask {
   id: string;
   title: string;
-  done: boolean;
+  completed: boolean;
 }
 
 export interface Task {
@@ -24,7 +24,7 @@ export interface Task {
   dueDate?: string;
   topicId: string;
   workspaceId: string;
-  subTasks: SubTask[];
+  subtasks: SubTask[];
   createdAt: string;
 }
 
@@ -35,6 +35,7 @@ interface TaskState {
   setTasks: (tasks: Task[]) => void;
   addTask: (task: Task) => void;
   updateTask: (task: Task) => void;
+  clearTasks: () => void;
 }
 
 export const useTaskStore = create<TaskState>((set) => ({
@@ -45,4 +46,5 @@ export const useTaskStore = create<TaskState>((set) => ({
   addTask: (task) => set((s) => ({ tasks: [...s.tasks, task] })),
   updateTask: (task) =>
     set((s) => ({ tasks: s.tasks.map((t) => (t.id === task.id ? task : t)) })),
+  clearTasks: () => set({ tasks: [] }),
 }));

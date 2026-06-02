@@ -30,6 +30,8 @@ model User {
   directMessages        DirectMessage[]             @relation("DirectMessageAuthor")
   directMessageReactions DirectMessageReaction[]
   topicReadStates       TopicReadState[]
+  taskComments  TaskComment[]
+  taskAssignees TaskAssignee[]
 }
 
 model Workspace {
@@ -148,6 +150,7 @@ model Task {
   order       Int       @default(0)
   version     Int       @default(0)
   dueDate     DateTime?
+  priority    String    @default("MEDIUM")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -157,6 +160,8 @@ model Task {
   assignee  User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
   message   Message?   @relation(fields: [messageId], references: [id])
   subtasks  SubTask[]
+  assignees TaskAssignee[]
+  comments  TaskComment[]
 
   @@index([topicId, statusId, order])
 }
@@ -316,4 +321,25 @@ enum NotificationType {
 enum Role {
   OWNER
   MEMBER
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  taskId    String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+}
+
+model TaskAssignee {
+  taskId String
+  userId String
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([taskId, userId])
 }
