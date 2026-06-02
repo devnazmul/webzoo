@@ -151,8 +151,8 @@ export default function MessageBubble({
       </div>
 
       {/* Actions — only for non-deleted messages */}
-      {showActions && !isDeleted && (
-        <div className="absolute right-4 top-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+      {!isDeleted && (
+        <div className="absolute right-2 md:right-4 -top-3.5 md:top-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
           <MessageActions
             message={message}
             isOwn={isOwn}

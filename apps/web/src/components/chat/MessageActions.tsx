@@ -59,14 +59,25 @@ export default function MessageActions({
           <Smile size={15} />
         </button>
         {showEmoji && (
-          <div className="fixed z-[9999]" style={{ transform: 'translateY(-110%) translateX(-80%)' }}>
-            <EmojiPicker
-              onEmojiClick={handleEmojiClick}
-              theme={Theme.AUTO}
-              width={300}
-              height={360}
+          <>
+            {/* Mobile background blur backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[9998] md:hidden"
+              onClick={() => setShowEmoji(false)}
             />
-          </div>
+            <div 
+              className="fixed bottom-0 left-0 right-0 md:absolute md:bottom-auto md:right-0 md:top-8 z-[9999] flex justify-center md:block p-3 md:p-0 bg-popover md:bg-transparent rounded-t-2xl md:rounded-none border-t md:border-none border-border shadow-[0_-8px_30px_rgb(0,0,0,0.12)] md:shadow-none animate-in slide-in-from-bottom duration-200"
+            >
+              <div className="w-full max-w-[320px] md:max-w-none">
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  theme={Theme.AUTO}
+                  width="100%"
+                  height={320}
+                />
+              </div>
+            </div>
+          </>
         )}
       </div>
 

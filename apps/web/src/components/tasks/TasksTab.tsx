@@ -101,8 +101,8 @@ export default function TasksTab({ topic, workspaceId, workspaceMembers }: Props
         </button>
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="flex h-full gap-3 p-3" style={{ minWidth: 'max-content' }}>
+      <div className="flex-1 overflow-x-auto overflow-y-hidden select-none scrollbar-thin">
+        <div className="flex h-full gap-[var(--kanban-column-gap)] p-[var(--kanban-card-padding)]" style={{ minWidth: 'max-content' }}>
           {statuses.map((status) => (
             <KanbanColumn
               key={status.id}

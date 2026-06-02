@@ -13,6 +13,15 @@
   --color-hud-border: rgba(240, 240, 250, 0.15);
   --color-hud-active: rgba(240, 240, 250, 0.12);
 
+  /* Kanban Board & Modal Sizing Design Tokens */
+  --kanban-column-width: 300px;
+  --kanban-column-gap: 12px;
+  --kanban-card-padding: 12px;
+  --kanban-card-radius: 12px;
+  --modal-max-width: 56rem;
+  --modal-max-height: 90vh;
+  --modal-sidebar-width: 18rem;
+
   /* Shadcn/UI Compatibility Overrides for SpaceX Theme */
   --color-background: var(--color-space-black);
   --color-foreground: var(--color-spectral-white);

@@ -15,7 +15,6 @@
     "noEmit": false,
     "emitDeclarationOnly": true,
     "composite": true,
-    "baseUrl": ".",
 
     /* Linting */
     "noUnusedLocals": true,

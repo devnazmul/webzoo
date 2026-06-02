@@ -213,10 +213,10 @@ export default function TaskDetailModal({
   const completedCount = subtasks.filter((s) => s.completed).length;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-2 sm:p-4 overflow-y-auto">
       <div
-        className="bg-background border border-border rounded-xl shadow-2xl w-full max-w-4xl my-auto flex flex-col"
-        style={{ maxHeight: "90vh" }}
+        className="bg-background border border-border rounded-xl shadow-2xl w-full max-w-[var(--modal-max-width)] my-auto flex flex-col"
+        style={{ maxHeight: "var(--modal-max-height)" }}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-border flex-shrink-0">
@@ -251,11 +251,11 @@ export default function TaskDetailModal({
         </div>
 
         {/* Body */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
           {/* Left panel */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div className="flex-1 md:overflow-y-auto overflow-visible p-4 sm:p-6 space-y-5">
             {/* Meta grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1.5">
                   Status
@@ -507,7 +507,7 @@ export default function TaskDetailModal({
           </div>
 
           {/* Right panel — comments */}
-          <div className="w-72 flex-shrink-0 border-l border-border flex flex-col overflow-hidden">
+          <div className="w-full md:w-[var(--modal-sidebar-width)] flex-shrink-0 border-t md:border-t-0 md:border-l border-border flex flex-col overflow-visible md:overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex-shrink-0">
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Clock size={14} className="text-muted-foreground" />
@@ -520,7 +520,7 @@ export default function TaskDetailModal({
               </h3>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            <div className="flex-1 md:overflow-y-auto overflow-visible p-3 space-y-3 min-h-[250px] md:min-h-0 max-h-[400px] md:max-h-none">
               {comments.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-6 opacity-60">
                   No comments yet

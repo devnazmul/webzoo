@@ -30,7 +30,7 @@ export default function KanbanColumn({
   return (
     <div
       className={cn(
-        'flex flex-col w-64 flex-shrink-0 rounded-xl border transition-colors',
+        'flex flex-col w-[var(--kanban-column-width)] flex-shrink-0 rounded-[var(--kanban-card-radius)] border transition-colors select-none',
         isDragOver
           ? 'border-primary/50 bg-primary/5'
           : 'border-border bg-muted/40'

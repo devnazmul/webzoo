@@ -19,7 +19,7 @@ export default function AppShell() {
   const user = useAuthStore((s) => s.user);
   const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace } =
     useWorkspaceStore();
-  const { setTopics, setActiveTopic, setUnreadCounts, incrementUnread, clearUnread } = useTopicStore();
+  const { setTopics, setActiveTopic, activeTopic, setUnreadCounts, incrementUnread, clearUnread } = useTopicStore();
   const {
     conversations,
     activeConversation,
@@ -44,6 +44,12 @@ export default function AppShell() {
   const [allTopics, setAllTopics] = useState<
     { id: string; label: string }[]
   >([]);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Auto-close sidebar on mobile when active channel or DM changes
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [activeTopic?.id, activeConversation?.id]);
 
   // ... (keep loadWorkspaces, loadTopics, useEffects unchanged to preserve logic)
   const loadWorkspaces = useCallback(async () => {
@@ -189,7 +195,7 @@ export default function AppShell() {
     }
   }
 
-  const activeTopic = useTopicStore((s) => s.activeTopic);
+
 
   // Mark topic as read when user switches to it
   useEffect(() => {
@@ -212,21 +218,60 @@ export default function AppShell() {
         <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-spectral-white/5 blur-[100px] rounded-full animate-aurora" style={{ animationDelay: '-10s' }} />
       </div>
 
+      {/* Mobile Sidebar Overlay Drawer (Placed at root level with high z-index to sit on top of the navbar) */}
+      {mobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex md:hidden bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setMobileSidebarOpen(false)}
+        >
+          <div 
+            className="flex h-full shadow-2xl animate-slide-in-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SidebarNarrow 
+              onCreateWorkspace={() => {
+                setModalError("");
+                setShowCreateWorkspace(true);
+              }} 
+            />
+            <div className="w-64 flex-shrink-0 flex">
+              <Sidebar
+                onCreateTopic={() => {
+                  setModalError("");
+                  setShowCreateTopic(true);
+                }}
+                onCreateWorkspace={() => {
+                  setModalError("");
+                  setShowCreateWorkspace(true);
+                }}
+                onInviteMember={() => {
+                  setModalError("");
+                  setShowInvite(true);
+                }}
+                workspaceMembers={workspaceMembers}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Header */}
 
-      <TopBar />
+      <TopBar onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
 
       <div className="flex flex-1 min-h-0 overflow-hidden relative z-10">
-        {/* Workspace Switcher */}
-        <SidebarNarrow 
-          onCreateWorkspace={() => {
-            setModalError("");
-            setShowCreateWorkspace(true);
-          }} 
-        />
+        {/* Desktop Workspace Switcher */}
+        <div className="hidden md:flex shrink-0">
+          <SidebarNarrow 
+            onCreateWorkspace={() => {
+              setModalError("");
+              setShowCreateWorkspace(true);
+            }} 
+          />
+        </div>
 
-        {/* Navigation Sidebar */}
-        <div className="w-64 flex-shrink-0 flex">
+        {/* Desktop Navigation Sidebar */}
+        <div className="hidden md:flex w-64 flex-shrink-0">
           <Sidebar
             onCreateTopic={() => {
               setModalError("");

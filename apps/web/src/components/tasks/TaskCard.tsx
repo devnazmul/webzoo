@@ -45,7 +45,7 @@ export default function TaskCard({ task, workspaceId, onDragStart, onOpen }: Pro
       onDragEnd={() => { setTimeout(() => { dragMoved.current = false; }, 100); }}
       onMouseDown={() => { dragMoved.current = false; }}
       onClick={() => { if (!dragMoved.current) onOpen(task); }}
-      className="bg-background border border-border rounded-lg p-3 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all select-none group"
+      className="bg-background border border-border rounded-[var(--kanban-card-radius)] p-[var(--kanban-card-padding)] cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all select-none group"
     >
       {/* Priority badge */}
       <div className="flex items-start justify-between gap-2 mb-2">
