@@ -33,22 +33,30 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">W</span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden px-4">
+      {/* WhatsApp Signature Top Teal Banner */}
+      <div className="absolute top-0 left-0 right-0 h-[220px] bg-whatsapp-teal pointer-events-none z-0" />
+
+      <Card className="w-full max-w-[460px] bg-card border border-border/80 rounded-2xl shadow-xl relative z-10 p-4 md:p-6 my-auto">
+        <CardHeader className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-whatsapp-teal text-white flex items-center justify-center shadow-sm">
+              <span className="font-sans font-bold text-base">W</span>
             </div>
-            <span className="font-bold text-xl">WebZoo</span>
+            <div className="flex flex-col">
+              <span className="font-sans font-bold text-lg text-foreground leading-none">WebZoo</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mt-1">Workspace Portal</span>
+            </div>
           </div>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Get started with WebZoo</CardDescription>
+          <div className="pt-2">
+            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">Create an Account</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground mt-1">Join WebZoo and start communicating</CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full name</Label>
+              <Label htmlFor="name" className="text-xs font-semibold text-foreground ml-0.5">Full Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -56,10 +64,11 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-xs font-semibold text-foreground ml-0.5">Email Address</Label>
               <Input
                 id="email"
                 type="email"
@@ -67,10 +76,11 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-xs font-semibold text-foreground ml-0.5">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -79,20 +89,25 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5"
               />
             </div>
             {error && (
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-xs text-destructive font-semibold text-center mt-2">{error}</p>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account...' : 'Create account'}
+            <Button 
+              type="submit" 
+              className="w-full h-11 bg-whatsapp-teal hover:bg-whatsapp-teal/90 text-white font-semibold rounded-lg text-sm transition-all shadow-xs border-0 mt-3 flex items-center justify-center cursor-pointer" 
+              disabled={loading}
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
+        <CardFooter className="flex justify-center border-t border-border mt-5 pt-5">
+          <p className="text-xs text-muted-foreground">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary hover:underline font-medium">
+            <Link to="/login" className="text-whatsapp-teal hover:underline font-bold transition-all ml-1">
               Sign in
             </Link>
           </p>

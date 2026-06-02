@@ -46,10 +46,10 @@ const SectionHeader = ({
   onToggle,
   onAdd,
 }: SectionHeaderProps) => (
-  <div className="flex items-center justify-between px-6 mt-6 mb-2 group text-spectral-white/40">
+  <div className="flex items-center justify-between px-6 mt-6 mb-2 group text-foreground/50">
     <button
       onClick={onToggle}
-      className="flex items-center gap-2 cursor-pointer transition-colors"
+      className="flex items-center gap-2 cursor-pointer transition-colors hover:text-foreground"
     >
       <ChevronDown
         size={12}
@@ -58,7 +58,7 @@ const SectionHeader = ({
           !isOpen && "-rotate-90",
         )}
       />
-      <span className="text-[10px] font-bold uppercase tracking-[2px]">
+      <span className="text-[10px] font-bold uppercase tracking-[1.5px] font-sans">
         {label}
       </span>
     </button>
@@ -68,7 +68,7 @@ const SectionHeader = ({
           e.stopPropagation();
           onAdd();
         }}
-        className="opacity-0 cursor-pointer group-hover:opacity-100 transition-opacity hover:text-white"
+        className="opacity-0 cursor-pointer group-hover:opacity-100 transition-opacity hover:text-foreground"
       >
         <Plus size={14} />
       </button>
@@ -113,39 +113,39 @@ export default function Sidebar({
 
   return (
     <div
-      className="flex-1 flex flex-col bg-black/20 backdrop-blur-md border-r border-ghost-border"
+      className="flex-1 flex flex-col bg-[#faf8f5] dark:bg-[#111b21] border-r border-border/80"
     >
       {/* Workspace Header */}
-      <div className="h-12 border-b border-ghost-border flex items-center px-6 justify-between group">
+      <div className="h-14 border-b border-border/80 flex items-center px-6 justify-between group bg-[#f0f2f5] dark:bg-[#202c33]">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 hover:bg-ghost-surface rounded-full px-3 py-1 transition-all pointer-events-auto border border-transparent hover:border-ghost-border">
-              <span className="font-industrial font-bold text-[13px] uppercase tracking-[1.17px] text-spectral-white">
+            <button className="flex items-center gap-2 hover:bg-accent/10 rounded-full px-3 py-1 transition-all pointer-events-auto border border-transparent hover:border-border">
+              <span className="font-sans font-bold text-[13px] tracking-wide text-foreground">
                 {activeWorkspace?.name ?? "Webzoo"}
               </span>
-              <ChevronDown size={14} className="text-spectral-white/50" />
+              <ChevronDown size={14} className="text-muted-foreground/70" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-64 bg-black/90 border-ghost-border text-spectral-white">
-            <DropdownMenuItem onClick={onInviteMember} className="uppercase text-[11px] font-bold tracking-wider">
+          <DropdownMenuContent align="start" className="w-64 bg-card border-border text-foreground">
+            <DropdownMenuItem onClick={onInviteMember} className="text-[11px] font-bold tracking-wider">
               Invite people to {activeWorkspace?.name}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onCreateTopic} className="uppercase text-[11px] font-bold tracking-wider">
+            <DropdownMenuItem onClick={onCreateTopic} className="text-[11px] font-bold tracking-wider">
               Create a channel
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowProfile(true)} className="uppercase text-[11px] font-bold tracking-wider">
+            <DropdownMenuItem onClick={() => setShowProfile(true)} className="text-[11px] font-bold tracking-wider">
               <Settings size={14} className="mr-2" />
               Profile settings
             </DropdownMenuItem>
             {workspaceMembers && workspaceMembers.length > 0 && (
               <>
-                <DropdownMenuSeparator className="bg-ghost-border" />
-                <DropdownMenuLabel className="uppercase text-[10px] font-bold tracking-wider px-2 py-1.5 text-spectral-white/40">Message a member</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-border" />
+                <DropdownMenuLabel className="text-[10px] font-bold tracking-wider px-2 py-1.5 text-muted-foreground/60">Message a member</DropdownMenuLabel>
                 {workspaceMembers.map((m) => (
                   <DropdownMenuItem
                     key={m.id}
                     onClick={() => startDM(m.id)}
-                    className="uppercase text-[11px] font-bold tracking-wider"
+                    className="text-[11px] font-bold tracking-wider"
                   >
                     <div className="w-2 h-2 rounded-full bg-green-500 mr-2 flex-shrink-0" />
                     {m.label}
@@ -155,7 +155,7 @@ export default function Sidebar({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-        <button className="bg-spectral-white/10 hover:bg-spectral-white/20 w-8 h-8 rounded-full flex items-center justify-center text-spectral-white border border-ghost-border transition-all active:scale-95 cursor-pointer">
+        <button className="bg-background hover:bg-accent/10 w-8 h-8 rounded-full flex items-center justify-center text-foreground border border-border transition-all active:scale-95 cursor-pointer">
           <SquarePen size={14} />
         </button>
       </div>
@@ -180,28 +180,28 @@ export default function Sidebar({
                   key={topic.id}
                   onClick={() => { setActiveConversation(null); setActiveTopic(topic); }}
                   className={cn(
-                    "flex items-center cursor-pointer gap-2 w-full px-6 py-2 text-[11px] font-bold uppercase tracking-[1.17px] transition-all group relative",
+                    "flex items-center cursor-pointer gap-3 w-full px-6 py-2.5 text-xs font-semibold transition-all group relative",
                     isActive
-                      ? "bg-ghost-surface text-white border-r-2 border-spectral-white"
+                      ? "bg-accent/15 text-whatsapp-teal border-r-[3px] border-whatsapp-teal dark:bg-accent/10"
                       : unread > 0
-                      ? "text-spectral-white hover:bg-ghost-surface/50 font-black"
-                      : "text-spectral-white/60 hover:text-spectral-white hover:bg-ghost-surface/50",
+                      ? "text-foreground hover:bg-accent/8 font-bold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/8",
                   )}
                 >
                   {isPrivate ? (
                     <Lock
                       size={14}
-                      className={isActive ? "text-white" : unread > 0 ? "text-spectral-white" : "text-spectral-white/60"}
+                      className={isActive ? "text-whatsapp-teal" : unread > 0 ? "text-foreground" : "text-muted-foreground"}
                     />
                   ) : (
                     <Hash
                       size={14}
-                      className={isActive ? "text-white" : unread > 0 ? "text-spectral-white" : "text-spectral-white/60"}
+                      className={isActive ? "text-whatsapp-teal" : unread > 0 ? "text-foreground" : "text-muted-foreground"}
                     />
                   )}
                   <span className="truncate flex-1 text-left">{topic.name}</span>
                   {unread > 0 && !isActive && (
-                    <span className="ml-auto flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-spectral-white text-space-black text-[9px] font-bold flex items-center justify-center px-1">
+                    <span className="ml-auto flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-whatsapp-teal text-white text-[9px] font-bold flex items-center justify-center px-1">
                       {unread > 99 ? '99+' : unread}
                     </span>
                   )}
@@ -210,7 +210,7 @@ export default function Sidebar({
             })}
             <button
               onClick={onCreateTopic}
-              className="flex items-center cursor-pointer gap-2 w-full px-6 py-2 text-[11px] font-bold uppercase tracking-[1.17px] text-spectral-white/40 hover:text-spectral-white hover:bg-ghost-surface/50 transition-colors"
+              className="flex items-center cursor-pointer gap-2 w-full px-6 py-2 text-xs font-semibold text-muted-foreground/60 hover:text-foreground hover:bg-accent/8 transition-colors"
             >
               <Plus size={14} />
               <span>Add topic</span>
@@ -227,7 +227,7 @@ export default function Sidebar({
         {dmsExpanded && (
           <div className="px-6 py-2 space-y-1">
             {conversations.length === 0 && (
-              <p className="px-2 text-xs text-spectral-white/30 uppercase tracking-[1px]">No conversations yet</p>
+              <p className="px-2 text-xs text-muted-foreground/40 font-semibold mt-1">No conversations yet</p>
             )}
             {conversations.map((conv) => {
               const other = conv.participants.find((p) => p.id !== user?.id);
@@ -237,18 +237,18 @@ export default function Sidebar({
                   key={conv.id}
                   onClick={() => setActiveConversation(conv)}
                   className={cn(
-                    'flex items-center gap-2 w-full px-2 py-1.5 rounded text-xs transition-colors font-bold uppercase tracking-wider',
+                    'flex items-center gap-3 w-full px-2 py-2 rounded-lg text-xs transition-colors font-semibold',
                     isActive
-                      ? 'bg-ghost-surface text-white border-r-2 border-spectral-white'
+                      ? 'bg-accent/15 text-whatsapp-teal border-r-[3px] border-whatsapp-teal dark:bg-accent/10'
                       : conv.unreadCount > 0
-                      ? 'text-spectral-white font-medium hover:bg-ghost-surface/50'
-                      : 'text-spectral-white/60 hover:text-spectral-white hover:bg-ghost-surface/50'
+                      ? 'text-foreground font-bold hover:bg-accent/8'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/8'
                   )}
                 >
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                   <span className="truncate flex-1 text-left">{other?.name ?? 'Unknown'}</span>
                   {conv.unreadCount > 0 && !isActive && (
-                    <span className="ml-auto flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-spectral-white text-space-black text-[9px] font-bold flex items-center justify-center px-1">
+                    <span className="ml-auto flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-whatsapp-teal text-white text-[9px] font-bold flex items-center justify-center px-1">
                       {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
                     </span>
                   )}
@@ -258,7 +258,7 @@ export default function Sidebar({
           </div>
         )}
       </ScrollArea>
-      <div className="p-4 border-t border-ghost-border flex items-center justify-end gap-2">
+      <div className="p-4 border-t border-border/80 flex items-center justify-end gap-2 bg-[#f0f2f5] dark:bg-[#111b21]">
         <NotificationBell />
         <ThemeToggle />
       </div>

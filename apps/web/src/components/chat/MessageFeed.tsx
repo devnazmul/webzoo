@@ -1,21 +1,21 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useAuthStore } from '@/store/auth.store';
-import { getSocket } from '@/lib/socket';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import MessageBubble from './MessageBubble';
-import TypingIndicator from './TypingIndicator';
-import DateSeparator from './DateSeparator';
-import TopicTabs, { TopicTab } from './TopicTabs';
-import CreateTaskModal from '@/components/tasks/CreateTaskModal';
-import { useTaskStore } from '@/store/task.store';
-import TasksTab from '@/components/tasks/TasksTab';
-import VaultTab from '@/components/vault/VaultTab';
-import MediaTab from '@/components/media/MediaTab';
-import LinksTab from '@/components/links/LinksTab';
-import LexicalEditor from './editor/LexicalEditor';
-import api from '@/lib/api';
-import { Message, Topic } from '@webzoo/shared';
-import ThreadPanel from './ThreadPanel';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useAuthStore } from "@/store/auth.store";
+import { getSocket } from "@/lib/socket";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import MessageBubble from "./MessageBubble";
+import TypingIndicator from "./TypingIndicator";
+import DateSeparator from "./DateSeparator";
+import TopicTabs, { TopicTab } from "./TopicTabs";
+import CreateTaskModal from "@/components/tasks/CreateTaskModal";
+import { useTaskStore } from "@/store/task.store";
+import TasksTab from "@/components/tasks/TasksTab";
+import VaultTab from "@/components/vault/VaultTab";
+import MediaTab from "@/components/media/MediaTab";
+import LinksTab from "@/components/links/LinksTab";
+import LexicalEditor from "./editor/LexicalEditor";
+import api from "@/lib/api";
+import { Message, Topic } from "@webzoo/shared";
+import ThreadPanel from "./ThreadPanel";
 
 interface Props {
   topic: Topic;
@@ -45,24 +45,24 @@ export default function MessageFeed({
     description: string;
     mentionedIds: string[];
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<TopicTab>('messages');
+  const [activeTab, setActiveTab] = useState<TopicTab>("messages");
   const statuses = useTaskStore((s) => s.statuses);
   const addTask = useTaskStore((s) => s.addTask);
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevTopicId = useRef<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   useEffect(() => {
     const socket = getSocket();
-    if (prevTopicId.current) socket.emit('topic:leave', prevTopicId.current);
-    socket.emit('topic:join', topic.id);
+    if (prevTopicId.current) socket.emit("topic:leave", prevTopicId.current);
+    socket.emit("topic:join", topic.id);
     prevTopicId.current = topic.id;
     setMessages([]);
     setTypingUsers([]);
-    setActiveTab('messages');
+    setActiveTab("messages");
     loadMessages();
 
     function onNewMessage(data: { message: Message & { replyToId?: string } }) {
@@ -79,7 +79,7 @@ export default function MessageFeed({
               ...m,
               _count: { ...((m as any)._count ?? {}), replies: current + 1 },
             } as any;
-          })
+          }),
         );
         return;
       }
@@ -93,25 +93,33 @@ export default function MessageFeed({
     }
 
     function onTypingUpdate(data: {
-      topicId: string; userId: string; isTyping: boolean;
+      topicId: string;
+      userId: string;
+      isTyping: boolean;
     }) {
       if (data.topicId !== topic.id) return;
       if (data.userId === user?.id) return;
       setTypingUsers((prev) =>
         data.isTyping
-          ? prev.includes(data.userId) ? prev : [...prev, data.userId]
-          : prev.filter((id) => id !== data.userId)
+          ? prev.includes(data.userId)
+            ? prev
+            : [...prev, data.userId]
+          : prev.filter((id) => id !== data.userId),
       );
     }
 
     function onMessageDeleted(data: { messageId: string; deletedFor: string }) {
-      if (data.deletedFor === 'everyone') {
+      if (data.deletedFor === "everyone") {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === data.messageId
-              ? { ...m, content: '__deleted__', deletedAt: new Date().toISOString() } as any
-              : m
-          )
+              ? ({
+                  ...m,
+                  content: "__deleted__",
+                  deletedAt: new Date().toISOString(),
+                } as any)
+              : m,
+          ),
         );
       }
     }
@@ -119,20 +127,22 @@ export default function MessageFeed({
     function onReactionUpdate(data: { messageId: string; reactions: any[] }) {
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === data.messageId ? { ...m, reactions: data.reactions } as any : m
-        )
+          m.id === data.messageId
+            ? ({ ...m, reactions: data.reactions } as any)
+            : m,
+        ),
       );
     }
 
-    socket.on('message:new', onNewMessage);
-    socket.on('typing:update', onTypingUpdate);
-    socket.on('message:deleted', onMessageDeleted);
-    socket.on('reaction:update', onReactionUpdate);
+    socket.on("message:new", onNewMessage);
+    socket.on("typing:update", onTypingUpdate);
+    socket.on("message:deleted", onMessageDeleted);
+    socket.on("reaction:update", onReactionUpdate);
     return () => {
-      socket.off('message:new', onNewMessage);
-      socket.off('typing:update', onTypingUpdate);
-      socket.off('message:deleted', onMessageDeleted);
-      socket.off('reaction:update', onReactionUpdate);
+      socket.off("message:new", onNewMessage);
+      socket.off("typing:update", onTypingUpdate);
+      socket.off("message:deleted", onMessageDeleted);
+      socket.off("reaction:update", onReactionUpdate);
     };
   }, [topic.id]);
 
@@ -140,7 +150,7 @@ export default function MessageFeed({
     setLoading(true);
     try {
       const res = await api.get(
-        `/workspaces/${workspaceId}/topics/${topic.id}/messages`
+        `/workspaces/${workspaceId}/topics/${topic.id}/messages`,
       );
       setMessages(res.data.data.messages);
       setTimeout(scrollToBottom, 50);
@@ -154,10 +164,10 @@ export default function MessageFeed({
   }
 
   async function handleSend(content: string) {
-    await api.post(
-      `/workspaces/${workspaceId}/topics/${topic.id}/messages`,
-      { content, replyToId: replyTo?.id }
-    );
+    await api.post(`/workspaces/${workspaceId}/topics/${topic.id}/messages`, {
+      content,
+      replyToId: replyTo?.id,
+    });
     setReplyTo(null);
   }
 
@@ -172,7 +182,7 @@ export default function MessageFeed({
       />
 
       {/* Tab content */}
-      {activeTab === 'messages' && (
+      {activeTab === "messages" && (
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Main feed */}
           <div className="flex flex-col flex-1 min-h-0 min-w-0">
@@ -191,16 +201,19 @@ export default function MessageFeed({
               )}
               {messages.map((message, index) => {
                 const prev = messages[index - 1];
-                const showDate = !prev ||
+                const showDate =
+                  !prev ||
                   new Date(message.createdAt).toDateString() !==
-                  new Date(prev.createdAt).toDateString();
+                    new Date(prev.createdAt).toDateString();
                 return (
-                  <div key={message.id}>
-                    {showDate && <DateSeparator date={new Date(message.createdAt)} />}
+                  <div key={message.id} className={`relative `}>
+                    {showDate && (
+                      <DateSeparator date={new Date(message.createdAt)} />
+                    )}
                     <MessageBubble
                       message={message as any}
                       isOwn={message.authorId === user?.id}
-                      currentUserId={user?.id ?? ''}
+                      currentUserId={user?.id ?? ""}
                       workspaceId={workspaceId}
                       topicId={topic.id}
                       onReply={(msg) => setThreadMessage(msg)}
@@ -228,19 +241,22 @@ export default function MessageFeed({
                       onReactionUpdate={(messageId, reactions) => {
                         setMessages((prev) =>
                           prev.map((m) =>
-                            m.id === messageId ? { ...m, reactions } as any : m
-                          )
+                            m.id === messageId
+                              ? ({ ...m, reactions } as any)
+                              : m,
+                          ),
                         );
                       }}
                     />
                   </div>
                 );
               })}
-              <TypingIndicator typingUsers={typingUsers} memberNames={memberNames} />
+              <TypingIndicator
+                typingUsers={typingUsers}
+                memberNames={memberNames}
+              />
               <div ref={bottomRef} />
             </ScrollArea>
-
-
 
             <LexicalEditor
               topicId={topic.id}
@@ -266,7 +282,7 @@ export default function MessageFeed({
         </div>
       )}
 
-      {activeTab === 'tasks' && (
+      {activeTab === "tasks" && (
         <div className="flex-1 overflow-hidden">
           <TasksTab
             topic={topic}
@@ -276,19 +292,19 @@ export default function MessageFeed({
         </div>
       )}
 
-      {activeTab === 'vault' && (
+      {activeTab === "vault" && (
         <div className="flex-1 overflow-hidden">
           <VaultTab topic={topic} workspaceId={workspaceId} />
         </div>
       )}
 
-      {activeTab === 'media' && (
+      {activeTab === "media" && (
         <div className="flex-1 overflow-hidden">
           <MediaTab topic={topic} workspaceId={workspaceId} />
         </div>
       )}
 
-      {activeTab === 'links' && (
+      {activeTab === "links" && (
         <div className="flex-1 overflow-hidden">
           <LinksTab topic={topic} workspaceId={workspaceId} />
         </div>
@@ -303,7 +319,10 @@ export default function MessageFeed({
           statuses={statuses}
           workspaceMembers={workspaceMembers}
           onClose={() => setTaskFromMessage(null)}
-          onCreated={(task) => { addTask(task); setTaskFromMessage(null); }}
+          onCreated={(task) => {
+            addTask(task);
+            setTaskFromMessage(null);
+          }}
           prefillTitle={taskFromMessage.content}
           prefillDescription={taskFromMessage.description}
           creatorName={user?.name}

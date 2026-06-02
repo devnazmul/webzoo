@@ -32,47 +32,44 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-space-black relative overflow-hidden">
-      {/* Aurora Blurry Gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-aurora" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 blur-[150px] rounded-full animate-aurora" style={{ animationDelay: '-5s' }} />
-        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-spectral-white/5 blur-[100px] rounded-full animate-aurora" style={{ animationDelay: '-10s' }} />
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden px-4">
+      {/* WhatsApp Signature Top Teal Banner */}
+      <div className="absolute top-0 left-0 right-0 h-[220px] bg-whatsapp-teal pointer-events-none z-0" />
       
-      <Card className="w-full max-w-md border-ghost-border bg-black/60 backdrop-blur-2xl relative z-10 p-4 shadow-[0_0_80px_rgba(0,0,0,0.8)]">
-
+      <Card className="w-full max-w-[460px] bg-card border border-border/80 rounded-2xl shadow-xl relative z-10 p-4 md:p-6 my-auto">
         <CardHeader className="space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-spectral-white/10 border border-ghost-border flex items-center justify-center">
-              <span className="text-spectral-white font-industrial font-bold text-sm">W</span>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-whatsapp-teal text-white flex items-center justify-center shadow-sm">
+              <span className="font-sans font-bold text-base">W</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-industrial font-bold text-xl uppercase tracking-[1.17px] text-spectral-white">WebZoo</span>
-              <span className="text-[9px] uppercase tracking-[2px] text-spectral-white/40">Mission Control</span>
+              <span className="font-sans font-bold text-lg text-foreground leading-none">WebZoo</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mt-1">Workspace Portal</span>
             </div>
           </div>
-          <div>
-            <CardTitle className="text-2xl font-industrial uppercase tracking-[1.17px] text-spectral-white">Authentication Required</CardTitle>
-            <CardDescription className="uppercase tracking-widest text-[10px] text-spectral-white/50">Establish mission telemetry link</CardDescription>
+          <div className="pt-2">
+            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">Sign In</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground mt-1">Enter your credentials to access the workspace</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="uppercase text-[10px] tracking-[2px] text-spectral-white/60 ml-1">Command Email</Label>
+              <Label htmlFor="email" className="text-xs font-semibold text-foreground ml-0.5">Email Address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="MISSION_CONTROL@WEBZOO.COM"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-ghost-surface border-ghost-border text-spectral-white placeholder:text-spectral-white/20"
+                className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="uppercase text-[10px] tracking-[2px] text-spectral-white/60 ml-1">Access Key</Label>
+              <div className="flex justify-between items-center px-0.5">
+                <Label htmlFor="password" className="text-xs font-semibold text-foreground">Password</Label>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -80,22 +77,26 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-ghost-surface border-ghost-border text-spectral-white"
+                className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5"
               />
             </div>
             {error && (
-              <p className="text-[11px] uppercase tracking-wider text-destructive font-bold text-center">{error}</p>
+              <p className="text-xs text-destructive font-semibold text-center mt-2">{error}</p>
             )}
-            <Button type="submit" className="w-full h-12" disabled={loading}>
-              {loading ? 'SYNCHRONIZING...' : 'INITIATE LOGIN'}
+            <Button 
+              type="submit" 
+              className="w-full h-11 bg-whatsapp-teal hover:bg-whatsapp-teal/90 text-white font-semibold rounded-lg text-sm transition-all shadow-xs border-0 mt-2 flex items-center justify-center cursor-pointer"
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t border-ghost-border mt-6 pt-6">
-          <p className="text-[10px] uppercase tracking-[2px] text-spectral-white/50">
-            No credentials?{' '}
-            <Link to="/register" className="text-spectral-white hover:underline font-bold transition-all">
-              Create Account
+        <CardFooter className="flex justify-center border-t border-border mt-5 pt-5">
+          <p className="text-xs text-muted-foreground">
+            Don't have an account?
+            <Link to="/register" className="text-whatsapp-teal hover:underline font-bold transition-all ml-1">
+              Create one
             </Link>
           </p>
         </CardFooter>

@@ -39,10 +39,10 @@ interface Props {
 
 const PRIORITY_OPTIONS = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const PRIORITY_BG: Record<string, string> = {
-  LOW: "bg-slate-500/20 text-slate-400",
-  MEDIUM: "bg-blue-500/20 text-blue-400",
-  HIGH: "bg-orange-500/20 text-orange-400",
-  URGENT: "bg-red-500/20 text-red-400",
+  LOW:    'bg-slate-100 dark:bg-[#222e35] text-slate-500 border border-slate-200 dark:border-slate-700',
+  MEDIUM: 'bg-blue-50 dark:bg-blue-950/10 text-blue-500 border border-blue-100 dark:border-blue-900/40',
+  HIGH:   'bg-orange-50 dark:bg-orange-950/10 text-orange-500 border border-orange-100 dark:border-orange-900/40',
+  URGENT: 'bg-red-50 dark:bg-red-950/10 text-red-500 border border-red-100 dark:border-red-900/40',
 };
 
 function extractPlain(content: string) {
@@ -213,16 +213,16 @@ export default function TaskDetailModal({
   const completedCount = subtasks.filter((s) => s.completed).length;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-start justify-center z-50 p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-250">
       <div
-        className="bg-background border border-border rounded-xl shadow-2xl w-full max-w-[var(--modal-max-width)] my-auto flex flex-col"
+        className="bg-card border border-border rounded-[var(--kanban-card-radius)] shadow-2xl w-full max-w-[var(--modal-max-width)] my-auto flex flex-col overflow-hidden"
         style={{ maxHeight: "var(--modal-max-height)" }}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-border flex-shrink-0">
           <span
             className={cn(
-              "text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0",
+              "text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0",
               PRIORITY_BG[priority],
             )}
           >
@@ -234,7 +234,7 @@ export default function TaskDetailModal({
             onBlur={() =>
               title.trim() !== task.title && patch({ title: title.trim() })
             }
-            className="flex-1 text-lg font-semibold bg-transparent outline-none border-b border-transparent focus:border-primary transition-colors min-w-0"
+            className="flex-1 text-lg font-semibold bg-transparent outline-none border-b border-transparent focus:border-whatsapp-teal transition-colors min-w-0"
           />
           {saving && (
             <span className="text-xs text-muted-foreground flex-shrink-0">
@@ -244,7 +244,7 @@ export default function TaskDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-accent transition-colors flex-shrink-0"
+            className="text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors flex-shrink-0"
           >
             <X size={18} />
           </button>
@@ -266,7 +266,7 @@ export default function TaskDetailModal({
                     setStatusId(e.target.value);
                     patch({ statusId: e.target.value });
                   }}
-                  className="w-full text-sm bg-muted border border-border rounded-lg px-2.5 py-1.5 outline-none focus:border-primary"
+                  className="w-full text-sm bg-muted border border-border rounded-full px-3.5 py-1.5 outline-none focus:border-whatsapp-teal focus:ring-1 focus:ring-whatsapp-teal transition-all"
                 >
                   {statuses.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -286,7 +286,7 @@ export default function TaskDetailModal({
                     setPriority(e.target.value as any);
                     patch({ priority: e.target.value });
                   }}
-                  className="w-full text-sm bg-muted border border-border rounded-lg px-2.5 py-1.5 outline-none focus:border-primary"
+                  className="w-full text-sm bg-muted border border-border rounded-full px-3.5 py-1.5 outline-none focus:border-whatsapp-teal focus:ring-1 focus:ring-whatsapp-teal transition-all"
                 >
                   {PRIORITY_OPTIONS.map((p) => (
                     <option key={p} value={p}>
@@ -307,7 +307,7 @@ export default function TaskDetailModal({
                     setDueDate(e.target.value);
                     patch({ dueDate: e.target.value });
                   }}
-                  className="w-full text-sm bg-muted border border-border rounded-lg px-2.5 py-1.5 outline-none focus:border-primary"
+                  className="w-full text-sm bg-muted border border-border rounded-full px-3.5 py-1.5 outline-none focus:border-whatsapp-teal focus:ring-1 focus:ring-whatsapp-teal transition-all"
                 />
               </div>
 
@@ -320,13 +320,13 @@ export default function TaskDetailModal({
                   {assignees.map((a) => (
                     <div
                       key={a.id}
-                      className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full"
+                      className="flex items-center gap-1 bg-whatsapp-teal/15 text-whatsapp-teal text-xs px-2.5 py-0.5 rounded-full border border-whatsapp-teal/10"
                     >
                       <span>{a.name.split(" ")[0]}</span>
                       <button
                         type="button"
                         onClick={() => toggleAssignee(a.id)}
-                        className="hover:text-destructive"
+                        className="hover:text-destructive text-[11px] font-bold"
                       >
                         ×
                       </button>
@@ -336,7 +336,7 @@ export default function TaskDetailModal({
                     <button
                       type="button"
                       onClick={() => setShowAssigneeMenu((v) => !v)}
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border rounded-full px-2 py-0.5 transition-colors"
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border rounded-full px-3 py-0.5 transition-colors"
                     >
                       <Plus size={10} /> Add
                     </button>
@@ -351,11 +351,11 @@ export default function TaskDetailModal({
                               onClick={() => toggleAssignee(m.id)}
                               className={cn(
                                 "flex items-center justify-between w-full px-3 py-1.5 text-sm hover:bg-muted transition-colors",
-                                assigned && "text-primary",
+                                assigned && "text-whatsapp-teal font-semibold",
                               )}
                             >
                               {m.label}
-                              {assigned && <CheckSquare size={12} />}
+                              {assigned && <CheckSquare size={12} className="text-whatsapp-teal" />}
                             </button>
                           );
                         })}
@@ -384,7 +384,7 @@ export default function TaskDetailModal({
               </div>
 
               {editingDesc ? (
-                <div className="border border-border rounded-lg overflow-hidden">
+                <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                   <LexicalEditor
                     topicId={task.id}
                     topicName="description"
@@ -398,7 +398,7 @@ export default function TaskDetailModal({
                       type="button"
                       onClick={() => setEditingDesc(false)}
                       variant="ghost"
-                      className="h-7 text-xs"
+                      className="h-8 text-xs rounded-full border border-border"
                     >
                       Cancel
                     </Button>
@@ -406,7 +406,7 @@ export default function TaskDetailModal({
                 </div>
               ) : description ? (
                 <div
-                  className="prose prose-sm max-w-none bg-muted/30 rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="prose prose-sm max-w-none bg-muted/30 rounded-xl p-3.5 border border-border/30 cursor-pointer hover:bg-muted/50 transition-colors text-foreground"
                   onClick={() => setEditingDesc(true)}
                 >
                   <MessageRenderer content={description} />
@@ -415,7 +415,7 @@ export default function TaskDetailModal({
                 <button
                   type="button"
                   onClick={() => setEditingDesc(true)}
-                  className="w-full text-left text-sm text-muted-foreground bg-muted/30 hover:bg-muted/50 rounded-lg p-3 transition-colors italic"
+                  className="w-full text-left text-sm text-muted-foreground bg-muted/30 hover:bg-muted/50 rounded-xl p-3.5 border border-dashed border-border transition-colors italic"
                 >
                   Add a description…
                 </button>
@@ -438,7 +438,7 @@ export default function TaskDetailModal({
               {subtasks.length > 0 && (
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-3">
                   <div
-                    className="h-full bg-primary rounded-full transition-all"
+                    className="h-full bg-whatsapp-teal rounded-full transition-all"
                     style={{
                       width: `${subtasks.length ? (completedCount / subtasks.length) * 100 : 0}%`,
                     }}
@@ -455,17 +455,17 @@ export default function TaskDetailModal({
                     <button
                       type="button"
                       onClick={() => toggleSubtask(s.id, !s.completed)}
-                      className="flex-shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                      className="flex-shrink-0 text-muted-foreground hover:text-whatsapp-teal transition-colors"
                     >
                       {s.completed ? (
-                        <CheckSquare size={16} className="text-primary" />
+                        <CheckSquare size={16} className="text-whatsapp-teal" />
                       ) : (
                         <Square size={16} />
-                      )}
+                       )}
                     </button>
                     <span
                       className={cn(
-                        "flex-1 text-sm",
+                        "flex-1 text-sm text-foreground",
                         s.completed && "line-through text-muted-foreground",
                       )}
                     >
@@ -490,15 +490,14 @@ export default function TaskDetailModal({
                     if (e.key === "Enter") addSubtask();
                   }}
                   placeholder="Add an item…"
-                  className="h-7 text-xs"
+                  className="h-8 text-xs rounded-full border border-border bg-card px-3.5 focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0"
                 />
                 <Button
                   type="button"
                   size="sm"
-                  variant="outline"
                   onClick={addSubtask}
                   disabled={!newSubtask.trim()}
-                  className="h-7 text-xs px-2 flex-shrink-0"
+                  className="h-8 text-xs px-3.5 rounded-full bg-whatsapp-teal hover:bg-whatsapp-teal/90 text-white flex-shrink-0 border-0 flex items-center justify-center font-medium"
                 >
                   <Plus size={12} className="mr-1" /> Add
                 </Button>
@@ -507,9 +506,9 @@ export default function TaskDetailModal({
           </div>
 
           {/* Right panel — comments */}
-          <div className="w-full md:w-[var(--modal-sidebar-width)] flex-shrink-0 border-t md:border-t-0 md:border-l border-border flex flex-col overflow-visible md:overflow-hidden">
-            <div className="px-4 py-3 border-b border-border flex-shrink-0">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
+          <div className="w-full md:w-[var(--modal-sidebar-width)] flex-shrink-0 border-t md:border-t-0 md:border-l border-border flex flex-col overflow-visible md:overflow-hidden bg-[#faf8f5] dark:bg-[#182229]">
+            <div className="px-4 py-3 border-b border-border flex-shrink-0 bg-secondary/30">
+              <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                 <Clock size={14} className="text-muted-foreground" />
                 Comments
                 {comments.length > 0 && (
@@ -520,7 +519,7 @@ export default function TaskDetailModal({
               </h3>
             </div>
 
-            <div className="flex-1 md:overflow-y-auto overflow-visible p-3 space-y-3 min-h-[250px] md:min-h-0 max-h-[400px] md:max-h-none">
+            <div className="flex-1 md:overflow-y-auto overflow-visible p-3 space-y-3.5 min-h-[250px] md:min-h-0 max-h-[400px] md:max-h-none">
               {comments.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-6 opacity-60">
                   No comments yet
@@ -529,17 +528,17 @@ export default function TaskDetailModal({
                 comments.map((c) => (
                   <div key={c.id} className="group/comment">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-whatsapp-teal/15 text-whatsapp-teal flex items-center justify-center text-[9px] font-semibold flex-shrink-0">
                         {c.author.name[0].toUpperCase()}
                       </div>
-                      <span className="text-xs font-semibold">
+                      <span className="text-xs font-semibold text-foreground">
                         {c.author.name}
                       </span>
                       <span className="text-[10px] text-muted-foreground ml-auto">
                         {timeAgo(c.createdAt)}
                       </span>
                     </div>
-                    <div className="ml-7 bg-muted rounded-lg px-3 py-2 text-sm relative">
+                    <div className="ml-7 bg-bubble-other-light dark:bg-bubble-other-dark text-foreground border border-border/40 rounded-[12px] rounded-tl-none px-3 py-2 text-sm relative shadow-xs">
                       {c.content}
                       <button
                         type="button"
@@ -554,7 +553,7 @@ export default function TaskDetailModal({
               )}
             </div>
 
-            <div className="flex-shrink-0 border-t border-border">
+            <div className="flex-shrink-0 border-t border-border bg-card">
               <LexicalEditor
                 topicId={task.id}
                 topicName="comment"

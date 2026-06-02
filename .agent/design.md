@@ -1,493 +1,396 @@
-# ClickUp™ — Style Reference
+---
+version: alpha
+name: "WhatsApp"
+website: "https://www.whatsapp.com"
+description: >-
+  WhatsApp's marketing site runs WhatsApp Sans Var across every tier, paints a near-black ink against a warm cream canvas, and reserves a single bright voltage-green pill CTA for the Download action. Hero photography of real conversations sits inside a fully rounded 25px container, and the entire chrome around it is pill-shaped — buttons sit at 50px radius, badges at 50%, contact circles at 50%. The page is a utility brand for a utility product: a 1B-user messaging app inside Meta, whose marketing surface deliberately reads more like a public-service announcement about end-to-end encryption than a SaaS landing page.
 
-> Vibrant productivity hub: a dynamic workspace with energetic highlights.
+seo:
+  title: "WhatsApp Design System for React — voltage green, WhatsApp Sans, 14 components"
+  metaDescription: "WhatsApp's marketing system pairs near-black ink, a warm-cream canvas, and a single voltage-green pill CTA. Tokens for React, Next.js, and AI coding tools."
+  highlights:
+    - "Single voltage-green CTA — the bright green pill appears exactly four times on the page, reserved for Download actions; every other interactive element is text-only or transparent"
+    - "Warm-cream canvas — the page floor is a peachy off-white, not stark white, and it carries every hero band; bright voltage-green reads warmer against cream than against pure white"
+    - "Pill chrome everywhere — every container that rounds rounds to 50px (buttons, cards) or 50% (avatars, badges); no 4px, 8px, or 12px tiers exist on the page"
+    - "WhatsApp Sans Var at weight 400 — the entire hierarchy from 80px display down to 12px caption runs at a single 400 weight; no semibold or bold tier ever appears"
+    - "Mixed-band canvases — the page alternates cream and a deep near-black section (the encryption story) to dramatize the green CTA's only chromatic neighbor"
+  tags:
+    - "Communication & Messaging"
+  lastUpdated: "2026-05-18"
+  author:
+    name: "Dov Azencot"
+    url: "https://x.com/dovazencot"
+  opening: |
+    WhatsApp.com is one of the strangest marketing sites a billion-user product has ever shipped. The hero is a photograph of a woman holding a phone, framed inside a 25px-rounded peachy-cream container, with the headline "Message privately" set in white at 80px / weight 400 floating over the image. Around the photograph, small circular profile chips drift across the cream canvas as if torn from a contact picker. A single bright voltage-green pill — the Download CTA — sits beneath the headline at 50px radius, and that pill is the only chromatic brand moment above the fold. Where Telegram leans into glossy gradient screenshots and where Signal goes austere monochrome, WhatsApp picks a third lane: warm-cream editorial photography with a single high-voltage green button.
 
-**Theme:** light
+    The system runs on a custom proprietary variable sans — WhatsApp Sans Var — across every tier, never deviating from weight 400. The 80px hero h1, the 60px section h2, the 18px body paragraph, and the 12px caption all share that single weight. Display feels like a 19th-century billboard rather than a SaaS shout. The chromatic palette is just as restrained: near-black ink (#1c1e21) reading on a peachy cream canvas (#fcf5eb), with WhatsApp's signature voltage green (#25d366) reserved for primary calls to action and a deep near-black band underneath the fold to dramatize the end-to-end-encryption story. Every container that rounds rounds to 50px or 50% — there is no 4px or 8px tier anywhere on the page.
 
-ClickUp's interface channels a vibrant productivity hub atmosphere: an inviting white canvas contrasts with deep charcoal text, punctuated by vivid accents of violet and electric blue. Its visual identity relies on dynamic, lightweight UI elements, thin borders, and soft shadows, creating a sense of clarity and speed. Typography is confident and modern, leveraging condensed sans-serifs for headings and a highly legible sans-serif for body text, maintaining a tight visual rhythm. Gradients are strategically used for subtle flair and to highlight interactive states, reinforcing an energetic, forward-looking aesthetic.
+    Feed this DESIGN.md to an AI coding tool and it reproduces WhatsApp's specific moves: warm cream as page floor instead of stark white, single voltage-green pill reserved for the Download action, WhatsApp Sans Var (or a system-sans substitute) at uniform weight 400, and pill-everything radius. The one move that requires nerve to copy: trusting a 400-weight 80px display headline to carry a billion-user product. Most teams reach for 600 or 700 here. WhatsApp doesn't.
+  related:
+    - href: "/design"
+      title: "Browse all design systems"
+      description: "The full directory of DESIGN.md files on shadcn.io, with live mockups for each."
+    - href: "https://www.whatsapp.com"
+      title: "WhatsApp — official site"
+      description: "WhatsApp's public marketing site — the source of truth for the live tokens captured in this file."
+    - href: "https://github.com/google-labs-code/design.md"
+      title: "The DESIGN.md specification"
+      description: "Google Labs' open spec for machine-readable design system files — the format this page is built on."
+  questions:
+    - id: "primary-color"
+      title: "What is WhatsApp's primary brand color?"
+      answer: "WhatsApp's brand voltage is the bright green known internally as 'WhatsApp green' — a saturated yellow-green that reads near-fluorescent against the warm-cream marketing canvas. On the captured marketing page it appears four times: the primary Download CTA pill in the hero, the Download CTA on the Mac section, the kbd-style highlight inside the encryption section, and the secondary green pill on the desktop-app card. Every other interactive element on the page is either text-only in near-black or a transparent pill with a thin black hairline. The restraint is the brand's signature — one voltage green on cream, and nothing else competes for the action."
+    - id: "typography"
+      title: "What typeface does WhatsApp use, and what should I use as a substitute?"
+      answer: "The site runs a proprietary variable sans called WhatsApp Sans Var across every tier. Display headlines sit at 60-80px in weight 400; section headings at 48px in weight 400; body copy at 18px in weight 400; navigation and captions at 12-16px in weight 400. Notably, every tier shares the same weight 400 — there is no semibold or bold variant anywhere on the marketing page. The closest open-source substitute is Inter at weight 400 with negative letter-spacing on the display tier, or Söhne Buch if you have access to it. Both transfer cleanly because WhatsApp Sans Var's proportions are close to a humanist sans with slightly wider counters."
+    - id: "canvas-color"
+      title: "Why does WhatsApp use a warm cream instead of pure white?"
+      answer: "The page floor is a peachy off-white at a hex value warmer than standard #ffffff. The choice is deliberate: WhatsApp's voltage green reads dramatically warmer against a cream tone than against stark white — on white it skews neon-electric, on cream it skews friendly-approachable, which matches the brand's positioning as a tool for personal conversations rather than office productivity. The cream also carries hero photography of real people on phones without the harsh contrast that pure white would create. Below the fold, the page alternates between this cream and a deep near-black band that holds the end-to-end-encryption messaging — the green pill reads strongest against that black."
+    - id: "rounded-style"
+      title: "What is WhatsApp's corner-radius philosophy?"
+      answer: "WhatsApp's radius scale is pill-everywhere. The dominant value is 50px, used on every button and pill chip on the page. Hero photography containers round at 25px — slightly tighter than the buttons but still generous. Avatar contact chips and notification badges sit at 50% radius, which renders as a full circle on square elements. There is no 4px, 8px, or 12px tier anywhere in the captured page. The scale skips the 'tight-corners' aesthetic of dev-tools entirely. Everything rounds to either a pill, a generous tile, or a full circle — there is no in-between."
+    - id: "use-in-project"
+      title: "Can I use this DESIGN.md to build my own messaging-product marketing site?"
+      answer: "Yes — feed the file to Claude, Cursor, or any AI tool that reads structured design tokens and the agent will reproduce WhatsApp's specific moves: warm cream canvas instead of stark white, single voltage-green pill CTA reserved for the Download action, WhatsApp Sans Var (or Inter weight 400) across every tier with no semibold tier, and pill-everywhere radius starting at 50px. You can also reference the tokens directly. One caveat: the entirely-400-weight typography is dangerous to copy without the rest of the system — if your headlines need to feel urgent or commercial, WhatsApp's weight discipline will read flat. It works at WhatsApp because the product is a utility that already has a billion users."
 
-## Tokens — Colors
+mockups:
+  - "marketing-hero"
+  - "chat-conversation"
 
-| Name                | Value                                                                                                              | Token                         | Role                                                                                                                                                                                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Canvas White        | `#ffffff`                                                                                                          | `--color-canvas-white`        | Page backgrounds, card surfaces, ghost button backgrounds, default component fills. Creates a bright, expansive foundation                                                                                                                                    |
-| Midnight Charcoal   | `#292d34`                                                                                                          | `--color-midnight-charcoal`   | Primary body text, active state indicators, strong borders. Provides high contrast against light surfaces                                                                                                                                                     |
-| Dark Onyx           | `linear-gradient(97deg, rgb(32, 32, 32) 43.17%, rgb(143, 143, 143) 110.86%)`                                       | `--color-dark-onyx`           | Backgrounds for prominent buttons, card borders, and primary interactive elements. A deep neutral that commands attention when filled; Subtle background for UI elements, transitioning from dark to light gray                                               |
-| Ash Gray            | `#e8e8e8`                                                                                                          | `--color-ash-gray`            | Subtle borders, dividers, disabled states, ghost button borders. Provides separation without visual noise                                                                                                                                                     |
-| Smoke Gray          | `#b3b3b3`                                                                                                          | `--color-smoke-gray`          | Muted text, secondary icons, subtle outlines. For less prominent information or decorative details                                                                                                                                                            |
-| Hint of Sky         | `#e9ebf0`                                                                                                          | `--color-hint-of-sky`         | Subtle background tint for alternating content sections, providing a soft shift in surface elevation                                                                                                                                                          |
-| Shadow Tint Blue    | `#edf6fd`                                                                                                          | `--color-shadow-tint-blue`    | Light background for interactive states or subtle focus elements                                                                                                                                                                                              |
-| Deep Violet         | `#7b68ee`                                                                                                          | `--color-deep-violet`         | Interactive link text, image accents, decorative strokes – a core brand color, active and inviting                                                                                                                                                            |
-| Electric Blue       | `conic-gradient(rgb(0, 145, 255), rgb(255, 2, 240), rgb(247, 104, 8), rgb(102, 71, 240), rgb(0, 145, 255) 360deg)` | `--color-electric-blue`       | Blue accent for outlined action borders, linked labels, and lightweight interactive emphasis. Do not promote it to the primary CTA color; Decorative backgrounds, illustrative elements, and for conveying a dynamic, modern feel with a broad color spectrum |
-| Rich Plum           | `#514b81`                                                                                                          | `--color-rich-plum`           | Background details, subtle decorative elements, less prominent brand mentions. A deeper, more reserved brand color                                                                                                                                            |
-| Vivid Purple        | `#6647f0`                                                                                                          | `--color-vivid-purple`        | Violet outline accent for tags, dividers, and focused UI edges. Do not promote it to the primary CTA color                                                                                                                                                    |
-| Deep Space Charcoal | `#090c1d`                                                                                                          | `--color-deep-space-charcoal` | Main headings, high-contrast text elements, and specific UI backgrounds where extreme contrast is desired                                                                                                                                                     |
-| Warm Fade Gradient  | `linear-gradient(rgba(246, 233, 232, 0), rgba(255, 91, 54, 0.23))`                                                 | `--color-warm-fade-gradient`  | Subtle accent for visual interest or background texture, fading from transparent to a soft orange                                                                                                                                                             |
+colors:
+  primary: "#25d366"
+  secondary: "#e6ffda"
+  ink: "#1c1e21"
+  ink-muted: "#5e5e5e"
+  ink-inverse: "#ffffff"
+  canvas: "#fcf5eb"
+  surface-1: "#ffffff"
+  surface-dark: "#000000"
+  link: "#0373e9"
+  hairline: "#1c1e21"
 
-## Tokens — Typography
+typography:
+  display-xl:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 80px
+    fontWeight: 400
+    lineHeight: 80px
+    letterSpacing: 0
+  display-lg:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 60px
+    fontWeight: 400
+    lineHeight: 60px
+    letterSpacing: 0
+  display-md:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 48px
+    fontWeight: 400
+    lineHeight: 48px
+    letterSpacing: 0
+  body-lg:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 18px
+    fontWeight: 400
+    lineHeight: 25px
+    letterSpacing: 0
+  body-md:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 22px
+    letterSpacing: 0
+  button-md:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 16px
+    letterSpacing: 0
+  nav-link:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 22px
+    letterSpacing: 0
+  caption:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 15.6px
+    letterSpacing: 0
+  caption-tight:
+    fontFamily: "\"WhatsApp Sans Var\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 14.4px
+    letterSpacing: 0
 
-### Plus Jakarta Sans — Used for headings and prominent UI elements. Its slightly condensed structure provides a modern, space-efficient feel, especially impactful with subtle negative letter-spacing at larger sizes. · `--font-plus-jakarta-sans`
+rounded:
+  none: "0px"
+  tile: "25px"
+  pill: "50px"
+  full: "9999px"
 
-- **Substitute:** system-ui, sans-serif
-- **Weights:** 400, 500, 650, 700, 800
-- **Sizes:** 14px, 16px, 26px, 34px, 40px, 42px, 48px, 52px, 60px, 76px
-- **Line height:** 1.05, 1.10, 1.12, 1.14, 1.18, 1.20, 1.25, 1.43, 1.50
-- **Letter spacing:** -0.0500em at 76px, -0.0400em at 60px, -0.0350em at 52px, -0.0110em at 48px
-- **OpenType features:** `"calt" 0`
-- **Role:** Used for headings and prominent UI elements. Its slightly condensed structure provides a modern, space-efficient feel, especially impactful with subtle negative letter-spacing at larger sizes.
+spacing:
+  xs: "8px"
+  sm: "12px"
+  md: "16px"
+  lg: "18px"
+  xl: "20px"
+  2xl: "24px"
+  3xl: "32px"
+  4xl: "40px"
+  5xl: "80px"
 
-### Inter — Dedicated to body text, UI labels, and captions. Its high legibility and variable font features ensure clarity across various sizes, enhancing the information-dense product experience. · `--font-inter`
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.ink}"
+    typography: "{typography.button-md}"
+    rounded: "{rounded.pill}"
+    padding: "16px 28px"
+    height: "53px"
+    borderColor: "{colors.ink}"
+  button-secondary:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.button-md}"
+    rounded: "{rounded.pill}"
+    padding: "12px 24px"
+    height: "44px"
+    borderColor: "{colors.ink}"
+  top-nav:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.nav-link}"
+    padding: "16px 24px"
+    height: "72px"
+  nav-link:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.nav-link}"
+    padding: "0px 20px"
+  hero-heading:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-inverse}"
+    typography: "{typography.display-xl}"
+    padding: "0px"
+  section-heading:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.display-md}"
+  body-paragraph:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-inverse}"
+    typography: "{typography.body-lg}"
+  body-paragraph-dark:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-lg}"
+  hero-card:
+    backgroundColor: "{colors.surface-1}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.tile}"
+    padding: "0px"
+  contact-chip:
+    backgroundColor: "{colors.surface-1}"
+    textColor: "{colors.ink}"
+    typography: "{typography.caption}"
+    rounded: "{rounded.full}"
+    padding: "8px 12px"
+    height: "40px"
+  message-bubble-out:
+    backgroundColor: "{colors.secondary}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.tile}"
+    padding: "8px 12px"
+  text-input:
+    backgroundColor: "{colors.surface-1}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.pill}"
+    padding: "12px 24px"
+    height: "44px"
+    borderColor: "{colors.ink}"
+  encryption-band:
+    backgroundColor: "{colors.surface-dark}"
+    textColor: "{colors.ink-inverse}"
+    typography: "{typography.body-lg}"
+    padding: "80px 24px"
+  footer:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.caption}"
+    padding: "32px 24px"
+---
 
-- **Substitute:** system-ui, sans-serif
-- **Weights:** 400, 500, 600, 650, 700
-- **Sizes:** 8px, 9px, 12px, 13px, 14px, 15px, 16px, 17px, 18px, 19px
-- **Line height:** 1.00, 1.14, 1.33, 1.37, 1.38, 1.43, 1.50
-- **Letter spacing:** -0.0400em at 19px, -0.0200em at 18px, -0.0190em at 17px, -0.0160em at 16px, -0.0140em at 15px, -0.0110em at 14px
-- **OpenType features:** `"calt" 0, "clig" 0, "liga" 0`
-- **Role:** Dedicated to body text, UI labels, and captions. Its high legibility and variable font features ensure clarity across various sizes, enhancing the information-dense product experience.
+## Overview
 
-### Sometype Mono — Used sparingly for code snippets, timestamps, and specific badge content, providing a technical, precise contrast to the primary sans-serifs. · `--font-sometype-mono`
+WhatsApp's marketing site is one of the strangest landing pages a billion-user product has ever shipped. **Utility-first voltage.** Where Telegram leans into glossy gradient screenshots and where Signal goes austere monochrome, WhatsApp picks a third lane — a warm peachy-cream canvas that carries editorial photography of real conversations, with a single bright voltage-green pill CTA as the only chromatic brand moment. The page reads more like a public-service announcement about end-to-end encryption than a SaaS landing page, and that's the point: the product is so universal that the marketing surface refuses to perform.
 
-- **Substitute:** monospace
-- **Weights:** 400, 500
-- **Sizes:** 12px, 14px, 16px, 24px, 40px
-- **Line height:** 1.25, 1.29, 1.38, 1.43
-- **Letter spacing:** 0.0600em
-- **Role:** Used sparingly for code snippets, timestamps, and specific badge content, providing a technical, precise contrast to the primary sans-serifs.
+The chromatic restraint is the system's signature. There is exactly one brand voltage — the WhatsApp green at `{colors.primary}` (#25d366) — and it appears four times on the page, all on Download CTAs. Near-black ink at `{colors.ink}` (#1c1e21) does every reading job, against a warm cream canvas at `{colors.canvas}` (#fcf5eb). Below the fold the page drops into a deep near-black band that dramatizes the encryption story — the green pill reads loudest against that black. The remaining structural tones (white card surfaces, a soft mint message bubble at `{colors.secondary}`, a single link blue) appear in supporting roles only.
 
-### Type Scale
+Typography is WhatsApp Sans Var across every tier, uniformly at weight 400. The 80px hero h1, the 60px section h2, the 48px sub-heading, the 18px body paragraph, and the 12px caption all share that single weight. There is no semibold or bold variant anywhere on the captured marketing page — display feels like 19th-century billboard typography rather than a SaaS shout.
 
-| Role       | Size | Line Height | Letter Spacing | Token               |
-| ---------- | ---- | ----------- | -------------- | ------------------- |
-| caption    | 12px | 1.43        | -0.14px        | `--text-caption`    |
-| body-sm    | 14px | 1.43        | -0.15px        | `--text-body-sm`    |
-| body       | 16px | 1.5         | -0.26px        | `--text-body`       |
-| subheading | 26px | 1.25        | -0.91px        | `--text-subheading` |
-| heading-sm | 34px | 1.18        | -1.19px        | `--text-heading-sm` |
-| heading    | 40px | 1.14        | -1.6px         | `--text-heading`    |
-| heading-lg | 52px | 1.12        | -1.82px        | `--text-heading-lg` |
-| display    | 76px | 1.05        | -3.8px         | `--text-display`    |
+**Key Characteristics:**
+- Warm cream canvas (`{colors.canvas}` — #fcf5eb), not stark white — voltage green reads warmer and friendlier against peach than against true white.
+- Single voltage-green pill (`{colors.primary}`) reserved exclusively for Download actions. Four occurrences on the captured page.
+- WhatsApp Sans Var across every typographic tier at uniform weight 400 — no semibold or bold variant exists on the page.
+- Pill-everywhere radius: 50px on buttons (`{rounded.pill}`), 25px on hero photography containers (`{rounded.tile}`), 50% on avatars and badges (`{rounded.full}`). No 4px, 8px, or 12px tier.
+- Mixed-band layout — cream sections alternate with a deep near-black band carrying the end-to-end-encryption story.
+- Hero photography (real people holding phones) sits inside generously rounded containers rather than full-bleed — the cream margin around each photo is part of the composition.
+- Floating contact-chip avatars drift around the hero photograph as if torn from a phone's contact picker.
 
-## Tokens — Spacing & Shapes
+## Colors
 
-**Base unit:** 4px
+### Brand
 
-**Density:** compact
+- **Voltage Green** (`{colors.primary}` — #25d366): frequency 6. Used as bg (4), border (1), text (1). The single chromatic brand moment on the page — every Download CTA pill, every primary action. The fill carries near-black `{colors.ink}` text rather than white, because green-on-white-text reads less legible at the small button sizes than green-on-near-black.
+- **Mint Bubble** (`{colors.secondary}` — #e6ffda): frequency 1. Used as bg only — the outgoing message bubble color borrowed from the in-product chat interface. Appears once below the fold in the encryption-story illustration.
 
-### Spacing Scale
+### Surface
 
-| Name | Value | Token           |
-| ---- | ----- | --------------- |
-| 4    | 4px   | `--spacing-4`   |
-| 8    | 8px   | `--spacing-8`   |
-| 12   | 12px  | `--spacing-12`  |
-| 16   | 16px  | `--spacing-16`  |
-| 20   | 20px  | `--spacing-20`  |
-| 24   | 24px  | `--spacing-24`  |
-| 32   | 32px  | `--spacing-32`  |
-| 40   | 40px  | `--spacing-40`  |
-| 48   | 48px  | `--spacing-48`  |
-| 52   | 52px  | `--spacing-52`  |
-| 56   | 56px  | `--spacing-56`  |
-| 60   | 60px  | `--spacing-60`  |
-| 80   | 80px  | `--spacing-80`  |
-| 100  | 100px | `--spacing-100` |
-| 128  | 128px | `--spacing-128` |
+- **Canvas** (`{colors.canvas}` — #fcf5eb): frequency 12 — used as bg (10), text (1), border (1). The peachy off-white that carries the hero band and most editorial sections. Warmer than #ffffff so voltage green reads approachable rather than electric.
+- **White** (`{colors.surface-1}` — #ffffff): frequency 102. Used as text (50), bg (2), border (50). The dominant text color when inverted on the dark encryption band, and the fill for the hero-photo container card and contact chips.
+- **Dark Surface** (`{colors.surface-dark}` — #000000): frequency 2 as text/border. Reserved for the encryption-story band — the only deep-black section on the page, used to dramatize the green CTA's contrast.
 
-### Border Radius
+### Text
 
-| Element          | Value |
-| ---------------- | ----- |
-| cards            | 12px  |
-| pills            | 54px  |
-| buttons          | 9px   |
-| default          | 9px   |
-| largeCards       | 24px  |
-| circularElements | 653px |
+- **Ink** (`{colors.ink}` — #1c1e21): frequency 690 — the dominant text/border tone. Used as text (342), bg (8), border (340). Near-black, slightly cooler than pure black, for body and headline copy on the cream canvas.
+- **Ink Muted** (`{colors.ink-muted}` — #5e5e5e): frequency 6 — text (3), border (3). Reserved for tertiary metadata and disabled-state captions.
+- **Ink Inverse** (`{colors.ink-inverse}` — #ffffff): the white text color used on hero photography and on the dark encryption band.
 
-### Shadows
+### Link & Hairline
 
-| Name     | Value                                                          | Token               |
-| -------- | -------------------------------------------------------------- | ------------------- |
-| subtle   | `rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0p...` | `--shadow-subtle`   |
-| xl       | `rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset, rgba(...` | `--shadow-xl`       |
-| subtle-2 | `rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px, rgba(18, 43, ...` | `--shadow-subtle-2` |
-| sm       | `rgba(13, 21, 48, 0.04) 0px 4px 4px 0px`                       | `--shadow-sm`       |
-| xl-2     | `rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset`           | `--shadow-xl-2`     |
+- **Link** (`{colors.link}` — #0373e9): frequency 4. Used as text (2), border (2). The standard sky blue for inline anchor links inside footer disclaimers. Not a brand color — purely functional.
+- **Hairline** (`{colors.hairline}` — #1c1e21): the near-black ink doubles as the 1px button border on secondary pills against the cream canvas.
 
-### Layout
+## Typography
 
-- **Page max-width:** 1px
-- **Section gap:** 24px
-- **Card padding:** 12px
-- **Element gap:** 9px
+### Font Family
 
-## Components
+The system runs **WhatsApp Sans Var** for every tier — a custom proprietary variable sans Meta ships specifically for WhatsApp's surfaces. The fallback stack is `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`. There is no separate display family, no serif tier, and no monospace anywhere on the marketing page. One variable-weight sans does every job — display, heading, body, button, caption — and it does every job at weight 400.
 
-### Primary Filled Button
+### Hierarchy
 
-**Role:** Call to action
+| Token | Size | Weight | Line Height | Use |
+|---|---|---|---|---|
+| `{typography.display-xl}` | 80px | 400 | 80px | Hero h1 ("Message privately") |
+| `{typography.display-lg}` | 60px | 400 | 60px | Section h2 ("Speak freely," "Stay close to family and friends") |
+| `{typography.display-md}` | 48px | 400 | 48px | Sub-section heading ("With private messaging and calling…") |
+| `{typography.body-lg}` | 18px | 400 | 25px | Default running body copy |
+| `{typography.body-md}` | 16px | 400 | 22px | Secondary body and navigation labels |
+| `{typography.button-md}` | 16px | 400 | 16px | Download CTA pill label |
+| `{typography.nav-link}` | 16px | 400 | 22px | Top-nav link labels (Privacy, About, Support, Business) |
+| `{typography.caption}` | 12px | 400 | 15.6px | Footer disclaimers, metadata |
+| `{typography.caption-tight}` | 12px | 400 | 14.4px | In-product caption rows |
 
-Filled with Dark Onyx (#202023), text in Canvas White (#ffffff). Rounded with 9px border-radius, using 4px vertical and 12px horizontal padding. Delivers a visually solid, high-priority action indicator.
+### Principles
 
-### Ghost Button
+Every tier sits at weight 400. There is no semibold, no bold, no heavy. The system's "emphasis" mechanism is size, not weight — an 80px h1 commands attention because it is enormous, not because it is heavy. This is deeply unusual at this product scale and is the single move that most directly defines WhatsApp's editorial voice. Display sizes step in roughly 1.5x increments (48 → 60 → 80) so the hierarchy stays legible without weight differentiation.
 
-**Role:** Secondary action
+### Note on Font Substitutes
 
-Transparent background, text in Midnight Charcoal (#292d34). Features a small 4px border-radius without explicit padding, relying on surrounding layout for spacing, for a subtle interactive element.
-
-### Pill Button
-
-**Role:** Tertiary action/Tag
-
-Transparent background, text in Charcoal Gray (#646464), with 54px border-radius making them fully rounded. Uses 4px vertical and 12px horizontal padding to create a compact, tag-like appearance.
-
-### Outline Button
-
-**Role:** Bordered action/Navigation element
-
-Transparent background, text in Midnight Charcoal (#000000), bordered by Ash Gray (#000000). Features an 8px border-radius and 4px vertical by 10px horizontal padding, offering a distinct but less assertive interactive state.
-
-### Feature Card
-
-**Role:** Content container
-
-Canvas White (#ffffff) background with a 12px border-radius and a light shadow (rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px). Includes 12px padding on all sides, providing a clear, visually separated content block.
-
-### Ghost Content Card
-
-**Role:** Visual content container without explicit bounding
-
-Fully transparent background (rgba(0, 0, 0, 0)), 20px border-radius, no boxShadow or padding. Designed for content that integrates seamlessly into the background, hinting at a boundary rather than overtly defining one.
-
-### Subtle Badge
-
-**Role:** Informational tag
-
-Transparent background, text in Midnight Charcoal (#000000). No border-radius or padding. Used for discreet labels or category indicators.
-
-### Pill Badge
-
-**Role:** Compact informational tag
-
-Background rgba(0,0,0,0.1), text in Midnight Charcoal (#292d34). Features a 12px border-radius, 10px vertical and 12px horizontal padding. Used for highlighting short pieces of information such as 'Super Agent' labels.
-
-## Do's and Don'ts
-
-### Do
-
-- Use Plus Jakarta Sans for all headings and prominent brand statements, leveraging its negative letter-spacing at larger sizes for a premium, condensed feel.
-- Prioritize Canvas White (#ffffff) as the primary background for all page sections and elevated component surfaces to maintain a bright, open aesthetic.
-- Apply Midnight Charcoal (#292d34) for primary body text and main content to ensure readability across all contexts.
-- Utilize Electric Blue (#0091ff) or Deep Violet (#7b68ee) as the primary accent colors for interactive elements, links, and key brand highlights.
-- Employ a 9px border-radius for buttons and a 12px radius for cards, with a 54px radius reserved for pill-shaped elements and tags.
-- Create visual hierarchy and separation using thin, subtle borders in Ash Gray (#e8e8e8) or Dark Onyx (#202023) rather than heavy solid backgrounds.
-- Maintain a compact information density with 12px card padding and 9px element gaps, ensuring UI elements feel connected but not overcrowded.
-
-### Don't
-
-- Avoid using achromatic grays like #000000 for body text; always prefer Midnight Charcoal (#292d34) for content clarity and consistency.
-- Do not use strong, opaque background colors for action buttons unless explicitly outlined as a Brand or Accent color; prefer Dark Onyx (#202023) for filled primary actions with white text.
-- Do not introduce new shadow styles; stick to the defined, subtle shadows (e.g., rgba(0, 0, 0, 0.1) 0px 1px 3px 0px) to maintain a lightweight elevation philosophy.
-- Refrain from using heavily decorative gradients as primary backgrounds; reserve complex gradients for illustrative and atmospheric elements.
-- Do not extend the use of Sometype Mono beyond code snippets or technical labels; it is not suitable for general body or heading text.
-- Avoid large, unpadded sections; use the defined `elementGap` of 9px and `cardPadding` of 12px to ensure consistent spacing and density.
-- Do not use bold weights indiscriminately; the combination of condensed letter-spacing in Plus Jakarta Sans and Inter provides sufficient visual weight when necessary.
-
-## Surfaces
-
-| Level | Name                 | Value     | Purpose                                                                                     |
-| ----- | -------------------- | --------- | ------------------------------------------------------------------------------------------- |
-| 0     | Canvas White         | `#ffffff` | Primary page background and default container surface.                                      |
-| 1     | Hint of Sky          | `#e9ebf0` | Subtle background for alternating content sections, providing a soft shift in visual depth. |
-| 2     | Feature Card Surface | `#ffffff` | Elevated card backgrounds with a soft shadow to indicate interactive or contained content.  |
-| 3     | Shadow Tint Blue     | `#edf6fd` | Light background for interactive states or subtle focus elements.                           |
-
-## Elevation
-
-- **Feature Card:** `rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px`
-- **Hover/Interactive Elements:** `rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px, rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px, rgba(18, 43, 165, 0.04) 0px 6px 6px -3px, rgba(18, 43, 165, 0.04) 0px 12px 12px -6px`
-- **Button Shadow (subtle):** `rgba(13, 21, 48, 0.04) 0px 4px 4px 0px`
-
-## Imagery
-
-Imagery primarily consists of bright, clean product screenshots embedded within UI mockups, often demonstrating the platform's features. These are typically contained within card-like structures or placed alongside explanatory text. Illustrations are abstract and organic, using fluid shapes and soft gradients, serving as decorative atmosphere rather than direct content explanation. Icons are predominantly outlined, conveying a lightweight feel, with a consistent stroke weight. The overall density is balanced: images punctuate text blocks to illustrate functionality without overwhelming the layout.
+WhatsApp Sans Var is proprietary to Meta. The closest open-source substitutes:
+- **Inter** at weight 400 with -0.5% letter-spacing on the display tier transfers cleanly; the proportions are close.
+- **Söhne Buch** if you have a Klim Type license — closer in counter width to WhatsApp Sans.
+- **system-ui** as a fallback is acceptable because the stack already includes Apple system and Segoe UI; on macOS and Windows the page degrades to native sans without visible damage to the rhythm.
 
 ## Layout
 
-The page maintains a centered, max-width layout, approximately 1200px wide. The hero section is full-bleed, featuring a prominent headline over a product screenshot. Sections alternate between soft white and subtle gray backgrounds, creating a clear visual rhythm. Content is generally arranged in two-column layouts, often with text on the left and visuals or product UI on the right, or centered stacks for feature showcases. Grid patterns are prominent for displaying product capabilities and features, typically in a multi-column card grid. The navigation is a sticky top bar, providing persistent access to global navigation elements.
+### Spacing System
 
-## Agent Prompt Guide
+- **Base unit:** 4px (with 8px and 12px as the dominant modules).
+- **Tokens:** `{spacing.xs}` 8px · `{spacing.sm}` 12px · `{spacing.md}` 16px · `{spacing.lg}` 18px · `{spacing.xl}` 20px · `{spacing.2xl}` 24px · `{spacing.3xl}` 32px · `{spacing.4xl}` 40px · `{spacing.5xl}` 80px.
+- **Section padding (vertical):** 80px between major bands.
+- **Card internal padding:** 0px on the hero photography card — the image fills the rounded container edge-to-edge, with no internal margin.
+- **Hero padding:** 16px 28px on the primary CTA pill — wider on the horizontal axis to keep the pill feeling pill-like rather than capsule-like.
 
-### Quick Color Reference
+### Grid & Container
 
-text: #292d34
-background: #ffffff
-border: #e8e8e8
-accent: #7b68ee
-primary action: #202023 (filled action)
+- **Max content width:** ~1080px on the hero band, ~900px on the editorial sections below.
+- **Hero:** cream canvas with a 25px-rounded photography card sitting inside the safe area, headline overlaid in white at the top-left of the photo, contact chips drifting around the perimeter.
+- **Mixed-band stack:** cream → cream → near-black encryption band → cream → cream. The deep band is the only chromatic break in the page.
+- **Footer:** 6-column link grid with disclaimer microcopy below.
 
-### 3-5 Example Component Prompts
+### Rhythm
 
-1. Create a Primary Action Button: #202023 background, #ffffff text, 9999px radius, compact pill padding. Use this filled treatment for the main CTA.
-2. Design a Feature Card: Canvas White (#ffffff) background, 12px border-radius, shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px. Inside, a heading at 26px Plus Jakarta Sans, weight 700, Deep Space Charcoal (#090c1d), letter-spacing -0.91px, 12px padding. Body text at 16px Inter, weight 400, Midnight Charcoal (#292d34), letter-spacing -0.26px.
-3. Implement a Pill Tag: Transparent background, text in Midnight Charcoal (#292d34) at 14px Inter, weight 500, letter-spacing -0.15px. 12px border-radius, 10px vertical / 12px horizontal padding. Border in Ash Gray (#e8e8e8).
-4. Create a Navigation Link: Text in Midnight Charcoal (#292d34) at 16px Inter, weight 500, letter-spacing -0.26px. On hover, text color changes to Deep Violet (#7b68ee) and an underline appears.
+The page alternates between **cream editorial bands** (with hero photography and headline copy) and **a single deep near-black band** (the encryption story). There is no atmospheric gradient between sections — every band terminates on a flat fill color, and the green CTA pill is the only element that crosses bands unchanged.
 
-## Similar Brands
+## Elevation
 
-- **Notion** — Similar focus on white canvas, modular content blocks, and productivity software UI with clear typography.
-- **Asana** — Employs a clean, bright interface with distinct accent colors for task management and status, paired with functional sans-serif typography.
-- **Linear** — Uses a minimalist approach with a strong emphasis on content, subtle elevation, and precise typographic control in software development tools.
-- **Figma** — Leverages a light UI with carefully selected accent colors for interactive elements, featuring clear information hierarchy in a design tool context.
+The system has **essentially no shadow tier**. The hero photography card sits against the cream canvas with no shadow, no border — only a 25px corner radius defines the container. The encryption band carries no shadow either. Hierarchy comes from corner radius and color contrast, never from depth.
 
-## Quick Start
+- **Flat (no shadow):** every band on the page — 100% of surfaces.
+- **Tonal lift:** the dark encryption band lifts off the cream surface by sheer luminance contrast, not by drop shadow.
+- **Pill outlines:** secondary CTA pills carry a 1px `{colors.hairline}` (near-black) border against the cream canvas. The border is the only "edge" treatment in the system.
 
-### CSS Custom Properties
+## Shapes
 
-```css
-:root {
-  /* Colors */
-  --color-canvas-white: #ffffff;
-  --color-midnight-charcoal: #292d34;
-  --color-dark-onyx: #202023;
-  --gradient-dark-onyx: linear-gradient(
-    97deg,
-    rgb(32, 32, 32) 43.17%,
-    rgb(143, 143, 143) 110.86%
-  );
-  --color-ash-gray: #e8e8e8;
-  --color-smoke-gray: #b3b3b3;
-  --color-hint-of-sky: #e9ebf0;
-  --color-shadow-tint-blue: #edf6fd;
-  --color-deep-violet: #7b68ee;
-  --color-electric-blue: #0091ff;
-  --gradient-electric-blue: conic-gradient(
-    rgb(0, 145, 255),
-    rgb(255, 2, 240),
-    rgb(247, 104, 8),
-    rgb(102, 71, 240),
-    rgb(0, 145, 255) 360deg
-  );
-  --color-rich-plum: #514b81;
-  --color-vivid-purple: #6647f0;
-  --color-deep-space-charcoal: #090c1d;
-  --color-warm-fade-gradient: #ff5b36;
-  --gradient-warm-fade-gradient: linear-gradient(
-    rgba(246, 233, 232, 0),
-    rgba(255, 91, 54, 0.23)
-  );
+The radius scale is **pill-or-tile, never tight**:
 
-  /* Typography — Font Families */
-  --font-plus-jakarta-sans:
-    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-inter:
-    "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
-  --font-sometype-mono:
-    "Sometype Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    monospace;
+- `{rounded.none}` 0px — only on full-bleed page bands.
+- `{rounded.tile}` 25px — hero photography containers and outgoing message bubbles. The "generous" tile radius.
+- `{rounded.pill}` 50px — every button, every pill chip. The dominant radius on the page (6 occurrences).
+- `{rounded.full}` 9999px (50% on square elements) — avatars, notification badges, contact chips, profile circles.
 
-  /* Typography — Scale */
-  --text-caption: 12px;
-  --leading-caption: 1.43;
-  --tracking-caption: -0.14px;
-  --text-body-sm: 14px;
-  --leading-body-sm: 1.43;
-  --tracking-body-sm: -0.15px;
-  --text-body: 16px;
-  --leading-body: 1.5;
-  --tracking-body: -0.26px;
-  --text-subheading: 26px;
-  --leading-subheading: 1.25;
-  --tracking-subheading: -0.91px;
-  --text-heading-sm: 34px;
-  --leading-heading-sm: 1.18;
-  --tracking-heading-sm: -1.19px;
-  --text-heading: 40px;
-  --leading-heading: 1.14;
-  --tracking-heading: -1.6px;
-  --text-heading-lg: 52px;
-  --leading-heading-lg: 1.12;
-  --tracking-heading-lg: -1.82px;
-  --text-display: 76px;
-  --leading-display: 1.05;
-  --tracking-display: -3.8px;
+There is no 4px, 8px, 12px, or 16px tier anywhere on the page. The scale skips the entire "tight-corners" aesthetic that dev-tools brands lean on. Everything is either a pill, a generous tile, or a full circle — no in-between.
 
-  /* Typography — Weights */
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-w650: 650;
-  --font-weight-bold: 700;
-  --font-weight-extrabold: 800;
+## Components
 
-  /* Spacing */
-  --spacing-unit: 4px;
-  --spacing-4: 4px;
-  --spacing-8: 8px;
-  --spacing-12: 12px;
-  --spacing-16: 16px;
-  --spacing-20: 20px;
-  --spacing-24: 24px;
-  --spacing-32: 32px;
-  --spacing-40: 40px;
-  --spacing-48: 48px;
-  --spacing-52: 52px;
-  --spacing-56: 56px;
-  --spacing-60: 60px;
-  --spacing-80: 80px;
-  --spacing-100: 100px;
-  --spacing-128: 128px;
+**`button-primary`** — The signature Download CTA. Voltage-green `{colors.primary}` fill, near-black `{colors.ink}` text (not white — the green/black contrast reads more legible at this size), `{rounded.pill}` 50px radius, 16x28 padding, 53px height. A 1px `{colors.ink}` border wraps the pill. "Download" is the canonical instance, sitting beneath the hero headline.
 
-  /* Layout */
-  --page-max-width: 1px;
-  --section-gap: 24px;
-  --card-padding: 12px;
-  --element-gap: 9px;
+**`button-secondary`** — Transparent fill with near-black text and a 1px `{colors.ink}` hairline border. `{rounded.pill}` 50px radius, 12x24 padding, 44px height. Used for tertiary links in the top nav.
 
-  /* Border Radius */
-  --radius-lg: 9px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  --radius-2xl-2: 20px;
-  --radius-3xl: 24px;
-  --radius-3xl-2: 28px;
-  --radius-3xl-3: 32px;
-  --radius-3xl-4: 39px;
-  --radius-3xl-5: 45px;
-  --radius-full: 54px;
-  --radius-full-2: 653px;
+**`top-nav`** — Cream `{colors.canvas}` background flush with the page floor. 72px height, 16x24 padding. Houses the WhatsApp wordmark, the four product-nav links (Privacy, About, Support, Business), and the right-aligned Download pill.
 
-  /* Named Radii */
-  --radius-cards: 12px;
-  --radius-pills: 54px;
-  --radius-buttons: 9px;
-  --radius-default: 9px;
-  --radius-largecards: 24px;
-  --radius-circularelements: 653px;
+**`nav-link`** — Transparent background, near-black text in `{typography.nav-link}` (16px / 400), 0x20 padding. The most generic interactive treatment on the page.
 
-  /* Shadows */
-  --shadow-subtle:
-    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
-  --shadow-xl:
-    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset,
-    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
-  --shadow-subtle-2:
-    rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px,
-    rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px,
-    rgba(18, 43, 165, 0.04) 0px 6px 6px -3px,
-    rgba(18, 43, 165, 0.04) 0px 12px 12px -6px;
-  --shadow-sm: rgba(13, 21, 48, 0.04) 0px 4px 4px 0px;
-  --shadow-xl-2: rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
+**`hero-heading`** — White text on the hero photography card, `{typography.display-xl}` (80px / 400). 0 padding because the headline sits inside the rounded photo container's safe area.
 
-  /* Surfaces */
-  --surface-canvas-white: #ffffff;
-  --surface-hint-of-sky: #e9ebf0;
-  --surface-feature-card-surface: #ffffff;
-  --surface-shadow-tint-blue: #edf6fd;
-}
-```
+**`section-heading`** — Near-black text, `{typography.display-md}` (48px / 400). Used for "With private messaging and calling…" and the encryption-section headers.
 
-### Tailwind v4
+**`body-paragraph`** — White text on the hero card at `{typography.body-lg}` (18px / 400). The hero sub-paragraph and dark-band lead copy.
 
-```css
-@theme {
-  /* Colors */
-  --color-canvas-white: #ffffff;
-  --color-midnight-charcoal: #292d34;
-  --color-dark-onyx: #202023;
-  --color-ash-gray: #e8e8e8;
-  --color-smoke-gray: #b3b3b3;
-  --color-hint-of-sky: #e9ebf0;
-  --color-shadow-tint-blue: #edf6fd;
-  --color-deep-violet: #7b68ee;
-  --color-electric-blue: #0091ff;
-  --color-rich-plum: #514b81;
-  --color-vivid-purple: #6647f0;
-  --color-deep-space-charcoal: #090c1d;
-  --color-warm-fade-gradient: #ff5b36;
+**`body-paragraph-dark`** — Same typography as above, but in `{colors.ink}` for cream-canvas sections.
 
-  /* Typography */
-  --font-plus-jakarta-sans:
-    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-inter:
-    "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
-  --font-sometype-mono:
-    "Sometype Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    monospace;
+**`hero-card`** — White `{colors.surface-1}` fill, `{rounded.tile}` 25px radius, 0 padding. The container that holds the hero photograph edge-to-edge.
 
-  /* Typography — Scale */
-  --text-caption: 12px;
-  --leading-caption: 1.43;
-  --tracking-caption: -0.14px;
-  --text-body-sm: 14px;
-  --leading-body-sm: 1.43;
-  --tracking-body-sm: -0.15px;
-  --text-body: 16px;
-  --leading-body: 1.5;
-  --tracking-body: -0.26px;
-  --text-subheading: 26px;
-  --leading-subheading: 1.25;
-  --tracking-subheading: -0.91px;
-  --text-heading-sm: 34px;
-  --leading-heading-sm: 1.18;
-  --tracking-heading-sm: -1.19px;
-  --text-heading: 40px;
-  --leading-heading: 1.14;
-  --tracking-heading: -1.6px;
-  --text-heading-lg: 52px;
-  --leading-heading-lg: 1.12;
-  --tracking-heading-lg: -1.82px;
-  --text-display: 76px;
-  --leading-display: 1.05;
-  --tracking-display: -3.8px;
+**`contact-chip`** — White circular avatar chips with the contact's photo, fully rounded `{rounded.full}`. The chips drift around the hero photo perimeter as decorative composition elements.
 
-  /* Spacing */
-  --spacing-4: 4px;
-  --spacing-8: 8px;
-  --spacing-12: 12px;
-  --spacing-16: 16px;
-  --spacing-20: 20px;
-  --spacing-24: 24px;
-  --spacing-32: 32px;
-  --spacing-40: 40px;
-  --spacing-48: 48px;
-  --spacing-52: 52px;
-  --spacing-56: 56px;
-  --spacing-60: 60px;
-  --spacing-80: 80px;
-  --spacing-100: 100px;
-  --spacing-128: 128px;
+**`message-bubble-out`** — `{colors.secondary}` (mint) fill, near-black text, `{rounded.tile}` 25px radius. The outgoing message bubble borrowed from the in-product chat interface.
 
-  /* Border Radius */
-  --radius-lg: 9px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  --radius-2xl-2: 20px;
-  --radius-3xl: 24px;
-  --radius-3xl-2: 28px;
-  --radius-3xl-3: 32px;
-  --radius-3xl-4: 39px;
-  --radius-3xl-5: 45px;
-  --radius-full: 54px;
-  --radius-full-2: 653px;
+**`text-input`** — White fill, near-black text, `{rounded.pill}` 50px radius, 12x24 padding, 44px height. Inputs are pills rather than tiles.
 
-  /* Shadows */
-  --shadow-subtle:
-    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
-  --shadow-xl:
-    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset,
-    rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
-  --shadow-subtle-2:
-    rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px,
-    rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px,
-    rgba(18, 43, 165, 0.04) 0px 6px 6px -3px,
-    rgba(18, 43, 165, 0.04) 0px 12px 12px -6px;
-  --shadow-sm: rgba(13, 21, 48, 0.04) 0px 4px 4px 0px;
-  --shadow-xl-2: rgba(255, 255, 255, 0.08) 0px -32px 64px 0px inset;
-}
-```
+**`encryption-band`** — Deep near-black `{colors.surface-dark}` fill, white text, 80x24 padding. The single dramatic break in the page's cream rhythm — the band that holds the end-to-end-encryption story.
+
+**`footer`** — Cream canvas, near-black text, 32x24 padding. No surface contrast against the page floor — the footer just continues the cream.
+
+## Do's and Don'ts
+
+**Do** reserve the voltage green for Download actions only. The page has exactly four green pills, all on Download CTAs. Multiplying the green into navigation links, badges, or decorative pills would destroy the single-signal discipline that makes the brand voltage land.
+
+**Do** use the warm cream `{colors.canvas}` (#fcf5eb) as the page floor rather than #ffffff. The voltage green reads electric-harsh against pure white and friendly-approachable against cream — the cream is doing more brand work than it appears to.
+
+**Do** keep typography at weight 400 across every tier. The 80px hero h1 at weight 400 is the brand's editorial signature; jumping to weight 600 or 700 turns the page into a generic SaaS shout and undercuts the utility-first restraint.
+
+**Do** round every container to either 25px, 50px, or 50%. Mixing in a 4px or 8px radius would import a dev-tools aesthetic that doesn't belong on a billion-user messaging product.
+
+**Don't** use voltage green text on a white background. The captured page sets green pills with near-black text (#1c1e21) on green, not white-on-green. White-on-green at 16px button size reads less legible than black-on-green at WhatsApp's specific saturation point.
+
+**Don't** swap the dark encryption band's fill from pure #000000 to a softer charcoal. The whole point of the band is dramatic contrast — softening it removes the visual hierarchy that makes the encryption story feel important against the rest of the cream page.
+
+**Don't** introduce a semibold or bold weight to typography. The system's "emphasis" mechanism is size, not weight. Adding weight 600 to section headings will visually fight the 80px hero h1 and flatten the size-driven hierarchy.
+
+**Don't** drop shadows on the hero photography card. The captured page sits the card on cream with no shadow and no border, defining the container by corner radius alone. Adding even a subtle drop shadow imports a SaaS-card aesthetic that breaks the editorial-photography reading.
+
+## Known Gaps
+
+- **Hover and focus states:** the captured marketing surface shows resting states only. Pill button hover, focus ring, and disabled tints are not exposed on the marketing page — they live inside the product app.
+- **Form input error states:** the marketing page carries no real form inputs (no signup, no contact form). Error styling for `{component.text-input}` is captured from product context only.
+- **Dark mode:** the marketing page is light-only. WhatsApp's in-product chat surfaces have a dark mode but it is not represented on the public site.
+- **Motion:** the contact chips drifting around the hero photograph likely carry a subtle parallax or float animation, but the spec captures end-state geometry only.
+- **Product surfaces:** this DESIGN.md captures the marketing site at whatsapp.com. The in-product chat UI (web.whatsapp.com, mobile apps) carries a much richer token system — message bubble variants, typing indicators, status colors, voice-call gradients — that is not represented here.
+- **Localized typography:** WhatsApp Sans Var ships variants for Arabic, Devanagari, and CJK scripts that don't appear on the en-US marketing surface captured here.
+- **The mint message bubble color** appears once on the page in an in-product illustration; the full chat-bubble color matrix (incoming bubble fill, system message tint, link color) is not captured.

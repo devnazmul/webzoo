@@ -2,9 +2,17 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Message } from '@webzoo/shared';
 import MessageRenderer from './MessageRenderer';
-import MessageActions from './MessageActions';
 import ReactionBar from './ReactionBar';
 import api from '@/lib/api';
+import { cn } from '@/lib/utils';
+import { ChevronDown, Reply, CheckSquare, Smile, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 interface ExtendedMessage extends Message {
   reactions?: { id: string; emoji: string; user: { id: string; name: string } }[];
@@ -92,42 +100,98 @@ export default function MessageBubble({
 
   return (
     <div
-      className="flex items-start gap-3 px-4 py-1.5 hover:bg-accent/20 group transition-colors relative"
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      className={cn(
+        "flex items-start gap-3 px-4 py-2 hover:bg-accent/5 group transition-colors relative",
+        isOwn ? "flex-row-reverse" : "flex-row"
+      )}
     >
-      <Avatar className="w-8 h-8 mt-0.5 flex-shrink-0">
-        <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">
+      <Avatar className="w-8 h-8 mt-1 flex-shrink-0">
+        <AvatarFallback className="text-xs bg-whatsapp-teal/20 text-whatsapp-teal font-semibold">
           {getInitials(message.author.name)}
         </AvatarFallback>
       </Avatar>
 
-      <div className="flex-1 min-w-0">
+      <div className={cn(
+        "flex flex-col max-w-[85%] md:max-w-[70%]",
+        isOwn ? "items-end" : "items-start"
+      )}>
         {/* Reply context */}
         {message.replyTo && !isDeleted && (
-          <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground border-l-2 border-border pl-2">
-            <span className="font-medium">{message.replyTo.author.name}</span>
-            <span className="truncate max-w-xs opacity-70">
-              {extractPlainText(message.replyTo.content).slice(0, 80)}
+          <div className="flex items-center gap-2 mb-1 text-[11px] text-muted-foreground border-l-2 border-whatsapp-teal pl-2 opacity-85">
+            <span className="font-semibold">{message.replyTo.author.name}</span>
+            <span className="truncate max-w-xs">
+              {extractPlainText(message.replyTo.content).slice(0, 60)}
             </span>
           </div>
         )}
 
-        <div className="flex items-baseline gap-2 mb-0.5">
-          <span className={`text-sm font-semibold ${isOwn ? 'text-primary' : 'text-foreground'}`}>
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-xs font-semibold text-muted-foreground">
             {message.author.name}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-[10px] text-muted-foreground/80">
             {formatTime(message.createdAt)}
           </span>
         </div>
 
         {isDeleted ? (
-          <p className="text-sm text-muted-foreground italic">
+          <div className="bg-muted text-muted-foreground italic text-xs rounded-xl px-3 py-2 border border-border/40">
             This message was deleted.
-          </p>
+          </div>
         ) : (
-          <>
+          <div className={cn(
+            "rounded-[16px] px-3.5 py-2 text-sm shadow-sm relative select-text border group/bubble pr-7",
+            isOwn 
+              ? "bg-bubble-own-light dark:bg-bubble-own-dark text-[#1c1e21] dark:text-[#f0f2f5] border-[#d1f4cc] dark:border-[#004c3e] rounded-tr-none" 
+              : "bg-bubble-other-light dark:bg-bubble-other-dark text-[#1c1e21] dark:text-[#e9edef] border-[#e9edef] dark:border-[#222e35] rounded-tl-none"
+          )}>
+            {/* WhatsApp Style Chevron-Down Message Trigger */}
+            {!isDeleted && (
+              <div className="absolute top-1 right-1 opacity-0 group-hover/bubble:opacity-100 transition-opacity z-20">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="h-6 w-6 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground cursor-pointer transition-colors border-0 outline-none">
+                      <ChevronDown size={14} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align={isOwn ? "end" : "start"} className="w-48 bg-card border-border text-foreground p-1 shadow-md">
+                    {/* Reaction Row */}
+                    <div className="flex items-center gap-1.5 px-2 py-1 justify-between bg-muted/40 rounded-sm mb-1">
+                      {['👍', '❤️', '😂', '😮', '😢', '🙏'].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => handleReact(emoji)}
+                          className="hover:scale-125 transition-transform text-base p-0.5 cursor-pointer"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    <DropdownMenuItem onClick={() => onReply(message)} className="text-xs font-semibold gap-2 py-2 cursor-pointer">
+                      <Reply size={14} className="text-muted-foreground" />
+                      Reply
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onCreateTask(message)} className="text-xs font-semibold gap-2 py-2 cursor-pointer">
+                      <CheckSquare size={14} className="text-muted-foreground" />
+                      Create Task
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem onClick={handleDeleteForMe} className="text-xs font-semibold gap-2 py-2 cursor-pointer">
+                      <Trash2 size={14} className="text-muted-foreground" />
+                      Delete for me
+                    </DropdownMenuItem>
+                    {isOwn && (
+                      <DropdownMenuItem onClick={handleDeleteForEveryone} className="text-xs font-semibold gap-2 py-2 text-destructive focus:text-destructive cursor-pointer">
+                        <Trash2 size={14} className="text-destructive" />
+                        Delete for everyone
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             <MessageRenderer content={message.content} />
             <ReactionBar
               reactions={reactions}
@@ -138,7 +202,7 @@ export default function MessageBubble({
               <button
                 type="button"
                 onClick={() => onOpenThread(message)}
-                className="mt-1 flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+                className="mt-1 flex items-center gap-1.5 text-xs text-whatsapp-teal hover:underline font-semibold"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -146,24 +210,9 @@ export default function MessageBubble({
                 {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
               </button>
             )}
-          </>
+          </div>
         )}
       </div>
-
-      {/* Actions — only for non-deleted messages */}
-      {!isDeleted && (
-        <div className="absolute right-2 md:right-4 -top-3.5 md:top-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20">
-          <MessageActions
-            message={message}
-            isOwn={isOwn}
-            onReact={handleReact}
-            onReply={() => onReply(message)}
-            onCreateTask={() => onCreateTask(message)}
-            onDeleteForMe={handleDeleteForMe}
-            onDeleteForEveryone={handleDeleteForEveryone}
-          />
-        </div>
-      )}
     </div>
   );
 }

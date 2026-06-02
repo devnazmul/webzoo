@@ -8,6 +8,7 @@ import { SendHorizonal } from 'lucide-react';
 import api from '@/lib/api';
 import { DMConversation, DMMessage } from '@/store/dm.store';
 import DateSeparator from '@/components/chat/DateSeparator';
+import { cn } from '@/lib/utils';
 
 interface Props {
   conversation: DMConversation;
@@ -130,24 +131,37 @@ export default function DMFeed({ conversation, currentUserId }: Props) {
           return (
             <div key={msg.id}>
               {showDate && <DateSeparator date={new Date(msg.createdAt)} />}
-              <div className="flex items-start gap-3 px-4 py-1.5 hover:bg-accent/20 transition-colors">
+              <div
+                className={cn(
+                  "flex items-start gap-3 px-4 py-1.5 group transition-colors",
+                  isOwn ? "flex-row-reverse" : "flex-row"
+                )}
+              >
                 <Avatar className="w-8 h-8 mt-0.5 flex-shrink-0">
-                  <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">
+                  <AvatarFallback className="text-xs bg-whatsapp-teal/20 text-whatsapp-teal font-semibold">
                     {getInitials(msg.author.name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-0.5">
-                    <span className={`text-sm font-semibold ${isOwn ? 'text-primary' : 'text-foreground'}`}>
+                <div className={cn(
+                  "flex flex-col max-w-[85%] md:max-w-[70%]",
+                  isOwn ? "items-end" : "items-start"
+                )}>
+                  <div className="flex items-baseline gap-2 mb-0.5 px-0.5">
+                    <span className="text-xs font-semibold text-muted-foreground">
                       {msg.author.name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground/80">
                       {formatTime(msg.createdAt)}
                     </span>
                   </div>
-                  <p className="text-sm text-foreground/90 leading-relaxed">
+                  <div className={cn(
+                    "rounded-[16px] px-3.5 py-2 text-sm shadow-xs relative border select-text leading-relaxed",
+                    isOwn 
+                      ? "bg-bubble-own-light dark:bg-bubble-own-dark text-[#1c1e21] dark:text-[#f0f2f5] border-[#d1f4cc] dark:border-[#004c3e] rounded-tr-none" 
+                      : "bg-bubble-other-light dark:bg-bubble-other-dark text-[#1c1e21] dark:text-[#e9edef] border-border dark:border-[#222e35] rounded-tl-none"
+                  )}>
                     {extractPlain(msg.content)}
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>

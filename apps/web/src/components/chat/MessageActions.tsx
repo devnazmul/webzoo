@@ -47,14 +47,14 @@ export default function MessageActions({
   }
 
   return (
-    <div className="flex items-center gap-0.5 bg-background border border-border rounded-lg shadow-sm px-1 py-0.5">
+    <div className="flex items-center gap-0.5 bg-card border border-border rounded-full shadow-md px-1.5 py-0.5">
       {/* Emoji */}
       <div ref={emojiRef} className="relative">
         <button
           type="button"
           onClick={() => { setShowEmoji((v) => !v); setShowMenu(false); }}
           title="Add reaction"
-          className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
         >
           <Smile size={15} />
         </button>
@@ -86,7 +86,7 @@ export default function MessageActions({
         type="button"
         onClick={onReply}
         title="Reply"
-        className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
       >
         <Reply size={15} />
       </button>
@@ -96,7 +96,7 @@ export default function MessageActions({
         type="button"
         onClick={onCreateTask}
         title="Create task"
-        className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
       >
         <CheckSquare size={15} />
       </button>
@@ -108,7 +108,7 @@ export default function MessageActions({
           onClick={() => { setShowMenu((v) => !v); setShowEmoji(false); }}
           title="More"
           className={cn(
-            'p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
+            'p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
             showMenu && 'bg-accent text-foreground'
           )}
         >

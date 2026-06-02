@@ -18,7 +18,7 @@ function applyTheme(theme: Theme) {
   localStorage.setItem('webzoo-theme', theme);
 }
 
-const stored = (localStorage.getItem('webzoo-theme') as Theme) || 'light';
+const stored = (localStorage.getItem('webzoo-theme') as Theme) || 'dark';
 applyTheme(stored);
 
 export const useThemeStore = create<ThemeState>((set) => ({

@@ -22,37 +22,40 @@ export default function SidebarNarrow({
   }
 
   return (
-    <div className="w-[68px] relative   shrink-0 bg-black/40 backdrop-blur-md border-r border-ghost-border">
+    <div className="w-[68px] relative shrink-0 bg-[#e3e6e9] dark:bg-[#182229] border-r border-border/80 flex flex-col justify-between h-full">
       <div
-        className={`overflow-y-scroll overflow-x-hidden flex flex-col items-center py-6 gap-6 max-h-[calc(100vh-100px)]`}
+        className="overflow-y-auto overflow-x-hidden flex-1 flex flex-col items-center py-6 gap-5 max-h-[calc(100vh-80px)] scrollbar-none"
       >
-        {workspaces.map((ws) => (
-          <div key={ws.id} className="relative group flex items-center">
-            {activeWorkspace?.id === ws.id && (
-              <div className="absolute left-[-2px] w-1 h-8 bg-spectral-white rounded-r-full shadow-[0_0_10px_rgba(240,240,250,0.5)]" />
-            )}
-            <button
-              onClick={() => setActiveWorkspace(ws)}
-              className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold industrial uppercase tracking-tighter transition-all border border-ghost-border",
-                activeWorkspace?.id === ws.id
-                  ? "bg-spectral-white text-space-black scale-110"
-                  : "bg-ghost-surface text-spectral-white/70 hover:bg-spectral-white/20 hover:text-white",
+        {workspaces.map((ws) => {
+          const isActive = activeWorkspace?.id === ws.id;
+          return (
+            <div key={ws.id} className="relative group flex items-center justify-center w-full">
+              {isActive && (
+                <div className="absolute left-0 w-1.5 h-7 bg-whatsapp-teal rounded-r-full shadow-sm" />
               )}
-              title={ws.name}
-            >
-              {getInitials(ws.name)}
-            </button>
-          </div>
-        ))}
+              <button
+                onClick={() => setActiveWorkspace(ws)}
+                className={cn(
+                  "w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold font-sans tracking-wide transition-all duration-200 cursor-pointer shadow-xs border",
+                  isActive
+                    ? "bg-whatsapp-teal text-white border-whatsapp-teal scale-105"
+                    : "bg-background dark:bg-[#111b21] text-foreground border-border hover:bg-accent/15 hover:border-whatsapp-teal/30",
+                )}
+                title={ws.name}
+              >
+                {getInitials(ws.name)}
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       <div
-        className={`sticky bottom-0  flex justify-center items-center bg-black py-3`}
+        className="flex justify-center items-center py-4 bg-inherit border-t border-border/50 shrink-0"
       >
         <button
           onClick={onCreateWorkspace}
-          className="w-10 h-10 rounded-full bg-ghost-surface border border-dashed border-ghost-border hover:bg-spectral-white/10 transition-all flex items-center justify-center text-spectral-white/50 hover:text-white"
+          className="w-11 h-11 rounded-full bg-background dark:bg-[#111b21] border border-dashed border-border hover:border-whatsapp-teal hover:text-whatsapp-teal transition-all flex items-center justify-center text-muted-foreground/80 cursor-pointer"
           title="Add Workspace"
         >
           <Plus size={18} />
