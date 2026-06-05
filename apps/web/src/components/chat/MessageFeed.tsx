@@ -179,6 +179,7 @@ export default function MessageFeed({
         onChange={setActiveTab}
         topicName={topic.name}
         onlineCount={onlineUsers.length}
+        onlineUserNames={onlineUsers.map((id) => memberNames[id] ?? "Unknown")}
       />
 
       {/* Tab content */}
@@ -186,7 +187,7 @@ export default function MessageFeed({
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Main feed */}
           <div className="flex flex-col flex-1 min-h-0 min-w-0">
-            <ScrollArea className="flex-1 py-4 overflow-y-auto">
+            <ScrollArea className="flex-1 pt-4 overflow-y-auto">
               {loading && (
                 <div className="flex justify-center py-8 text-muted-foreground text-sm">
                   Loading messages...
@@ -258,13 +259,15 @@ export default function MessageFeed({
               <div ref={bottomRef} />
             </ScrollArea>
 
-            <LexicalEditor
-              topicId={topic.id}
-              topicName={topic.name}
-              users={workspaceMembers}
-              topics={allTopics}
-              onSend={handleSend}
-            />
+            <div className={`px-2 pb-2`}>
+              <LexicalEditor
+                topicId={topic.id}
+                topicName={topic.name}
+                users={workspaceMembers}
+                topics={allTopics}
+                onSend={handleSend}
+              />
+            </div>
           </div>
 
           {/* Thread panel */}

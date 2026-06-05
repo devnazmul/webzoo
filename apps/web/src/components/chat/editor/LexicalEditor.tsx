@@ -37,7 +37,7 @@ import FilePreview from "./ui/FilePreview";
 import { serializeEditor } from "./utils/serializer";
 import { SerializedFileNode, MentionSuggestion } from "./utils/schema";
 import { getSocket } from "@/lib/socket";
-import { uploadFile, UploadedFile } from '@/lib/upload';
+import { uploadFile, UploadedFile } from "@/lib/upload";
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
@@ -183,7 +183,7 @@ function InnerEditor({
       name: uploaded.originalName,
       mimeType: uploaded.mimeType,
       size: uploaded.size,
-      previewUrl: `${import.meta.env.VITE_API_URL ?? 'http://localhost:4000'}${uploaded.url}`,
+      previewUrl: `${import.meta.env.VITE_API_URL ?? "http://localhost:4000"}${uploaded.url}`,
       version: 1 as const,
     }));
     setFiles(mapped);
@@ -255,7 +255,7 @@ function InnerEditor({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-3 pb-2 pt-1 border-t border-border/50">
+        <div className="flex rounded-b-xl bg-whatsapp-primary/10 items-center justify-between px-3 pb-2 pt-1 border-t border-border/50">
           <div className="flex items-center gap-1">
             {/* Emoji button */}
             <button
@@ -297,7 +297,7 @@ function InnerEditor({
           >
             <SendHorizonal
               size={14}
-              className={sending ? "animate-pulse" : ""}
+              className={` ${sending ? "animate-pulse" : ""}`}
             />
           </Button>
         </div>
@@ -316,7 +316,7 @@ function InnerEditor({
           if (root && (root as any).__handleFiles) {
             await (root as any).__handleFiles(files);
           }
-          e.target.value = '';
+          e.target.value = "";
         }}
       />
 

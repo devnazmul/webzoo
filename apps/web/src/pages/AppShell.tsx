@@ -126,11 +126,17 @@ export default function AppShell() {
     }
 
     function onNewDMMessage(data: { message: { conversationId: string } }) {
-      const { activeConversation } = useDMStore.getState();
+      const { activeConversation, conversations } = useDMStore.getState();
+
+      // If conversation not in list yet, reload the full list
+      const known = conversations.find((c) => c.id === data.message.conversationId);
+      if (!known) {
+        loadDMs();
+        return;
+      }
+
       if (data.message.conversationId !== activeConversation?.id) {
         dmIncrementUnread(data.message.conversationId);
-      } else {
-        dmClearUnread(data.message.conversationId);
       }
     }
 

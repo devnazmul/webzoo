@@ -43,6 +43,7 @@ export default function DMFeed({ conversation, currentUserId }: Props) {
   const other = conversation.participants.find((p) => p.id !== currentUserId);
 
   useEffect(() => {
+    setMessages([]);
     load();
     const socket = getSocket();
 
@@ -55,8 +56,14 @@ export default function DMFeed({ conversation, currentUserId }: Props) {
       setTimeout(scrollToBottom, 50);
     }
 
+    // Join the DM socket room
+    socket.emit('dm:join', conversation.id);
+
     socket.on('dm:message:new', onNewDM);
-    return () => { socket.off('dm:message:new', onNewDM); };
+    return () => {
+      socket.off('dm:message:new', onNewDM);
+      socket.emit('dm:leave', conversation.id);
+    };
   }, [conversation.id]);
 
   async function load() {

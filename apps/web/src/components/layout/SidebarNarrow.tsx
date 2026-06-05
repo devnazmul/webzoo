@@ -23,13 +23,14 @@ export default function SidebarNarrow({
 
   return (
     <div className="w-[68px] relative shrink-0 bg-[#e3e6e9] dark:bg-[#182229] border-r border-border/80 flex flex-col justify-between h-full">
-      <div
-        className="overflow-y-auto overflow-x-hidden flex-1 flex flex-col items-center py-6 gap-5 max-h-[calc(100vh-80px)] scrollbar-none"
-      >
+      <div className="overflow-y-auto overflow-x-hidden flex-1 flex flex-col items-center py-6 gap-5 max-h-[calc(100vh-80px)] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-background [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full">
         {workspaces.map((ws) => {
           const isActive = activeWorkspace?.id === ws.id;
           return (
-            <div key={ws.id} className="relative group flex items-center justify-center w-full">
+            <div
+              key={ws.id}
+              className="relative group flex items-center justify-center w-full"
+            >
               {isActive && (
                 <div className="absolute left-0 w-1.5 h-7 bg-whatsapp-teal rounded-r-full shadow-sm" />
               )}
@@ -50,9 +51,7 @@ export default function SidebarNarrow({
         })}
       </div>
 
-      <div
-        className="flex justify-center items-center py-4 bg-inherit border-t border-border/50 shrink-0"
-      >
+      <div className="flex justify-center items-center py-4 bg-inherit border-t border-border/50 shrink-0">
         <button
           onClick={onCreateWorkspace}
           className="w-11 h-11 rounded-full bg-background dark:bg-[#111b21] border border-dashed border-border hover:border-whatsapp-teal hover:text-whatsapp-teal transition-all flex items-center justify-center text-muted-foreground/80 cursor-pointer"
