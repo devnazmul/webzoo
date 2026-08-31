@@ -1,0 +1,40 @@
+## WEBZOO 
+
+### Need to do those:
+- Invitation should be work if we enter a valid email. although the email is not registered, system should send a email to joind in the channel and when user visit using the given url it will redirect to the registration page and create a user in that case the email field should be auto filled and disabled and on form submit server should also validate the exact email matching or not. and if that email already registered then it should send a notification and email as well to join in the channel and the invitation link should expired in 24h.
+
+- After log in if there is no channel then it should show a message on the screen (use some decent Graphics) and there also should have a create channel button to create a channel. and channel should have 2 step form, first step should contain channel logo, channel name, description and second step should have an invitation interface also have a copy link button, on click on that it should copy the invitation link and that will expired in 1h
+
+- When a user create a channel it should automatically create 2 topic. 1. General & 2. Announcement. in General users of that topic can message each other and on Announcement topic only owner and admins can give message and all other user only read those. 
+
+- Message rich text editor need to fix
+
+- File Upload is not working
+
+- Message replay is not working.
+
+- On Message mention need to send notification to that mentioned 
+
+- if user in a diffrent channel and someone message on top of that channel should show total unread message as badge
+
+- in a topic if there is no member then should show a message to invite users (use some decent Graphics)
+
+- Fix direct message. in the direct message there should be a search bar and there is no user in the contact then there should be a option to find user using email and a talk request. and then it will send that person a notification and if they accept then the person's info should show.
+
+- Create Task Modal Need to re-design and fix
+
+- if someone assign an user, in a task then that user should be notified.
+
+- if someone change the status of a task it should notify the task creator
+
+- Need to track the stay time for each task status
+
+- Vault need to dynamic
+
+- if someone send a link that should automatically add in  Links tab and Link add manually should work
+
+- In Media Tab all the conversational media should be shown as a grid (Images, Files, etc.) also user can manually upload files as well
+
+- Message Search option should be in 2 places, 1. Global, 2. In conversation. Global search bar should search in each and every channel, topic and Direct Message and in conversation search only search messages from that specific 
+
+- Notification should be dynamic

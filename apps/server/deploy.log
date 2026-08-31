@@ -1,0 +1,27 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": MySQL database "webzoo_db" at "localhost:3307"
+
+6 migrations found in prisma/migrations
+
+Applying migration `20260518063506_add_tasks_vault_media_links`
+Applying migration `20260519040831_add_notifications_dm_readstate`
+Applying migration `20260527083134_add_message_deleted_at`
+Applying migration `20260602055039_add_task_comments_and_assignees`
+Applying migration `20260602055223_add_priority_to_task`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260518063506_add_tasks_vault_media_links/
+    └─ migration.sql
+  └─ 20260519040831_add_notifications_dm_readstate/
+    └─ migration.sql
+  └─ 20260527083134_add_message_deleted_at/
+    └─ migration.sql
+  └─ 20260602055039_add_task_comments_and_assignees/
+    └─ migration.sql
+  └─ 20260602055223_add_priority_to_task/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
