@@ -19,17 +19,20 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const [inviteDetails, setInviteDetails] = useState<{ workspaceName: string; inviterName: string } | null>(null);
+  const [inviteDetails, setInviteDetails] = useState<{ workspaceName: string; inviterName: string; hasSpecificEmail?: boolean } | null>(null);
 
   useEffect(() => {
     if (inviteToken) {
       // Fetch invite details to pre-fill email
       api.get(`/invitations/${inviteToken}`)
         .then((res) => {
-          setEmail(res.data.data.email);
+          if (res.data.data.email) {
+            setEmail(res.data.data.email);
+          }
           setInviteDetails({
             workspaceName: res.data.data.workspaceName,
             inviterName: res.data.data.inviterName,
+            hasSpecificEmail: !!res.data.data.email,
           });
         })
         .catch((err) => {
@@ -118,11 +121,11 @@ export default function RegisterPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="name@example.com"
                 value={email}
-                onChange={(e) => !inviteToken && setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={!!inviteToken}
+                disabled={inviteDetails?.hasSpecificEmail || false}
                 className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5 disabled:opacity-50"
               />
             </div>

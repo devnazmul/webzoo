@@ -36,10 +36,12 @@ model User {
 }
 
 model Workspace {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   members       WorkspaceMember[]
   topics        Topic[]
@@ -315,7 +317,7 @@ model TopicReadState {
 model WorkspaceInvitation {
   id          String           @id @default(uuid())
   token       String           @unique
-  email       String
+  email       String?
   workspaceId String
   invitedById String
   status      InvitationStatus @default(PENDING)

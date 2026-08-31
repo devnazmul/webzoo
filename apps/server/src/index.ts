@@ -57,7 +57,10 @@ app.use(
   '/api/workspaces/:workspaceId/topics/:topicId/messages/:messageId/reactions',
   reactionsRouter
 );
+import usersRouter from './routes/users';
+
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/users', usersRouter);
 app.use('/api/dm', dmRouter);
 
 // Health check

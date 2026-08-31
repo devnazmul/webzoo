@@ -9,6 +9,8 @@ router.use(authenticate);
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(2).max(50),
+  description: z.string().optional(),
+  logoUrl: z.string().optional(),
 });
 
 // POST /api/workspaces
@@ -25,6 +27,8 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     const workspace = await prisma.workspace.create({
       data: {
         name: body.data.name,
+        description: body.data.description,
+        logoUrl: body.data.logoUrl,
         members: {
           create: {
             userId: req.user!.userId,
@@ -204,6 +208,50 @@ router.post("/:workspaceId/invite", async (req: AuthRequest, res: Response) => {
     }
 
     res.status(201).json({ data: { message: "Invitation sent successfully" } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+// POST /api/workspaces/:workspaceId/invite-link
+router.post("/:workspaceId/invite-link", async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId } = req.params;
+
+    // Only owners can generate invite links
+    const requester = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: req.user!.userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!requester || requester.role !== "OWNER") {
+      res
+        .status(403)
+        .json({ status: "error", message: "Only owners can generate invite links" });
+      return;
+    }
+
+    const token = require('crypto').randomUUID();
+    const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+
+    await prisma.workspaceInvitation.create({
+      data: {
+        token,
+        workspaceId,
+        invitedById: req.user!.userId,
+        expiresAt,
+      },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const link = `${frontendUrl}/invite/${token}`;
+
+    res.status(201).json({ data: { link, token, expiresAt } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ status: "error", message: "Internal server error" });

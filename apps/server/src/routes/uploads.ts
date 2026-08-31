@@ -33,6 +33,24 @@ const upload = multer({
   },
 });
 
+// POST /api/upload/image (General purpose image upload for authenticated users)
+router.post(
+  '/image',
+  upload.single('file'),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.file) {
+        res.status(422).json({ status: 'error', message: 'No file uploaded' });
+        return;
+      }
+      const url = `/uploads/${req.file.filename}`;
+      res.status(201).json({ data: { url } });
+    } catch (err) {
+      res.status(500).json({ status: 'error', message: 'Internal server error' });
+    }
+  }
+);
+
 // POST /api/workspaces/:workspaceId/topics/:topicId/upload
 router.post(
   '/',

@@ -82,7 +82,7 @@ router.post('/:token/accept', authenticate, async (req: AuthRequest, res: Respon
 
     const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
     
-    if (user?.email !== invitation.email) {
+    if (invitation.email && user?.email !== invitation.email) {
       res.status(422).json({ status: 'error', message: 'Email does not match the invitation' });
       return;
     }
@@ -91,7 +91,7 @@ router.post('/:token/accept', authenticate, async (req: AuthRequest, res: Respon
     const existing = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: user.id,
+          userId: user!.id,
           workspaceId: invitation.workspaceId,
         },
       },
@@ -100,17 +100,21 @@ router.post('/:token/accept', authenticate, async (req: AuthRequest, res: Respon
     if (!existing) {
       await prisma.workspaceMember.create({
         data: {
-          userId: user.id,
+          userId: user!.id,
           workspaceId: invitation.workspaceId,
           role: 'MEMBER',
         },
       });
     }
 
-    await prisma.workspaceInvitation.update({
-      where: { id: invitation.id },
-      data: { status: 'ACCEPTED' },
-    });
+    // Only mark as accepted if it's a direct email invitation
+    // Generic links (email = null) remain pending until they expire
+    if (invitation.email) {
+      await prisma.workspaceInvitation.update({
+        where: { id: invitation.id },
+        data: { status: 'ACCEPTED' },
+      });
+    }
 
     res.status(200).json({ data: { message: 'Invitation accepted' } });
   } catch (err) {

@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MessageFeed from "@/components/chat/MessageFeed";
 import { useDMStore } from '@/store/dm.store';
 import DMFeed from '@/components/dm/DMFeed';
+import NoWorkspaceState from '@/components/layout/NoWorkspaceState';
+import CreateChannelWizard from '@/components/layout/CreateChannelWizard';
 
 export default function AppShell() {
   const user = useAuthStore((s) => s.user);
@@ -45,6 +47,7 @@ export default function AppShell() {
     { id: string; label: string }[]
   >([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [hasLoadedWorkspaces, setHasLoadedWorkspaces] = useState(false);
 
   // Auto-close sidebar on mobile when active channel or DM changes
   useEffect(() => {
@@ -72,7 +75,9 @@ export default function AppShell() {
           }))
         );
       }
-    } catch {}
+    } catch {} finally {
+      setHasLoadedWorkspaces(true);
+    }
   }, [setWorkspaces, setActiveWorkspace]);
 
   const loadTopics = useCallback(async (workspaceId: string) => {
@@ -266,99 +271,72 @@ export default function AppShell() {
       <TopBar onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
 
       <div className="flex flex-1 min-h-0 overflow-hidden relative z-10">
-        {/* Desktop Workspace Switcher */}
-        <div className="hidden md:flex shrink-0">
-          <SidebarNarrow 
-            onCreateWorkspace={() => {
-              setModalError("");
-              setShowCreateWorkspace(true);
-            }} 
-          />
-        </div>
-
-        {/* Desktop Navigation Sidebar */}
-        <div className="hidden md:flex w-64 flex-shrink-0">
-          <Sidebar
-            onCreateTopic={() => {
-              setModalError("");
-              setShowCreateTopic(true);
-            }}
-            onCreateWorkspace={() => {
-              setModalError("");
-              setShowCreateWorkspace(true);
-            }}
-            onInviteMember={() => {
-              setModalError("");
-              setShowInvite(true);
-            }}
-            workspaceMembers={workspaceMembers}
-          />
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-black/10 backdrop-blur-sm border-l border-ghost-border">
-          <div className="flex-1 flex flex-col min-h-0 min-w-0">
-            {activeConversation ? (
-              <DMFeed
-                conversation={activeConversation}
-                currentUserId={user?.id ?? ''}
+        {hasLoadedWorkspaces && workspaces.length === 0 ? (
+          <NoWorkspaceState onCreate={() => setShowCreateWorkspace(true)} />
+        ) : (
+          <>
+            {/* Desktop Workspace Switcher */}
+            <div className="hidden md:flex shrink-0">
+              <SidebarNarrow 
+                onCreateWorkspace={() => {
+                  setModalError("");
+                  setShowCreateWorkspace(true);
+                }} 
               />
-            ) : activeTopic && (
-              <MessageFeed
-                topic={activeTopic}
-                workspaceId={activeWorkspace!.id}
-                memberNames={memberNames}
-                onlineUsers={onlineUsers}
+            </div>
+
+            {/* Desktop Navigation Sidebar */}
+            <div className="hidden md:flex w-64 flex-shrink-0">
+              <Sidebar
+                onCreateTopic={() => {
+                  setModalError("");
+                  setShowCreateTopic(true);
+                }}
+                onCreateWorkspace={() => {
+                  setModalError("");
+                  setShowCreateWorkspace(true);
+                }}
+                onInviteMember={() => {
+                  setModalError("");
+                  setShowInvite(true);
+                }}
                 workspaceMembers={workspaceMembers}
-                allTopics={allTopics}
               />
-            )}
-          </div>
-        </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-black/10 backdrop-blur-sm border-l border-ghost-border">
+              <div className="flex-1 flex flex-col min-h-0 min-w-0">
+                {activeConversation ? (
+                  <DMFeed
+                    conversation={activeConversation}
+                    currentUserId={user?.id ?? ''}
+                  />
+                ) : activeTopic && (
+                  <MessageFeed
+                    topic={activeTopic}
+                    workspaceId={activeWorkspace!.id}
+                    memberNames={memberNames}
+                    onlineUsers={onlineUsers}
+                    workspaceMembers={workspaceMembers}
+                    allTopics={allTopics}
+                  />
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
 
       {/* Modals ... */}
 
       {/* Modals */}
-      {(showCreateWorkspace || showCreateTopic || showInvite) && (
+      {showCreateWorkspace && <CreateChannelWizard onClose={() => setShowCreateWorkspace(false)} />}
+      
+      {(showCreateTopic || showInvite) && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-sm border-ghost-border bg-black/40 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-
-            {showCreateWorkspace && (
-              <>
-                <CardHeader>
-                  <CardTitle>Create workspace</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleCreateWorkspace} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Workspace name</Label>
-                      <Input
-                        value={wsName}
-                        onChange={(e) => setWsName(e.target.value)}
-                        placeholder="My Team"
-                        required
-                        minLength={2}
-                      />
-                    </div>
-                    {modalError && (
-                      <p className="text-sm text-destructive">{modalError}</p>
-                    )}
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setShowCreateWorkspace(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit">Create</Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </>
-            )}
 
             {showCreateTopic && (
               <>
