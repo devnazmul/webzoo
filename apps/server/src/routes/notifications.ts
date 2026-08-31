@@ -18,7 +18,20 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       },
     });
 
-    res.status(200).json({ data: { notifications } });
+    const mappedNotifications = notifications.map(n => {
+      let message = '';
+      switch (n.type) {
+        case 'MENTION': message = `${n.actor.name} mentioned you in ${n.workspace.name}`; break;
+        case 'REPLY': message = `${n.actor.name} replied to your message in ${n.workspace.name}`; break;
+        case 'TASK_ASSIGNED': message = `${n.actor.name} assigned you a task in ${n.workspace.name}`; break;
+        case 'REACTION': message = `${n.actor.name} reacted to your message in ${n.workspace.name}`; break;
+        case 'WORKSPACE_INVITE': message = `${n.actor.name} invited you to join ${n.workspace.name}`; break;
+        default: message = `New notification from ${n.actor.name}`;
+      }
+      return { ...n, message, actorName: n.actor.name, workspaceName: n.workspace.name };
+    });
+
+    res.status(200).json({ data: { notifications: mappedNotifications } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }

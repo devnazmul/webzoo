@@ -11,6 +11,7 @@ interface Notification {
   isRead: boolean;
   createdAt: string;
   actorName?: string;
+  workspaceId?: string;
 }
 
 export default function NotificationBell() {
@@ -22,10 +23,45 @@ export default function NotificationBell() {
   useEffect(() => {
     loadNotifications();
 
+    // Request browser notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
     const socket = getSocket();
     socket.on('notification:new', (n: Notification) => {
       setNotifications((prev) => [n, ...prev].slice(0, 20));
       setUnreadCount((c) => c + 1);
+
+      // Play beep sound
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // 800Hz beep
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // Low volume
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15); // 150ms beep
+      } catch (e) {
+        console.error('AudioContext error:', e);
+      }
+
+      // Show browser push notification if permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const pushNotif = new window.Notification('New WebZoo Notification', {
+          body: n.message,
+          icon: '/favicon.ico', // Assuming there's a favicon or you can provide a generic icon
+        });
+        
+        // Focus the window when clicking the notification
+        pushNotif.onclick = () => {
+          window.focus();
+          pushNotif.close();
+        };
+      }
     });
 
     return () => {
@@ -142,6 +178,38 @@ export default function NotificationBell() {
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {formatTime(n.createdAt)}
                     </p>
+                    {n.type === 'WORKSPACE_INVITE' && (
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          className="px-2 py-1 bg-whatsapp-teal text-white text-xs rounded shadow-sm hover:bg-whatsapp-teal/90"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              // Accept the invite using a direct API if possible, or workspace join
+                              // Note: We need a backend route to accept by workspaceId for already-registered users
+                              await api.post(`/workspaces/${n.workspaceId}/join`);
+                              deleteNotification(n.id);
+                              
+                              // Reload to refresh workspaces in AppShell
+                              window.location.reload();
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="px-2 py-1 bg-muted text-foreground text-xs rounded hover:bg-muted/80"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(n.id);
+                          }}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"

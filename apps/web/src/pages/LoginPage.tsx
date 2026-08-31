@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,32 @@ import api from '@/lib/api';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
   const setAuth = useAuthStore((s) => s.setAuth);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const [inviteDetails, setInviteDetails] = useState<{ workspaceName: string; inviterName: string } | null>(null);
+
+  useEffect(() => {
+    if (inviteToken) {
+      api.get(`/invitations/${inviteToken}`)
+        .then((res) => {
+          setEmail(res.data.data.email);
+          setInviteDetails({
+            workspaceName: res.data.data.workspaceName,
+            inviterName: res.data.data.inviterName,
+          });
+        })
+        .catch((err) => {
+          setError(err.response?.data?.message || 'Invalid or expired invitation token');
+        });
+    }
+  }, [inviteToken]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,6 +44,17 @@ export default function LoginPage() {
       const res = await api.post('/auth/login', { email, password });
       const { accessToken, refreshToken, user } = res.data.data;
       setAuth(user, accessToken, refreshToken);
+      
+      if (inviteToken) {
+        try {
+          await api.post(`/invitations/${inviteToken}/accept`, {}, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          });
+        } catch (acceptErr) {
+          console.error('Failed to accept invite after login', acceptErr);
+        }
+      }
+      
       navigate('/app');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
@@ -48,8 +80,16 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="pt-2">
-            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">Sign In</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-1">Enter your credentials to access the workspace</CardDescription>
+            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+              {inviteDetails ? 'Sign In to Accept Invite' : 'Sign In'}
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground mt-1">
+              {inviteDetails ? (
+                <><strong>{inviteDetails.inviterName}</strong> invited you to join <strong>{inviteDetails.workspaceName}</strong></>
+              ) : (
+                'Enter your credentials to access the workspace'
+              )}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -61,9 +101,10 @@ export default function LoginPage() {
                 type="email"
                 placeholder="name@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => !inviteToken && setEmail(e.target.value)}
                 required
-                className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5"
+                disabled={!!inviteToken}
+                className="h-10 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-whatsapp-teal focus-visible:ring-offset-0 focus-visible:border-whatsapp-teal px-3.5 disabled:opacity-50"
               />
             </div>
             <div className="space-y-2">
@@ -85,8 +126,8 @@ export default function LoginPage() {
             )}
             <Button 
               type="submit" 
-              className="w-full h-11 bg-whatsapp-teal hover:bg-whatsapp-teal/90 text-white font-semibold rounded-lg text-sm transition-all shadow-xs border-0 mt-2 flex items-center justify-center cursor-pointer"
-              disabled={loading}
+              className="w-full h-11 bg-whatsapp-teal hover:bg-whatsapp-teal/90 text-white font-semibold rounded-lg text-sm transition-all shadow-xs border-0 mt-2 flex items-center justify-center cursor-pointer disabled:opacity-50"
+              disabled={loading || (!!inviteToken && !inviteDetails && !error)}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
@@ -95,13 +136,12 @@ export default function LoginPage() {
         <CardFooter className="flex justify-center border-t border-border mt-5 pt-5">
           <p className="text-xs text-muted-foreground">
             Don't have an account?
-            <Link to="/register" className="text-whatsapp-teal hover:underline font-bold transition-all ml-1">
+            <Link to={inviteToken ? `/register?invite=${inviteToken}` : "/register"} className="text-whatsapp-teal hover:underline font-bold transition-all ml-1">
               Create one
             </Link>
           </p>
         </CardFooter>
       </Card>
     </div>
-
   );
 }

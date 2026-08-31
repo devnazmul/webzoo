@@ -41,8 +41,25 @@ export async function createNotification(
       },
     });
 
+    let message = '';
+    switch (notification.type) {
+      case 'MENTION': message = `${notification.actor.name} mentioned you in ${notification.workspace.name}`; break;
+      case 'REPLY': message = `${notification.actor.name} replied to your message in ${notification.workspace.name}`; break;
+      case 'TASK_ASSIGNED': message = `${notification.actor.name} assigned you a task in ${notification.workspace.name}`; break;
+      case 'REACTION': message = `${notification.actor.name} reacted to your message in ${notification.workspace.name}`; break;
+      case 'WORKSPACE_INVITE': message = `${notification.actor.name} invited you to join ${notification.workspace.name}`; break;
+      default: message = `New notification from ${notification.actor.name}`;
+    }
+
+    const mappedNotification = {
+      ...notification,
+      message,
+      actorName: notification.actor.name,
+      workspaceName: notification.workspace.name,
+    };
+
     // Emit real-time notification to recipient's personal room
-    io.to(`user:${params.userId}`).emit('notification:new', { notification });
+    io.to(`user:${params.userId}`).emit('notification:new', mappedNotification);
   } catch (err) {
     console.error('[Notifications] Failed to create notification:', err);
   }

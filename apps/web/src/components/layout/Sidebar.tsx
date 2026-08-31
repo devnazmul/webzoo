@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import NotificationBell from '@/components/ui/NotificationBell';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import ProfileModal from '@/components/ui/ProfileModal';
+import WorkspaceSettingsModal from '@/components/layout/WorkspaceSettingsModal';
 import api from '@/lib/api';
 import {
   Hash,
@@ -16,6 +17,7 @@ import {
   SquarePen,
   Lock,
   Settings,
+  Users,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -95,6 +97,7 @@ export default function Sidebar({
   const [topicsExpanded, setTopicsExpanded] = useState(true);
   const [dmsExpanded, setDmsExpanded] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
+  const [showWorkspaceSettings, setShowWorkspaceSettings] = useState(false);
 
   async function startDM(memberId: string) {
     try {
@@ -132,6 +135,11 @@ export default function Sidebar({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onCreateTopic} className="text-[11px] font-bold tracking-wider">
               Create a channel
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-border" />
+            <DropdownMenuItem onClick={() => setShowWorkspaceSettings(true)} className="text-[11px] font-bold tracking-wider">
+              <Users size={14} className="mr-2" />
+              Workspace settings
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowProfile(true)} className="text-[11px] font-bold tracking-wider">
               <Settings size={14} className="mr-2" />
@@ -263,7 +271,7 @@ export default function Sidebar({
         <ThemeToggle />
       </div>
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+      {showWorkspaceSettings && <WorkspaceSettingsModal onClose={() => setShowWorkspaceSettings(false)} />}
     </div>
-
   );
 }

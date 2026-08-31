@@ -8,30 +8,31 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
+  id           String   @id @default(uuid())
+  email        String   @unique
   name         String
   passwordHash String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  workspaces   WorkspaceMember[]
-  messages     Message[]
-  refreshTokens RefreshToken[]
-  attachments    Attachment[]   @relation("AttachmentUploader")
-  tasksCreated   Task[]         @relation("TaskCreatedBy")
-  tasksAssigned  Task[]         @relation("TaskAssignee")
-  vaultDocuments VaultDocument[] @relation("VaultDocumentCreator")
-  sharedLinks    SharedLink[]   @relation("SharedLinkUser")
-  reactions      Reaction[]
-  notifications         Notification[]              @relation("NotificationRecipient")
-  notificationsActed    Notification[]              @relation("NotificationActor")
-  directParticipations  DirectConversationParticipant[]
-  directMessages        DirectMessage[]             @relation("DirectMessageAuthor")
+  workspaces             WorkspaceMember[]
+  messages               Message[]
+  refreshTokens          RefreshToken[]
+  attachments            Attachment[]                    @relation("AttachmentUploader")
+  tasksCreated           Task[]                          @relation("TaskCreatedBy")
+  tasksAssigned          Task[]                          @relation("TaskAssignee")
+  vaultDocuments         VaultDocument[]                 @relation("VaultDocumentCreator")
+  sharedLinks            SharedLink[]                    @relation("SharedLinkUser")
+  reactions              Reaction[]
+  notifications          Notification[]                  @relation("NotificationRecipient")
+  notificationsActed     Notification[]                  @relation("NotificationActor")
+  directParticipations   DirectConversationParticipant[]
+  directMessages         DirectMessage[]                 @relation("DirectMessageAuthor")
   directMessageReactions DirectMessageReaction[]
-  topicReadStates       TopicReadState[]
-  taskComments  TaskComment[]
-  taskAssignees TaskAssignee[]
+  topicReadStates        TopicReadState[]
+  taskComments           TaskComment[]
+  taskAssignees          TaskAssignee[]
+  workspaceInvitations   WorkspaceInvitation[]           @relation("WorkspaceInviter")
 }
 
 model Workspace {
@@ -40,9 +41,10 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members  WorkspaceMember[]
-  topics   Topic[]
+  members       WorkspaceMember[]
+  topics        Topic[]
   notifications Notification[]
+  invitations   WorkspaceInvitation[]
 }
 
 model WorkspaceMember {
@@ -64,14 +66,14 @@ model Topic {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-  messages  Message[]
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id])
+  messages       Message[]
   attachments    Attachment[]
   taskStatuses   TaskStatus[]
   tasks          Task[]
   vaultDocuments VaultDocument[]
   sharedLinks    SharedLink[]
-  readStates TopicReadState[]
+  readStates     TopicReadState[]
 }
 
 model Message {
@@ -83,10 +85,10 @@ model Message {
   deletedAt DateTime?
   createdAt DateTime  @default(now())
 
-  topic   Topic    @relation(fields: [topicId], references: [id])
-  author  User     @relation(fields: [authorId], references: [id])
-  replyTo Message? @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies Message[] @relation("MessageReplies")
+  topic       Topic        @relation(fields: [topicId], references: [id])
+  author      User         @relation(fields: [authorId], references: [id])
+  replyTo     Message?     @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     Message[]    @relation("MessageReplies")
   attachments Attachment[]
   tasks       Task[]
   sharedLinks SharedLink[]
@@ -154,11 +156,11 @@ model Task {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  status    TaskStatus @relation(fields: [statusId], references: [id])
-  topic     Topic      @relation(fields: [topicId], references: [id])
-  createdBy User       @relation("TaskCreatedBy", fields: [createdById], references: [id])
-  assignee  User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  message   Message?   @relation(fields: [messageId], references: [id])
+  status    TaskStatus     @relation(fields: [statusId], references: [id])
+  topic     Topic          @relation(fields: [topicId], references: [id])
+  createdBy User           @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  assignee  User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  message   Message?       @relation(fields: [messageId], references: [id])
   subtasks  SubTask[]
   assignees TaskAssignee[]
   comments  TaskComment[]
@@ -206,9 +208,9 @@ model SharedLink {
   messageId   String?
   createdAt   DateTime @default(now())
 
-  topic     Topic    @relation(fields: [topicId], references: [id])
-  sharedBy  User     @relation("SharedLinkUser", fields: [sharedById], references: [id])
-  message   Message? @relation(fields: [messageId], references: [id])
+  topic    Topic    @relation(fields: [topicId], references: [id])
+  sharedBy User     @relation("SharedLinkUser", fields: [sharedById], references: [id])
+  message  Message? @relation(fields: [messageId], references: [id])
 
   @@index([topicId, createdAt])
 }
@@ -276,10 +278,10 @@ model DirectMessage {
   replyToId      String?
   createdAt      DateTime @default(now())
 
-  conversation DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  author       User               @relation("DirectMessageAuthor", fields: [authorId], references: [id])
-  replyTo      DirectMessage?     @relation("DirectMessageReplies", fields: [replyToId], references: [id])
-  replies      DirectMessage[]    @relation("DirectMessageReplies")
+  conversation DirectConversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       User                    @relation("DirectMessageAuthor", fields: [authorId], references: [id])
+  replyTo      DirectMessage?          @relation("DirectMessageReplies", fields: [replyToId], references: [id])
+  replies      DirectMessage[]         @relation("DirectMessageReplies")
   reactions    DirectMessageReaction[]
 
   @@index([conversationId, createdAt])
@@ -300,14 +302,39 @@ model DirectMessageReaction {
 }
 
 model TopicReadState {
-  userId      String
-  topicId     String
-  lastReadAt  DateTime @default(now())
+  userId     String
+  topicId    String
+  lastReadAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@id([userId, topicId])
+}
+
+model WorkspaceInvitation {
+  id          String           @id @default(uuid())
+  token       String           @unique
+  email       String
+  workspaceId String
+  invitedById String
+  status      InvitationStatus @default(PENDING)
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("WorkspaceInviter", fields: [invitedById], references: [id])
+
+  @@index([workspaceId, status])
+  @@index([email])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
 }
 
 enum NotificationType {

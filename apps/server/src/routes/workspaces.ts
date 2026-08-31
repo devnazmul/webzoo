@@ -138,6 +138,10 @@ router.post("/:workspaceId/invite", async (req: AuthRequest, res: Response) => {
           workspaceId,
         },
       },
+      include: {
+        user: true,
+        workspace: true,
+      },
     });
 
     if (!requester || requester.role !== "OWNER") {
@@ -149,43 +153,59 @@ router.post("/:workspaceId/invite", async (req: AuthRequest, res: Response) => {
 
     // Find user by email
     const invitee = await prisma.user.findUnique({ where: { email } });
-    if (!invitee) {
-      res.status(404).json({ status: "error", message: "User not found" });
-      return;
-    }
 
     // Check if already a member
-    const existing = await prisma.workspaceMember.findUnique({
-      where: {
-        userId_workspaceId: {
-          userId: invitee.id,
-          workspaceId,
+    if (invitee) {
+      const existing = await prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: {
+            userId: invitee.id,
+            workspaceId,
+          },
         },
-      },
-    });
+      });
 
-    if (existing) {
-      res
-        .status(409)
-        .json({ status: "error", message: "User is already a member" });
-      return;
+      if (existing) {
+        // Just return 200 without error as per user requirement
+        res.status(200).json({ data: { message: "User is already a member" } });
+        return;
+      }
     }
 
-    const member = await prisma.workspaceMember.create({
+    const token = require('crypto').randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const invitation = await prisma.workspaceInvitation.create({
       data: {
-        userId: invitee.id,
+        token,
+        email,
         workspaceId,
-        role: "MEMBER",
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
+        invitedById: req.user!.userId,
+        expiresAt,
       },
     });
 
-    res.status(201).json({ data: { member } });
+    const { sendInviteEmail, sendNotificationEmail } = await import('../utils/email');
+
+    if (invitee) {
+      // Create in-app notification and emit real-time event
+      const { createNotification } = await import('../utils/notifications');
+      await createNotification({
+        type: "WORKSPACE_INVITE",
+        userId: invitee.id,
+        actorId: req.user!.userId,
+        workspaceId: workspaceId,
+      });
+      // Send simple notification email (link to app)
+      await sendNotificationEmail(email, requester.workspace.name, requester.user.name);
+    } else {
+      // Send invite email with token link
+      await sendInviteEmail(email, requester.workspace.name, requester.user.name, token);
+    }
+
+    res.status(201).json({ data: { message: "Invitation sent successfully" } });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ status: "error", message: "Internal server error" });
   }
 });
@@ -230,7 +250,7 @@ router.delete('/:workspaceId/members/:userId', async (req: AuthRequest, res: Res
   try {
     const { workspaceId, userId } = req.params;
 
-    // Only owners can remove members
+    // Only owners can remove other members. A user can always remove themselves.
     const requester = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
@@ -240,15 +260,21 @@ router.delete('/:workspaceId/members/:userId', async (req: AuthRequest, res: Res
       },
     });
 
-    if (!requester || requester.role !== 'OWNER') {
-      res.status(403).json({ status: 'error', message: 'Only owners can remove members' });
+    if (!requester || (requester.role !== 'OWNER' && req.user!.userId !== userId)) {
+      res.status(403).json({ status: 'error', message: 'Only owners can remove other members' });
       return;
     }
 
     // Cannot remove yourself if you are the only owner
-    if (userId === req.user!.userId) {
-      res.status(422).json({ status: 'error', message: 'Cannot remove yourself from the workspace' });
-      return;
+    if (userId === req.user!.userId && requester.role === 'OWNER') {
+      const ownerCount = await prisma.workspaceMember.count({
+        where: { workspaceId, role: 'OWNER' },
+      });
+      
+      if (ownerCount <= 1) {
+        res.status(422).json({ status: 'error', message: 'Cannot leave workspace as the only owner. Transfer ownership or delete the workspace instead.' });
+        return;
+      }
     }
 
     await prisma.workspaceMember.delete({
@@ -258,6 +284,65 @@ router.delete('/:workspaceId/members/:userId', async (req: AuthRequest, res: Res
     });
 
     res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// POST /api/workspaces/:workspaceId/join
+router.post('/:workspaceId/join', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user!.userId;
+
+    // Verify they have an invitation or notification for this workspace
+    const notification = await prisma.notification.findFirst({
+      where: {
+        userId,
+        workspaceId,
+        type: 'WORKSPACE_INVITE',
+      }
+    });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    
+    const invitation = await prisma.workspaceInvitation.findFirst({
+      where: {
+        email: user?.email,
+        workspaceId,
+        status: 'PENDING',
+      }
+    });
+
+    if (!notification && !invitation) {
+      res.status(403).json({ status: 'error', message: 'No pending invitation found for this workspace' });
+      return;
+    }
+
+    const existing = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: { userId, workspaceId },
+      },
+    });
+
+    if (!existing) {
+      await prisma.workspaceMember.create({
+        data: {
+          userId,
+          workspaceId,
+          role: 'MEMBER',
+        },
+      });
+    }
+
+    if (invitation) {
+      await prisma.workspaceInvitation.update({
+        where: { id: invitation.id },
+        data: { status: 'ACCEPTED' },
+      });
+    }
+
+    res.status(200).json({ data: { message: 'Successfully joined workspace' } });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }

@@ -31,9 +31,12 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
+import invitationsRouter from './routes/invitations';
+
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/workspaces', workspacesRouter);
+app.use('/api/invitations', invitationsRouter);
 // Also mount uploads at top-level for editor convenience
 app.use('/api/upload', uploadsRouter);
 app.use('/api/workspaces/:workspaceId/topics', topicsRouter);
@@ -179,8 +182,10 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 4000;
-httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  httpServer.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-export { io };
+export { io, app };
