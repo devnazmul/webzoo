@@ -22,7 +22,7 @@ interface Props {
   workspaceId: string;
   memberNames: Record<string, string>;
   onlineUsers: string[];
-  workspaceMembers: { id: string; label: string }[];
+  workspaceMembers: { id: string; label: string; role?: string }[];
   allTopics: { id: string; label: string }[];
 }
 
@@ -260,13 +260,19 @@ export default function MessageFeed({
             </ScrollArea>
 
             <div className={`px-2 pb-2`}>
-              <LexicalEditor
-                topicId={topic.id}
-                topicName={topic.name}
-                users={workspaceMembers}
-                topics={allTopics}
-                onSend={handleSend}
-              />
+              {((topic as any).isReadOnly && workspaceMembers.find(m => m.id === user?.id)?.role !== 'OWNER') ? (
+                <div className="mx-2 mb-2 p-4 text-center border border-border bg-accent/30 rounded-lg text-sm text-muted-foreground">
+                  Only workspace owners can post in this announcement channel.
+                </div>
+              ) : (
+                <LexicalEditor
+                  topicId={topic.id}
+                  topicName={topic.name}
+                  users={workspaceMembers}
+                  topics={allTopics}
+                  onSend={handleSend}
+                />
+              )}
             </div>
           </div>
 

@@ -72,6 +72,7 @@ export default function AppShell() {
           members.map((m: any) => ({
             id: m.user.id,
             label: m.user.name,
+            role: m.role,
           }))
         );
       }
@@ -312,7 +313,7 @@ export default function AppShell() {
                     conversation={activeConversation}
                     currentUserId={user?.id ?? ''}
                   />
-                ) : activeTopic && (
+                ) : activeTopic ? (
                   <MessageFeed
                     topic={activeTopic}
                     workspaceId={activeWorkspace!.id}
@@ -321,6 +322,16 @@ export default function AppShell() {
                     workspaceMembers={workspaceMembers}
                     allTopics={allTopics}
                   />
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-black/20">
+                    <div className="w-20 h-20 bg-whatsapp-teal/10 rounded-full flex items-center justify-center mb-6">
+                      <div className="text-whatsapp-teal text-4xl">👋</div>
+                    </div>
+                    <h3 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Welcome to {activeWorkspace?.name}</h3>
+                    <p className="text-muted-foreground text-sm max-w-sm">
+                      Select a channel from the sidebar to start chatting, or create a new one for your team.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

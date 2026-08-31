@@ -119,6 +119,18 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    if (topic.isReadOnly) {
+      const member = await prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: { userId: req.user!.userId, workspaceId },
+        },
+      });
+      if (!member || member.role !== 'OWNER') {
+        res.status(403).json({ status: 'error', message: 'Only owners can post in this topic' });
+        return;
+      }
+    }
+
     const replyToId = req.body.replyToId as string | undefined;
 
     // Validate replyToId exists if provided

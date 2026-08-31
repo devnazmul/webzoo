@@ -35,6 +35,12 @@ router.post("/", async (req: AuthRequest, res: Response) => {
             role: "OWNER",
           },
         },
+        topics: {
+          create: [
+            { name: "General", isReadOnly: false },
+            { name: "Announcement", isReadOnly: true },
+          ],
+        },
       },
       include: {
         members: {
@@ -44,6 +50,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
             },
           },
         },
+        topics: true,
       },
     });
 
@@ -392,6 +399,51 @@ router.post('/:workspaceId/join', async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({ data: { message: 'Successfully joined workspace' } });
   } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/workspaces/:workspaceId
+router.delete('/:workspaceId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId } = req.params;
+
+    // Verify requester is OWNER
+    const requester = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: req.user!.userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!requester || requester.role !== 'OWNER') {
+      res.status(403).json({ status: 'error', message: 'Only workspace owners can delete the workspace' });
+      return;
+    }
+
+    // Cascade delete everything related to the workspace manually
+    await prisma.$transaction([
+      prisma.topicReadState.deleteMany({ where: { topic: { workspaceId } } }),
+      prisma.reaction.deleteMany({ where: { message: { topic: { workspaceId } } } }),
+      prisma.subTask.deleteMany({ where: { task: { topic: { workspaceId } } } }),
+      prisma.taskAssignee.deleteMany({ where: { task: { topic: { workspaceId } } } }),
+      prisma.taskComment.deleteMany({ where: { task: { topic: { workspaceId } } } }),
+      prisma.task.deleteMany({ where: { topic: { workspaceId } } }),
+      prisma.taskStatus.deleteMany({ where: { topic: { workspaceId } } }),
+      prisma.sharedLink.deleteMany({ where: { topic: { workspaceId } } }),
+      prisma.vaultDocument.deleteMany({ where: { topic: { workspaceId } } }),
+      prisma.attachment.deleteMany({ where: { topic: { workspaceId } } }),
+      prisma.message.deleteMany({ where: { topic: { workspaceId } } }),
+      prisma.topic.deleteMany({ where: { workspaceId } }),
+      prisma.workspaceMember.deleteMany({ where: { workspaceId } }),
+      prisma.workspace.delete({ where: { id: workspaceId } }),
+    ]);
+
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 });

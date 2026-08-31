@@ -1,6 +1,7 @@
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 interface SidebarNarrowProps {
   onCreateWorkspace: () => void;
@@ -37,14 +38,22 @@ export default function SidebarNarrow({
               <button
                 onClick={() => setActiveWorkspace(ws)}
                 className={cn(
-                  "w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold font-sans tracking-wide transition-all duration-200 cursor-pointer shadow-xs border",
+                  "w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold font-sans tracking-wide transition-all duration-200 cursor-pointer shadow-xs border overflow-hidden",
                   isActive
                     ? "bg-whatsapp-teal text-white border-whatsapp-teal scale-105"
                     : "bg-background dark:bg-[#111b21] text-foreground border-border hover:bg-accent/15 hover:border-whatsapp-teal/30",
                 )}
                 title={ws.name}
               >
-                {getInitials(ws.name)}
+                {ws.logoUrl ? (
+                  <img
+                    src={ws.logoUrl.startsWith('http') ? ws.logoUrl : `${API_URL}${ws.logoUrl}`}
+                    alt={ws.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  getInitials(ws.name)
+                )}
               </button>
             </div>
           );

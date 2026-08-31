@@ -3,9 +3,9 @@
 ### Need to do those:
 - ✅ Invitation should be work if we enter a valid email. although the email is not registered, system should send a email to joind in the channel and when user visit using the given url it will redirect to the registration page and create a user in that case the email field should be auto filled and disabled and on form submit server should also validate the exact email matching or not. and if that email already registered then it should send a notification and email as well to join in the channel and the invitation link should expired in 24h.
 
-- After log in if there is no channel then it should show a message on the screen (use some decent Graphics) and there also should have a create channel button to create a channel. and channel should have 2 step form, first step should contain channel logo, channel name, description and second step should have an invitation interface also have a copy link button, on click on that it should copy the invitation link and that will expired in 1h
+- ✅ After log in if there is no channel then it should show a message on the screen (use some decent Graphics) and there also should have a create channel button to create a channel. and channel should have 2 step form, first step should contain channel logo, channel name, description and second step should have an invitation interface also have a copy link button, on click on that it should copy the invitation link and that will expired in 1h
 
-- When a user create a channel it should automatically create 2 topic. 1. General & 2. Announcement. in General users of that topic can message each other and on Announcement topic only owner and admins can give message and all other user only read those. 
+- ✅ When a user create a channel it should automatically create 2 topic. 1. General & 2. Announcement. in General users of that topic can message each other and on Announcement topic only owner and admins can give message and all other user only read those. 
 
 - Message rich text editor need to fix
 
