@@ -8,96 +8,96 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  workspaces             WorkspaceMember[]
-  messages               Message[]
-  refreshTokens          RefreshToken[]
+  id                     String                          @id @default(uuid())
+  email                  String                          @unique
+  name                   String
+  passwordHash           String
+  createdAt              DateTime                        @default(now())
+  updatedAt              DateTime                        @updatedAt
   attachments            Attachment[]                    @relation("AttachmentUploader")
-  tasksCreated           Task[]                          @relation("TaskCreatedBy")
-  tasksAssigned          Task[]                          @relation("TaskAssignee")
-  vaultDocuments         VaultDocument[]                 @relation("VaultDocumentCreator")
-  sharedLinks            SharedLink[]                    @relation("SharedLinkUser")
-  reactions              Reaction[]
-  notifications          Notification[]                  @relation("NotificationRecipient")
-  notificationsActed     Notification[]                  @relation("NotificationActor")
   directParticipations   DirectConversationParticipant[]
   directMessages         DirectMessage[]                 @relation("DirectMessageAuthor")
   directMessageReactions DirectMessageReaction[]
-  topicReadStates        TopicReadState[]
-  taskComments           TaskComment[]
+  messages               Message[]
+  notificationsActed     Notification[]                  @relation("NotificationActor")
+  notifications          Notification[]                  @relation("NotificationRecipient")
+  reactions              Reaction[]
+  refreshTokens          RefreshToken[]
+  sharedLinks            SharedLink[]                    @relation("SharedLinkUser")
+  tasksAssigned          Task[]                          @relation("TaskAssignee")
+  tasksCreated           Task[]                          @relation("TaskCreatedBy")
   taskAssignees          TaskAssignee[]
+  taskComments           TaskComment[]
+  topicReadStates        TopicReadState[]
+  vaultDocuments         VaultDocument[]                 @relation("VaultDocumentCreator")
   workspaceInvitations   WorkspaceInvitation[]           @relation("WorkspaceInviter")
+  workspaces             WorkspaceMember[]
 }
 
 model Workspace {
-  id          String   @id @default(uuid())
-  name        String
-  description String?  @db.Text
-  logoUrl     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  members       WorkspaceMember[]
-  topics        Topic[]
+  id            String                @id @default(uuid())
+  name          String
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  description   String?               @db.Text
+  logoUrl       String?
   notifications Notification[]
+  topics        Topic[]
   invitations   WorkspaceInvitation[]
+  members       WorkspaceMember[]
 }
 
 model WorkspaceMember {
   userId      String
   workspaceId String
-  role        Role     @default(MEMBER)
-  joinedAt    DateTime @default(now())
-
-  user      User      @relation(fields: [userId], references: [id])
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  role        Role      @default(MEMBER)
+  joinedAt    DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
   @@id([userId, workspaceId])
+  @@index([workspaceId], map: "WorkspaceMember_workspaceId_fkey")
 }
 
 model Topic {
-  id          String   @id @default(uuid())
-  name        String
-  workspaceId String
-  isReadOnly  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  workspace      Workspace        @relation(fields: [workspaceId], references: [id])
-  messages       Message[]
+  id             String           @id @default(uuid())
+  name           String
+  workspaceId    String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  isReadOnly     Boolean          @default(false)
   attachments    Attachment[]
-  taskStatuses   TaskStatus[]
-  tasks          Task[]
-  vaultDocuments VaultDocument[]
+  messages       Message[]
   sharedLinks    SharedLink[]
+  tasks          Task[]
+  taskStatuses   TaskStatus[]
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id])
   readStates     TopicReadState[]
+  vaultDocuments VaultDocument[]
+
+  @@index([workspaceId], map: "Topic_workspaceId_fkey")
 }
 
 model Message {
-  id        String    @id @default(uuid())
-  content   String    @db.Text
-  topicId   String
-  authorId  String
-  replyToId String?
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-
-  topic       Topic        @relation(fields: [topicId], references: [id])
+  id          String       @id @default(uuid())
+  content     String       @db.Text
+  topicId     String
+  authorId    String
+  createdAt   DateTime     @default(now())
+  replyToId   String?
+  deletedAt   DateTime?
+  attachments Attachment[]
   author      User         @relation(fields: [authorId], references: [id])
   replyTo     Message?     @relation("MessageReplies", fields: [replyToId], references: [id])
   replies     Message[]    @relation("MessageReplies")
-  attachments Attachment[]
-  tasks       Task[]
-  sharedLinks SharedLink[]
+  topic       Topic        @relation(fields: [topicId], references: [id])
   reactions   Reaction[]
+  sharedLinks SharedLink[]
+  tasks       Task[]
 
   @@index([topicId, createdAt])
+  @@index([authorId], map: "Message_authorId_fkey")
+  @@index([replyToId], map: "Message_replyToId_fkey")
 }
 
 model RefreshToken {
@@ -106,8 +106,9 @@ model RefreshToken {
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId], map: "RefreshToken_userId_fkey")
 }
 
 model Attachment {
@@ -121,12 +122,13 @@ model Attachment {
   uploadedById String
   messageId    String?
   createdAt    DateTime @default(now())
-
-  topic      Topic    @relation(fields: [topicId], references: [id])
-  uploadedBy User     @relation("AttachmentUploader", fields: [uploadedById], references: [id])
-  message    Message? @relation(fields: [messageId], references: [id])
+  message      Message? @relation(fields: [messageId], references: [id])
+  topic        Topic    @relation(fields: [topicId], references: [id])
+  uploadedBy   User     @relation("AttachmentUploader", fields: [uploadedById], references: [id])
 
   @@index([topicId, createdAt])
+  @@index([messageId], map: "Attachment_messageId_fkey")
+  @@index([uploadedById], map: "Attachment_uploadedById_fkey")
 }
 
 model TaskStatus {
@@ -136,39 +138,41 @@ model TaskStatus {
   order     Int      @default(0)
   topicId   String
   createdAt DateTime @default(now())
-
-  topic Topic  @relation(fields: [topicId], references: [id])
-  tasks Task[]
+  tasks     Task[]
+  topic     Topic    @relation(fields: [topicId], references: [id])
 
   @@index([topicId, order])
 }
 
 model Task {
-  id          String    @id @default(uuid())
+  id          String         @id @default(uuid())
   title       String
-  description String?   @db.Text
+  description String?        @db.Text
   statusId    String
   topicId     String
   createdById String
   assigneeId  String?
   messageId   String?
-  order       Int       @default(0)
-  version     Int       @default(0)
+  order       Int            @default(0)
+  version     Int            @default(0)
   dueDate     DateTime?
-  priority    String    @default("MEDIUM")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  status    TaskStatus     @relation(fields: [statusId], references: [id])
-  topic     Topic          @relation(fields: [topicId], references: [id])
-  createdBy User           @relation("TaskCreatedBy", fields: [createdById], references: [id])
-  assignee  User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  message   Message?       @relation(fields: [messageId], references: [id])
-  subtasks  SubTask[]
-  assignees TaskAssignee[]
-  comments  TaskComment[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  priority    String         @default("MEDIUM")
+  subtasks    SubTask[]
+  assignee    User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy   User           @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  message     Message?       @relation(fields: [messageId], references: [id])
+  status      TaskStatus     @relation(fields: [statusId], references: [id])
+  topic       Topic          @relation(fields: [topicId], references: [id])
+  assignees   TaskAssignee[]
+  comments    TaskComment[]
 
   @@index([topicId, statusId, order])
+  @@index([assigneeId], map: "Task_assigneeId_fkey")
+  @@index([createdById], map: "Task_createdById_fkey")
+  @@index([messageId], map: "Task_messageId_fkey")
+  @@index([statusId], map: "Task_statusId_fkey")
 }
 
 model SubTask {
@@ -179,8 +183,7 @@ model SubTask {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId, order])
 }
@@ -193,11 +196,11 @@ model VaultDocument {
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  topic     Topic @relation(fields: [topicId], references: [id])
-  createdBy User  @relation("VaultDocumentCreator", fields: [createdById], references: [id])
+  createdBy   User     @relation("VaultDocumentCreator", fields: [createdById], references: [id])
+  topic       Topic    @relation(fields: [topicId], references: [id])
 
   @@index([topicId, createdAt])
+  @@index([createdById], map: "VaultDocument_createdById_fkey")
 }
 
 model SharedLink {
@@ -210,12 +213,13 @@ model SharedLink {
   sharedById  String
   messageId   String?
   createdAt   DateTime @default(now())
-
-  topic    Topic    @relation(fields: [topicId], references: [id])
-  sharedBy User     @relation("SharedLinkUser", fields: [sharedById], references: [id])
-  message  Message? @relation(fields: [messageId], references: [id])
+  message     Message? @relation(fields: [messageId], references: [id])
+  sharedBy    User     @relation("SharedLinkUser", fields: [sharedById], references: [id])
+  topic       Topic    @relation(fields: [topicId], references: [id])
 
   @@index([topicId, createdAt])
+  @@index([messageId], map: "SharedLink_messageId_fkey")
+  @@index([sharedById], map: "SharedLink_sharedById_fkey")
 }
 
 model Reaction {
@@ -224,12 +228,12 @@ model Reaction {
   messageId String
   userId    String
   createdAt DateTime @default(now())
-
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id])
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([messageId, userId, emoji])
   @@index([messageId])
+  @@index([userId], map: "Reaction_userId_fkey")
 }
 
 model Notification {
@@ -243,20 +247,20 @@ model Notification {
   taskId      String?
   read        Boolean          @default(false)
   createdAt   DateTime         @default(now())
-
-  user      User      @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
-  actor     User      @relation("NotificationActor", fields: [actorId], references: [id])
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actor       User             @relation("NotificationActor", fields: [actorId], references: [id])
+  user        User             @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([userId, read, createdAt])
   @@index([userId, createdAt])
+  @@index([actorId], map: "Notification_actorId_fkey")
+  @@index([workspaceId], map: "Notification_workspaceId_fkey")
 }
 
 model DirectConversation {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id           String                          @id @default(uuid())
+  createdAt    DateTime                        @default(now())
+  updatedAt    DateTime                        @updatedAt
   participants DirectConversationParticipant[]
   messages     DirectMessage[]
 }
@@ -264,55 +268,55 @@ model DirectConversation {
 model DirectConversationParticipant {
   conversationId String
   userId         String
-  joinedAt       DateTime @default(now())
-
-  conversation DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user         User               @relation(fields: [userId], references: [id])
+  joinedAt       DateTime           @default(now())
+  conversation   DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User               @relation(fields: [userId], references: [id])
 
   @@id([conversationId, userId])
   @@index([userId])
 }
 
 model DirectMessage {
-  id             String   @id @default(uuid())
-  content        String   @db.Text
+  id             String                  @id @default(uuid())
+  content        String                  @db.Text
   conversationId String
   authorId       String
   replyToId      String?
-  createdAt      DateTime @default(now())
-
-  conversation DirectConversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  author       User                    @relation("DirectMessageAuthor", fields: [authorId], references: [id])
-  replyTo      DirectMessage?          @relation("DirectMessageReplies", fields: [replyToId], references: [id])
-  replies      DirectMessage[]         @relation("DirectMessageReplies")
-  reactions    DirectMessageReaction[]
+  createdAt      DateTime                @default(now())
+  author         User                    @relation("DirectMessageAuthor", fields: [authorId], references: [id])
+  conversation   DirectConversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  replyTo        DirectMessage?          @relation("DirectMessageReplies", fields: [replyToId], references: [id])
+  replies        DirectMessage[]         @relation("DirectMessageReplies")
+  reactions      DirectMessageReaction[]
 
   @@index([conversationId, createdAt])
+  @@index([authorId], map: "DirectMessage_authorId_fkey")
+  @@index([replyToId], map: "DirectMessage_replyToId_fkey")
 }
 
 model DirectMessageReaction {
-  id        String   @id @default(uuid())
+  id        String        @id @default(uuid())
   emoji     String
   messageId String
   userId    String
-  createdAt DateTime @default(now())
-
-  message DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User          @relation(fields: [userId], references: [id])
+  createdAt DateTime      @default(now())
+  message   DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
 
   @@unique([messageId, userId, emoji])
   @@index([messageId])
+  @@index([userId], map: "DirectMessageReaction_userId_fkey")
 }
 
 model TopicReadState {
   userId     String
   topicId    String
   lastReadAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, topicId])
+  @@index([topicId], map: "TopicReadState_topicId_fkey")
 }
 
 model WorkspaceInvitation {
@@ -325,12 +329,35 @@ model WorkspaceInvitation {
   expiresAt   DateTime
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  invitedBy User      @relation("WorkspaceInviter", fields: [invitedById], references: [id])
+  invitedBy   User             @relation("WorkspaceInviter", fields: [invitedById], references: [id])
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, status])
   @@index([email])
+  @@index([invitedById], map: "WorkspaceInvitation_invitedById_fkey")
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  taskId    String
+  authorId  String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([authorId], map: "TaskComment_authorId_fkey")
+  @@index([taskId], map: "TaskComment_taskId_fkey")
+}
+
+model TaskAssignee {
+  taskId String
+  userId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([taskId, userId])
+  @@index([userId], map: "TaskAssignee_userId_fkey")
 }
 
 enum InvitationStatus {
@@ -351,25 +378,4 @@ enum NotificationType {
 enum Role {
   OWNER
   MEMBER
-}
-
-model TaskComment {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
-  taskId    String
-  authorId  String
-  createdAt DateTime @default(now())
-
-  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  author User @relation(fields: [authorId], references: [id])
-}
-
-model TaskAssignee {
-  taskId String
-  userId String
-
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id])
-
-  @@id([taskId, userId])
 }

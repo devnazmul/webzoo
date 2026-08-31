@@ -8,7 +8,7 @@ interface Notification {
   id: string;
   type: string;
   message: string;
-  isRead: boolean;
+  read: boolean;
   createdAt: string;
   actorName?: string;
   workspaceId?: string;
@@ -94,7 +94,7 @@ export default function NotificationBell() {
   async function markAllRead() {
     try {
       await api.post('/notifications/mark-read');
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch {}
   }
@@ -105,7 +105,7 @@ export default function NotificationBell() {
       setNotifications((prev) => {
         const removed = prev.find((n) => n.id === id);
         const next = prev.filter((n) => n.id !== id);
-        if (removed && !removed.isRead) setUnreadCount((c) => Math.max(0, c - 1));
+        if (removed && !removed.read) setUnreadCount((c) => Math.max(0, c - 1));
         return next;
       });
     } catch {}
@@ -166,13 +166,13 @@ export default function NotificationBell() {
                   key={n.id}
                   className={cn(
                     'flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors',
-                    !n.isRead ? 'bg-primary/5' : 'hover:bg-muted/50'
+                    !n.read ? 'bg-primary/5' : 'hover:bg-muted/50'
                   )}
                 >
-                  {!n.isRead && (
+                  {!n.read && (
                     <span className="mt-1.5 flex-shrink-0 w-2 h-2 rounded-full bg-primary" />
                   )}
-                  {n.isRead && <span className="mt-1.5 flex-shrink-0 w-2 h-2" />}
+                  {n.read && <span className="mt-1.5 flex-shrink-0 w-2 h-2" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm leading-snug">{n.message}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">

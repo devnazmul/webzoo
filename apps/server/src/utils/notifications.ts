@@ -78,17 +78,21 @@ export async function createMentionNotifications(params: {
 
     try {
       const parsed = JSON.parse(params.content);
+      console.log('[Mentions] Parsed payload mentions:', parsed.mentions);
       if (parsed?.mentions && Array.isArray(parsed.mentions)) {
         mentionedUserIds = parsed.mentions
           .filter((m: any) => m.mentionType === 'user')
           .map((m: any) => m.id);
       }
-    } catch {
-      // Plain text — no structured mentions
+    } catch (e) {
+      console.log('[Mentions] Parse error:', e);
     }
+    
+    console.log('[Mentions] Found mentioned users:', mentionedUserIds);
 
     // Create notification for each mentioned user
     for (const userId of mentionedUserIds) {
+      console.log(`[Mentions] Creating notification for user ${userId} by actor ${params.actorId}`);
       await createNotification({
         type: 'MENTION',
         userId,

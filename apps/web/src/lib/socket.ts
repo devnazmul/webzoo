@@ -13,8 +13,17 @@ export function getSocket(): Socket {
 
 export function connectSocket(userId: string): void {
   const s = getSocket();
+  
+  // Always attach connect listener to handle reconnects
+  s.off("connect");
+  s.on("connect", () => {
+    s.emit("presence:init", userId);
+  });
+
   if (!s.connected) {
     s.connect();
+  } else {
+    // Already connected, just emit
     s.emit("presence:init", userId);
   }
 }
