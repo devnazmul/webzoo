@@ -97,14 +97,15 @@ export default function TopicTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "flex cursor-pointer items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              "flex cursor-pointer items-center gap-1.5 px-3 md:px-3 lg:px-4 py-3 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
               activeTab === tab.id
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
             )}
+            title={tab.label}
           >
             {tab.icon}
-            {tab.label}
+            <span className="hidden lg:inline">{tab.label}</span>
           </button>
         ))}
       </div>

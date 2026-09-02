@@ -55,6 +55,7 @@ export default function SidebarNarrow({
                   getInitials(ws.name)
                 )}
               </button>
+              <WorkspaceUnreadBadge workspaceId={ws.id} isActive={isActive} />
             </div>
           );
         })}
@@ -70,5 +71,20 @@ export default function SidebarNarrow({
         </button>
       </div>
     </div>
+  );
+}
+
+/** Small badge showing unread count for a non-active workspace */
+function WorkspaceUnreadBadge({ workspaceId, isActive }: { workspaceId: string; isActive: boolean }) {
+  const count = useWorkspaceStore((s) => s.workspaceUnreadCounts[workspaceId] ?? 0);
+
+  if (isActive || count === 0) return null;
+
+  return (
+    <span
+      className="absolute -top-0.5 right-2.5 min-w-[17px] h-[17px] rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 ring-2 ring-[#e3e6e9] dark:ring-[#182229] animate-in fade-in zoom-in-75 duration-200 shadow-sm"
+    >
+      {count > 99 ? '99+' : count}
+    </span>
   );
 }

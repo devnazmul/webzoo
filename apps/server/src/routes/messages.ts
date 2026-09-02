@@ -179,7 +179,10 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       );
     }
 
-    io.to(topicId).emit('message:new', { message });
+    const messagePayload = { message: { ...message, workspaceId } };
+    io.to(topicId).emit('message:new', messagePayload);
+    // Also notify users in the workspace room who may be viewing a different workspace
+    io.to(`workspace:${workspaceId}`).emit('message:new', messagePayload);
 
     // Trigger mention notifications
     await createMentionNotifications({

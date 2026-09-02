@@ -100,6 +100,16 @@ io.on('connection', (socket) => {
     console.log(`User ${userId} initialized presence`);
   });
 
+  socket.on('workspace:join', (workspaceId: string) => {
+    socket.join(`workspace:${workspaceId}`);
+    console.log(`Socket ${socket.id} joined workspace room ${workspaceId}`);
+  });
+
+  socket.on('workspace:leave', (workspaceId: string) => {
+    socket.leave(`workspace:${workspaceId}`);
+    console.log(`Socket ${socket.id} left workspace room ${workspaceId}`);
+  });
+
   socket.on('topic:join', (topicId: string) => {
     socket.join(topicId);
     currentTopics.add(topicId);

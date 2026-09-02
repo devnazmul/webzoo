@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useTopicStore } from "@/store/topic.store";
@@ -19,9 +19,9 @@ import CreateChannelWizard from '@/components/layout/CreateChannelWizard';
 
 export default function AppShell() {
   const user = useAuthStore((s) => s.user);
-  const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace } =
+  const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace, incrementWorkspaceUnread, clearWorkspaceUnread } =
     useWorkspaceStore();
-  const { setTopics, setActiveTopic, activeTopic, setUnreadCounts, incrementUnread, clearUnread } = useTopicStore();
+  const { setTopics, setActiveTopic, activeTopic, setUnreadCounts, incrementUnread, clearUnread, unreadCounts } = useTopicStore();
   const {
     conversations,
     activeConversation,
@@ -48,6 +48,8 @@ export default function AppShell() {
   >([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [hasLoadedWorkspaces, setHasLoadedWorkspaces] = useState(false);
+  // Dedup set to avoid double-counting messages received on both topic and workspace rooms
+  const seenMessageIds = useRef<Set<string>>(new Set());
 
   // Auto-close sidebar on mobile when active channel or DM changes
   useEffect(() => {
@@ -76,6 +78,9 @@ export default function AppShell() {
           }))
         );
       }
+      // Subscribe to all workspace rooms for cross-workspace unread badge
+      const socket = getSocket();
+      data.forEach((ws: any) => socket.emit('workspace:join', ws.id));
     } catch {} finally {
       setHasLoadedWorkspaces(true);
     }
@@ -113,8 +118,10 @@ export default function AppShell() {
   useEffect(() => {
     if (activeWorkspace) {
       loadTopics(activeWorkspace.id);
+      // Clear the workspace-level unread badge when switching to this workspace
+      clearWorkspaceUnread(activeWorkspace.id);
     }
-  }, [activeWorkspace, loadTopics]);
+  }, [activeWorkspace, loadTopics, clearWorkspaceUnread]);
 
   useEffect(() => {
     if (!activeWorkspace) return;
@@ -124,8 +131,26 @@ export default function AppShell() {
       setOnlineUsers(data.onlineUsers);
     }
 
-    function onNewMessage(data: { message: { topicId: string } }) {
+    function onNewMessage(data: { message: { id: string; topicId: string; workspaceId?: string } }) {
+      // Deduplicate: message may arrive from both topic room and workspace room
+      if (seenMessageIds.current.has(data.message.id)) return;
+      seenMessageIds.current.add(data.message.id);
+      // Prune set to avoid memory leak (keep last 200)
+      if (seenMessageIds.current.size > 200) {
+        const first = seenMessageIds.current.values().next().value;
+        seenMessageIds.current.delete(first);
+      }
+
       const { activeTopic } = useTopicStore.getState();
+      const { activeWorkspace: currentWs } = useWorkspaceStore.getState();
+
+      // If message belongs to a different workspace, badge that workspace
+      if (data.message.workspaceId && data.message.workspaceId !== currentWs?.id) {
+        incrementWorkspaceUnread(data.message.workspaceId);
+        return;
+      }
+
+      // Same workspace — badge the topic if it's not the active one
       if (data.message.topicId !== activeTopic?.id) {
         incrementUnread(data.message.topicId);
       }
@@ -321,6 +346,7 @@ export default function AppShell() {
                     onlineUsers={onlineUsers}
                     workspaceMembers={workspaceMembers}
                     allTopics={allTopics}
+                    unreadCount={unreadCounts[activeTopic.id] ?? 0}
                   />
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-black/20">
