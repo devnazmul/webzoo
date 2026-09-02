@@ -24,6 +24,7 @@ interface Props {
   onlineUsers: string[];
   workspaceMembers: { id: string; label: string; role?: string }[];
   allTopics: { id: string; label: string }[];
+  unreadCount?: number;
 }
 
 export default function MessageFeed({
@@ -33,6 +34,7 @@ export default function MessageFeed({
   onlineUsers,
   workspaceMembers,
   allTopics,
+  unreadCount = 0,
 }: Props) {
   const user = useAuthStore((s) => s.user);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -49,10 +51,15 @@ export default function MessageFeed({
   const statuses = useTaskStore((s) => s.statuses);
   const addTask = useTaskStore((s) => s.addTask);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const firstUnreadRef = useRef<HTMLDivElement>(null);
   const prevTopicId = useRef<string | null>(null);
+  // Index of the first unread message — set once on load, cleared on send
+  const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
+  // Snapshot the unread count at load time so it doesn't change as user reads
+  const initialUnreadCount = useRef(0);
 
-  const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    bottomRef.current?.scrollIntoView({ behavior });
   }, []);
 
   useEffect(() => {
@@ -63,6 +70,8 @@ export default function MessageFeed({
     setMessages([]);
     setTypingUsers([]);
     setActiveTab("messages");
+    setFirstUnreadIndex(null);
+    initialUnreadCount.current = unreadCount;
     loadMessages();
 
     function onNewMessage(data: { message: Message & { replyToId?: string } }) {
@@ -152,8 +161,22 @@ export default function MessageFeed({
       const res = await api.get(
         `/workspaces/${workspaceId}/topics/${topic.id}/messages`,
       );
-      setMessages(res.data.data.messages);
-      setTimeout(scrollToBottom, 50);
+      const loaded: Message[] = res.data.data.messages;
+      setMessages(loaded);
+
+      const count = initialUnreadCount.current;
+      if (count > 0 && loaded.length > 0) {
+        // The first unread message is `count` from the end
+        const idx = Math.max(0, loaded.length - count);
+        setFirstUnreadIndex(idx);
+        // Instantly jump to first unread — no scroll animation
+        setTimeout(() => {
+          firstUnreadRef.current?.scrollIntoView({ behavior: "instant", block: "start" });
+        }, 0);
+      } else {
+        // Instantly jump to the bottom — no scroll animation
+        setTimeout(() => scrollToBottom("instant"), 0);
+      }
     } finally {
       setLoading(false);
     }
@@ -169,6 +192,8 @@ export default function MessageFeed({
       replyToId: replyTo?.id,
     });
     setReplyTo(null);
+    // Dismiss the unread divider once the user actively sends a message
+    setFirstUnreadIndex(null);
   }
 
   return (
@@ -206,8 +231,22 @@ export default function MessageFeed({
                   !prev ||
                   new Date(message.createdAt).toDateString() !==
                     new Date(prev.createdAt).toDateString();
+                const isFirstUnread = firstUnreadIndex !== null && index === firstUnreadIndex;
                 return (
-                  <div key={message.id} className={`relative `}>
+                  <div key={message.id} className="relative">
+                    {/* Unread messages divider */}
+                    {isFirstUnread && (
+                      <div
+                        ref={firstUnreadRef}
+                        className="flex items-center gap-3 px-4 py-1 my-1 sticky top-0 z-10"
+                      >
+                        <div className="flex-1 h-px bg-red-500/60" />
+                        <span className="text-[11px] font-semibold text-red-400 bg-red-500/10 border border-red-500/30 rounded-full px-3 py-0.5 whitespace-nowrap tracking-wide">
+                          {initialUnreadCount.current} unread message{initialUnreadCount.current !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex-1 h-px bg-red-500/60" />
+                      </div>
+                    )}
                     {showDate && (
                       <DateSeparator date={new Date(message.createdAt)} />
                     )}
